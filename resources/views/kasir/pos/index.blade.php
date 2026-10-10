@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'POS / Kasir')
+@section('title', 'Kasir')
 @section('description', 'Kelola transaksi penjualan pelanggan.')
 
 @section('content')
@@ -11,7 +11,7 @@
 
         <div class="page-card-header">
             <div>
-                <h3>POS / Kasir</h3>
+                <h3>Kasir</h3>
                 <p>Kelola transaksi penjualan pelanggan.</p>
             </div>
 

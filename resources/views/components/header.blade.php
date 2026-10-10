@@ -16,7 +16,7 @@
     </button>
 
     <div class="breadcrumb">
-        <span>KopSync / Management System</span>
+        <span>KopSync</span>
         <h2>@yield('title')</h2>
         <p>@yield('description')</p>
     </div>

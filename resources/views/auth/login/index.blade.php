@@ -148,29 +148,6 @@
                 Belum punya akun? <strong>Hubungi Admin</strong>
             </p>
 
-            <!-- DEMO: hanya tampil di environment local -->
-            @if (app()->environment('local'))
-                <div class="login-demo">
-
-                    <p>
-                        <strong>Akun demo</strong> (khusus pengembangan). Klik role untuk mengisi form.
-                        Password semua akun: <strong>password123</strong>
-                    </p>
-
-                    <div class="login-demo-list">
-                        <template x-for="account in accounts" :key="account.role">
-                            <button
-                                type="button"
-                                class="login-demo-btn"
-                                @click="fill(account)"
-                                x-text="account.label"
-                            ></button>
-                        </template>
-                    </div>
-
-                </div>
-            @endif
-
         </div>
 
     </main>

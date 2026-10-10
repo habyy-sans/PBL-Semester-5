@@ -60,7 +60,7 @@ return [
 
         'kasir' => [
             'MAIN MENU' => [
-                ['route' => 'kasir.pos',     'icon' => '▣', 'label' => 'POS / Kasir'],
+                ['route' => 'kasir.pos',     'icon' => '▣', 'label' => 'Kasir'],
                 ['route' => 'kasir.history', 'icon' => '▤', 'label' => 'Riwayat Transaksi'],
             ],
         ],
