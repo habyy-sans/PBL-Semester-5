@@ -44,10 +44,7 @@ Route::prefix('ic')->name('ic.')->group(function () use ($soon) {
 
     Route::view('/receiving', 'ic.PenerimaanBarang.index')->name('receiving');
 
-    Route::view('/waste', 'placeholder', $soon(
-        'Waste Log',
-        'Catat barang rusak atau terbuang beserta alasannya.'
-    ))->name('waste');
+    Route::view('/waste', 'ic.Waste.index')->name('waste');
 
     Route::view('/mutation', 'placeholder', $soon(
         'Histori Mutasi Stok',
