@@ -1,41 +1,29 @@
 @props(['role'])
-
+ 
 @php
-    $meta     = config("menu.roles.$role");
     $sections = config("menu.menus.$role", []);
-    $initial  = strtoupper(mb_substr($meta['name'], 0, 1));
 @endphp
-
+ 
 <aside id="sidebar" class="sidebar" :class="{ 'show': sidebarOpen }">
-
+ 
     <!-- LOGO -->
     <div class="sidebar-logo">
         <div class="logo-box">K</div>
-
+ 
         <div>
             <h1>KopSync</h1>
             <span>POS Management</span>
         </div>
     </div>
-
-    <!-- USER -->
-    <div class="sidebar-user">
-        <div class="user-avatar">{{ $initial }}</div>
-
-        <div>
-            <strong>{{ $meta['name'] }}</strong>
-            <span>{{ $meta['branch'] }}</span>
-        </div>
-    </div>
-
+ 
     <!-- MENU (sesuai role) -->
     <nav class="sidebar-nav">
-
+ 
         @foreach ($sections as $title => $items)
             <div class="menu-section">
-
+ 
                 <p class="menu-title">{{ $title }}</p>
-
+ 
                 @foreach ($items as $item)
                     <a
                         href="{{ route($item['route']) }}"
@@ -43,18 +31,18 @@
                     >
                         <span class="menu-icon">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
-
+ 
                         @isset($item['badge'])
                             <span class="menu-badge {{ ($item['danger'] ?? false) ? 'danger' : '' }}">{{ $item['badge'] }}</span>
                         @endisset
                     </a>
                 @endforeach
-
+ 
             </div>
         @endforeach
-
+ 
     </nav>
-
+ 
     <!-- LOGOUT (DEMO: kembali ke /login. Nanti jadi form POST + @csrf) -->
     <div class="sidebar-bottom">
         <a href="{{ route('login') }}" class="logout-button">
@@ -62,5 +50,6 @@
             Logout
         </a>
     </div>
-
+ 
 </aside>
+ 

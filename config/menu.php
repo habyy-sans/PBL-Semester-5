@@ -67,7 +67,7 @@ return [
 
         'ic' => [
             'MAIN MENU' => [
-                ['route' => 'ic.stock',     'icon' => '▤', 'label' => 'Stok Cabang'],
+                ['route' => 'ic.stock',     'icon' => '▤', 'label' => 'Stok Store'],
                 ['route' => 'ic.receiving', 'icon' => '▱', 'label' => 'Penerimaan Barang'],
                 ['route' => 'ic.waste',     'icon' => '△', 'label' => 'Waste Log'],
             ],

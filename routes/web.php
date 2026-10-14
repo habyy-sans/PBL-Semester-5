@@ -40,15 +40,9 @@ Route::prefix('kasir')->name('kasir.')->group(function () use ($soon) {
 
 Route::prefix('ic')->name('ic.')->group(function () use ($soon) {
 
-    Route::view('/stock', 'placeholder', $soon(
-        'Stok Cabang',
-        'Pantau stok cabang secara real-time.'
-    ))->name('stock');
+    Route::view('/stock', 'ic.stock.index')->name('stock');
 
-    Route::view('/receiving', 'placeholder', $soon(
-        'Penerimaan Barang',
-        'Cocokkan barang yang datang dengan Surat Jalan dan konfirmasi penerimaan.'
-    ))->name('receiving');
+    Route::view('/receiving', 'ic.PenerimaanBarang.index')->name('receiving');
 
     Route::view('/waste', 'placeholder', $soon(
         'Waste Log',

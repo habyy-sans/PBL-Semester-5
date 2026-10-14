@@ -129,68 +129,13 @@ body {
 }
 
 
-/* USER */
-
-.sidebar-user {
-
-    margin: 17px 13px;
-
-    padding: 10px;
-
-    border-radius: 12px;
-
-    background: rgba(255,255,255,0.09);
-
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.user-avatar {
-
-    width: 30px;
-    height: 30px;
-
-    border-radius: 50%;
-
-    background: #fff7e8;
-
-    color: var(--brown);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.sidebar-user strong {
-
-    display: block;
-
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.sidebar-user span {
-
-    display: block;
-
-    font-size: 8px;
-
-    color: #e5c5a6;
-}
-
-
 /* NAV */
 
 .sidebar-nav {
 
     flex: 1;
 
-    padding: 0 13px;
+    padding: 20px 13px 0;
 
     overflow: hidden;
 }
@@ -1071,31 +1016,285 @@ body {
     padding: 20px;
 }
 
-.page-card-header {
+.page-toolbar {
 
     display: flex;
 
+    justify-content: flex-end;
+
+    margin-bottom: 16px;
+}
+
+.page-empty {
+
+    text-align: center;
+
+    color: #ae9885;
+
+    font-size: 10px;
+
+    padding: 60px 0;
+}
+
+
+/* JARAK ANTAR BAGIAN HALAMAN (sama dengan gap stats-grid) */
+
+.section-gap {
+
+    margin-top: 13px;
+}
+
+
+/* TABLE TOOLBAR (pencarian + filter) */
+
+.table-toolbar {
+
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
 
-    justify-content: space-between;
+    gap: 8px;
 
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
-.page-card-header h3 {
+.search-input {
 
-    font-size: 16px;
+    flex: 1;
 
-    font-weight: 600;
-}
+    min-width: 180px;
+    max-width: 280px;
 
-.page-card-header p {
+    height: 29px;
 
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-family: inherit;
     font-size: 9px;
 
-    color: #9d8470;
+    padding: 0 11px;
 
-    margin-top: 3px;
+    outline: none;
+}
+
+.search-input::placeholder {
+
+    color: #b9a493;
+}
+
+.search-input:focus {
+
+    border-color: var(--brown);
+}
+
+.table-meta {
+
+    margin-left: auto;
+
+    font-size: 8px;
+
+    color: #a98e79;
+}
+
+
+/* BUTTON KECIL + STATUS INFO (dipakai di tabel) */
+
+.btn-sm {
+
+    padding: 6px 11px;
+
+    font-size: 8px;
+}
+
+.status.info {
+
+    background: var(--cream-dark);
+
+    color: var(--brown);
+}
+
+
+/* INPUT DI DALAM TABEL */
+
+.table-input {
+
+    width: 100%;
+
+    min-width: 150px;
+
+    height: 29px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 9px;
+
+    padding: 0 10px;
+
+    outline: none;
+}
+
+.table-input.qty {
+
+    width: 90px;
+
+    min-width: 0;
+}
+
+.table-input::placeholder {
+
+    color: #b9a493;
+}
+
+.table-input:focus {
+
+    border-color: var(--brown);
+}
+
+.table-input.has-error {
+
+    border-color: var(--red);
+}
+
+
+/* PENERIMAAN BARANG: FOOTER, INFO, PESAN, DIALOG */
+
+.receive-footer {
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+.receive-actions {
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.info-note {
+
+    flex: 1;
+
+    min-width: 220px;
+
+    padding: 10px 12px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 9px;
+
+    background: var(--cream-dark);
+
+    color: #775b46;
+
+    font-size: 9px;
+}
+
+.info-note.error {
+
+    border-color: #f0c8c6;
+
+    background: #f9e0df;
+
+    color: #b44141;
+}
+
+.flash-success {
+
+    margin-bottom: 13px;
+
+    padding: 11px 14px;
+
+    border: 1px solid #d6e0b8;
+
+    border-radius: 10px;
+
+    background: #edf2dd;
+
+    color: #687e34;
+
+    font-size: 9px;
+}
+
+.modal-backdrop {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 200;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 16px;
+
+    background: rgba(63, 42, 29, 0.45);
+}
+
+.modal-box {
+
+    width: 100%;
+    max-width: 380px;
+
+    padding: 22px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 15px;
+
+    background: var(--white);
+}
+
+.modal-box h4 {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--text);
+}
+
+.modal-box p {
+
+    margin-top: 8px;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+
+    color: #775b46;
+}
+
+.modal-actions {
+
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 18px;
 }
 
 
