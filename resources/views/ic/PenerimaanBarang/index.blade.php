@@ -4,49 +4,15 @@
 @section('description', 'Cocokkan barang yang datang dengan Surat Jalan dan konfirmasi penerimaan.')
 
 @php
-    // DEMO: data contoh untuk frontend. Nanti diganti data dari database (controller).
-    // status: dikirim (Dalam Pengiriman) | menunggu (Menunggu Pengecekan) | diterima
-    // sent = jumlah sesuai Surat Jalan, received = jumlah yang diterima IC (null jika belum diperiksa)
-    $shipments = [
-        [
-            'no' => '#SJ-018', 'date' => '14 Okt 2026', 'origin' => 'Distribution Center',
-            'status' => 'dikirim', 'itemCount' => 12, 'items' => [],
-        ],
-        [
-            'no' => '#SJ-016', 'date' => '13 Okt 2026', 'origin' => 'Distribution Center',
-            'status' => 'menunggu', 'itemCount' => 5, 'items' => [
-                ['name' => 'Fresh Milk',     'unit' => 'Liter', 'sent' => 20,  'received' => null, 'note' => ''],
-                ['name' => 'Sirup Vanilla',  'unit' => 'Botol', 'sent' => 10,  'received' => null, 'note' => ''],
-                ['name' => 'Sirup Hazelnut', 'unit' => 'Botol', 'sent' => 10,  'received' => null, 'note' => ''],
-                ['name' => 'Cup 16 oz',      'unit' => 'Pcs',   'sent' => 300, 'received' => null, 'note' => ''],
-                ['name' => 'Tutup Cup',      'unit' => 'Pcs',   'sent' => 300, 'received' => null, 'note' => ''],
-            ],
-        ],
-        [
-            'no' => '#SJ-015', 'date' => '11 Okt 2026', 'origin' => 'Distribution Center',
-            'status' => 'diterima', 'itemCount' => 3, 'items' => [
-                ['name' => 'Robusta Beans', 'unit' => 'Kg', 'sent' => 10, 'received' => 10, 'note' => ''],
-                ['name' => 'Bubuk Matcha',  'unit' => 'Kg', 'sent' => 5,  'received' => 5,  'note' => ''],
-                ['name' => 'Bubuk Cokelat', 'unit' => 'Kg', 'sent' => 8,  'received' => 8,  'note' => ''],
-            ],
-        ],
-        [
-            'no' => '#SJ-014', 'date' => '9 Okt 2026', 'origin' => 'Distribution Center',
-            'status' => 'diterima', 'itemCount' => 4, 'items' => [
-                ['name' => 'Fresh Milk',    'unit' => 'Liter', 'sent' => 20, 'received' => 18, 'note' => 'Kemasan bocor saat pengiriman'],
-                ['name' => 'Gula Pasir',    'unit' => 'Kg',    'sent' => 10, 'received' => 10, 'note' => ''],
-                ['name' => 'Arabica Beans', 'unit' => 'Kg',    'sent' => 12, 'received' => 12, 'note' => ''],
-                ['name' => 'Sirup Caramel', 'unit' => 'Botol', 'sent' => 6,  'received' => 6,  'note' => ''],
-            ],
-        ],
-        [
-            'no' => '#SJ-012', 'date' => '6 Okt 2026', 'origin' => 'Distribution Center',
-            'status' => 'diterima', 'itemCount' => 2, 'items' => [
-                ['name' => 'Cup 16 oz',  'unit' => 'Pcs', 'sent' => 200, 'received' => 200, 'note' => ''],
-                ['name' => 'Tutup Cup',  'unit' => 'Pcs', 'sent' => 200, 'received' => 200, 'note' => ''],
-            ],
-        ],
-    ];
+    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
+    // DC mengirim KEMASAN UTUH, jadi sent / received dihitung dalam kemasan (Botol, Kantong, Pack, Pcs).
+    // Saat dikonfirmasi, stok bertambah received x isi kemasan (dalam satuan terkecil ml / gr / Pcs).
+    $items = collect(config('demo.items'))
+        ->map(fn ($item, $id) => ['id' => $id] + $item)
+        ->keyBy('id')
+        ->all();
+
+    $shipments = config('demo.shipments');
 @endphp
 
 @section('content')
@@ -151,7 +117,7 @@
                             <tr>
                                 <td x-text="sj.no"></td>
                                 <td x-text="sj.date"></td>
-                                <td x-text="countOf(sj) + ' Item'"></td>
+                                <td x-text="sj.items.length + ' Item'"></td>
                                 <td>
                                     <span
                                         class="status"
@@ -238,7 +204,7 @@
                         <div>
                             <h3 x-text="editable ? 'Periksa Barang yang Diterima' : 'Rincian Barang Diterima'"></h3>
                             <p x-text="editable
-                                ? 'Cocokkan jumlah fisik dengan Surat Jalan, lalu ubah angka jika ada yang berbeda.'
+                                ? 'Hitung kemasan yang tiba, lalu ubah angka jika ada yang berbeda dari Surat Jalan.'
                                 : 'Penerimaan sudah dikonfirmasi dan tidak dapat diubah.'"></p>
                         </div>
                     </div>
@@ -259,34 +225,37 @@
 
                             <tbody>
 
-                                <template x-for="(item, index) in current.items" :key="item.name">
+                                <template x-for="(line, index) in current.items" :key="line.item">
                                     <tr>
                                         <td x-text="index + 1"></td>
-                                        <td x-text="item.name"></td>
-                                        <td x-text="format(item.sent) + ' ' + item.unit"></td>
+                                        <td x-text="itemOf(line).name"></td>
+                                        <td x-text="sentText(line)"></td>
 
-                                        <!-- DITERIMA -->
+                                        <!-- DITERIMA (kemasan utuh, bilangan bulat) -->
                                         <td>
                                             <template x-if="editable">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="any"
-                                                    class="table-input qty"
-                                                    :class="{ 'has-error': submitted && invalidQty(item) }"
-                                                    :aria-label="'Jumlah diterima ' + item.name"
-                                                    x-model.number="item.received"
-                                                >
+                                                <div class="form-row">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="1"
+                                                        class="table-input qty"
+                                                        :class="{ 'has-error': submitted && invalidQty(line) }"
+                                                        :aria-label="'Jumlah diterima ' + itemOf(line).name"
+                                                        x-model.number="line.received"
+                                                    >
+                                                    <span class="form-unit" x-text="itemOf(line).pack"></span>
+                                                </div>
                                             </template>
 
-                                            <span x-show="!editable" x-text="format(item.received) + ' ' + item.unit"></span>
+                                            <span x-show="!editable" x-text="format(line.received) + ' ' + itemOf(line).pack"></span>
                                         </td>
 
                                         <!-- SELISIH -->
                                         <td>
                                             <span
-                                                :class="{ 'danger-text': diff(item) !== 0 && diff(item) !== null }"
-                                                x-text="diff(item) === null ? '-' : (diff(item) > 0 ? '+' : '') + format(diff(item))"
+                                                :class="{ 'danger-text': diff(line) !== null && diff(line) !== 0 }"
+                                                x-text="diffText(line)"
                                             ></span>
                                         </td>
 
@@ -296,14 +265,14 @@
                                                 <input
                                                     type="text"
                                                     class="table-input"
-                                                    :class="{ 'has-error': submitted && noteMissing(item) }"
-                                                    :placeholder="needsNote(item) ? 'Wajib diisi (rusak, kurang, dll)' : '-'"
-                                                    :aria-label="'Catatan ' + item.name"
-                                                    x-model="item.note"
+                                                    :class="{ 'has-error': submitted && noteMissing(line) }"
+                                                    :placeholder="needsNote(line) ? 'Wajib diisi (rusak, kurang, dll)' : '-'"
+                                                    :aria-label="'Catatan ' + itemOf(line).name"
+                                                    x-model="line.note"
                                                 >
                                             </template>
 
-                                            <span x-show="!editable" x-text="item.note || '-'"></span>
+                                            <span x-show="!editable" x-text="line.note || '-'"></span>
                                         </td>
                                     </tr>
                                 </template>
@@ -321,8 +290,8 @@
                             class="info-note"
                             :class="{ 'error': submitted && hasErrors }"
                             x-text="submitted && hasErrors
-                                ? 'Periksa kembali: isi jumlah diterima, dan catatan untuk barang yang selisihnya tidak 0.'
-                                : 'Jika ada selisih (nilai tidak 0), kolom catatan wajib diisi.'"
+                                ? 'Periksa kembali: isi jumlah diterima (bilangan bulat), dan catatan untuk barang yang selisihnya tidak 0.'
+                                : 'DC mengirim kemasan utuh. Jika ada selisih (nilai tidak 0), kolom catatan wajib diisi.'"
                         ></p>
 
                         <div class="receive-actions">
@@ -347,13 +316,30 @@
 
     <div class="modal-backdrop" x-show="confirming" x-cloak @click.self="confirming = false">
 
-        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
 
             <h4 id="confirm-title">Konfirmasi Penerimaan Barang</h4>
 
             <p>
                 Setelah dikonfirmasi, stok cabang akan bertambah dan tidak dapat diubah lagi. Lanjutkan?
             </p>
+
+            <div class="summary-box">
+
+                <p class="summary-title">Perubahan stok cabang</p>
+
+                <template x-for="change in stockChanges" :key="change.item.id">
+                    <div class="summary-line">
+                        <span x-text="change.item.name"></span>
+                        <span x-text="display(change.item, change.before) + ' → ' + display(change.item, change.after)"></span>
+                    </div>
+                </template>
+
+                <div class="summary-line" x-show="stockChanges.length === 0">
+                    <span>Tidak ada barang yang diterima.</span>
+                </div>
+
+            </div>
 
             <div class="modal-actions">
                 <button type="button" class="outline-button btn-sm" @click="confirming = false">Batal</button>
@@ -370,12 +356,13 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari $shipments di atas. Nanti diganti data dari database,
+    // DEMO: data dari blok @php di atas. Nanti diganti data dari database,
     // dan confirmReceipt() diganti request ke backend (stok cabang bertambah di server).
     function receivingPage() {
 
         return {
 
+            items: @json($items),          // barang, kunci = id barang
             shipments: @json($shipments),
 
             view: 'list',          // 'list' | 'detail'
@@ -395,13 +382,62 @@
             },
 
 
-            /* ---------- DAFTAR ---------- */
+            /* ---------- FORMAT ---------- */
 
-            countOf(sj) {
+            format(value) {
 
-                return sj.items.length || sj.itemCount;
+                return new Intl.NumberFormat('id-ID').format(value);
             },
 
+
+            itemOf(line) {
+
+                return this.items[line.item];
+            },
+
+
+            // Ubah jumlah (satuan terkecil) menjadi tampilan per kemasan.
+            // 3430 ml (isi 700) => "4 Botol 630 ml"
+            display(item, amount) {
+
+                if (amount <= 0) {
+                    return '0 ' + item.pack;
+                }
+
+                if (item.size <= 1) {
+                    return this.format(amount) + ' ' + item.pack;
+                }
+
+                const packs = Math.floor(amount / item.size);
+                const rest  = Math.round((amount - packs * item.size) * 100) / 100;
+
+                if (packs === 0) {
+                    return this.format(rest) + ' ' + item.unit;
+                }
+
+                if (rest === 0) {
+                    return this.format(packs) + ' ' + item.pack;
+                }
+
+                return this.format(packs) + ' ' + item.pack + ' ' + this.format(rest) + ' ' + item.unit;
+            },
+
+
+            // "10 Botol (7.000 ml)" untuk barang berkemasan, "300 Pcs" untuk barang satuan
+            sentText(line) {
+
+                const item = this.itemOf(line);
+
+                if (item.size > 1) {
+                    return this.format(line.sent) + ' ' + item.pack
+                        + ' (' + this.format(line.sent * item.size) + ' ' + item.unit + ')';
+                }
+
+                return this.format(line.sent) + ' ' + item.pack;
+            },
+
+
+            /* ---------- DAFTAR ---------- */
 
             count(status) {
 
@@ -414,7 +450,7 @@
 
                 return this.shipments.filter(sj =>
                     sj.status === 'diterima'
-                    && sj.items.some(item => item.received !== item.sent)
+                    && sj.items.some(line => line.received !== line.sent)
                 ).length;
             },
 
@@ -439,9 +475,9 @@
 
                 // Default: jumlah diterima = jumlah dikirim (IC tinggal ubah jika berbeda)
                 if (this.current.status === 'menunggu') {
-                    this.current.items.forEach(item => {
-                        if (item.received === null) {
-                            item.received = item.sent;
+                    this.current.items.forEach(line => {
+                        if (line.received === null) {
+                            line.received = line.sent;
                         }
                     });
                 }
@@ -472,42 +508,81 @@
             },
 
 
-            invalidQty(item) {
+            // Kemasan utuh: harus bilangan bulat >= 0
+            invalidQty(line) {
 
-                return typeof item.received !== 'number' || item.received < 0;
+                return !Number.isInteger(line.received) || line.received < 0;
             },
 
 
             // Selisih = diterima - dikirim (null jika angka belum valid)
-            diff(item) {
+            diff(line) {
 
-                if (this.invalidQty(item)) {
+                if (this.invalidQty(line)) {
                     return null;
                 }
 
-                return Math.round((item.received - item.sent) * 100) / 100;
+                return line.received - line.sent;
             },
 
 
-            needsNote(item) {
+            diffText(line) {
 
-                const value = this.diff(item);
+                const value = this.diff(line);
+
+                if (value === null) {
+                    return '-';
+                }
+
+                if (value === 0) {
+                    return '0';
+                }
+
+                return (value > 0 ? '+' : '') + this.format(value) + ' ' + this.itemOf(line).pack;
+            },
+
+
+            needsNote(line) {
+
+                const value = this.diff(line);
 
                 return value !== null && value !== 0;
             },
 
 
-            noteMissing(item) {
+            noteMissing(line) {
 
-                return this.needsNote(item) && !item.note.trim();
+                return this.needsNote(line) && !line.note.trim();
             },
 
 
             get hasErrors() {
 
-                return this.current.items.some(item =>
-                    this.invalidQty(item) || this.noteMissing(item)
+                return this.current.items.some(line =>
+                    this.invalidQty(line) || this.noteMissing(line)
                 );
+            },
+
+
+            // Perubahan stok jika dikonfirmasi: stok + (diterima x isi kemasan)
+            get stockChanges() {
+
+                if (!this.current) {
+                    return [];
+                }
+
+                return this.current.items
+                    .filter(line => !this.invalidQty(line) && line.received > 0)
+                    .map(line => {
+
+                        const item = this.itemOf(line);
+
+                        return {
+                            item,
+                            before: item.stock,
+                            after: item.stock + line.received * item.size,
+                        };
+                    });
             },
 
 
@@ -527,6 +602,14 @@
 
                 const target = this.shipments.find(sj => sj.no === this.current.no);
 
+                // Tambah stok (di tampilan; di backend dilakukan server)
+                this.current.items.forEach(line => {
+                    if (!this.invalidQty(line)) {
+                        const item = this.itemOf(line);
+                        item.stock = item.stock + line.received * item.size;
+                    }
+                });
+
                 target.status = 'diterima';
                 target.items = JSON.parse(JSON.stringify(this.current.items));
 
@@ -535,12 +618,6 @@
                 setTimeout(() => { this.flash = ''; }, 5000);
 
                 this.back();
-            },
-
-
-            format(value) {
-
-                return new Intl.NumberFormat('id-ID').format(value);
             },
 
         };
