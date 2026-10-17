@@ -61,7 +61,7 @@
             <select id="alertStatus" class="select">
                 <option value="semua">Semua Status</option>
                 <option value="baru">Baru</option>
-                <option value="selesai">Sudah Ditindaklanjuti</option>
+                <option value="selesai">Sudah Dievaluasi</option>
             </select>
             <span class="table-meta" id="alertMeta"></span>
         </div>
@@ -103,8 +103,9 @@
     const ITEMS = @json(config('demo.items'));
     const MUT   = @json(config('demo.mutations'));
 
-    const DRAFT_NO = '#RS-024';
-    const MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const RESTOCK_URL = "{{ route('manager.restock') }}";
+    const DRAFT_NO    = '#RS-024';
+    const MONTHS      = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
@@ -127,13 +128,7 @@
     // kebutuhan = stok minimum - stok aktual, dibulatkan ke atas ke kemasan utuh
     const suggest = i => Math.max(1, Math.ceil((i.min - i.stock) / i.size));
 
-    const draftQty = {};
-    LOW.forEach(i => draftQty[i.key] = suggest(i));
-
-    let draftApproved = false;           // draft Instruksi Pengiriman sudah disetujui?
-    const wasteDone   = {};              // { idMutasi: 'dievaluasi' | 'direorder' }
-
-    let reorderQty = {};                 // qty reorder manual yang sedang dibuka
+    const wasteDone = {};                // { idMutasi: true } = sudah dievaluasi
 
     // waktu alert restock = waktu mutasi terakhir (stok terakhir berubah)
     const lastMut = [...MUT].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
@@ -151,6 +146,9 @@
     const lineValue = l => (Math.abs(l.amount) / ITEMS[l.item].size) * ITEMS[l.item].price;
     const wasteValue = m => m.lines.reduce((s, l) => s + lineValue(l), 0);
 
+    // alasan saja ("Salah Buat", "Rusak / Pecah"), tanpa nama menu
+    const wasteReason = m => m.ref.replace('Waste · ', '').split(' · ')[0];
+
     const wasteLines = m => m.lines.map(l =>
         `${ITEMS[l.item].name} ${Math.abs(l.amount).toLocaleString('id-ID')} ${ITEMS[l.item].unit}`).join(', ');
 
@@ -166,23 +164,20 @@
                 title: (i.stock <= 0 ? 'Stok Habis — ' : 'Stok Menipis — ') + i.name,
                 text: `Stok ${fmtStock(i.key, i.stock)} · minimum ${fmtStock(i.key, i.min)}`,
                 when: fmtDate(lastMut.date) + ' · ' + lastMut.time,
-                done: draftApproved,
-                doneLabel: 'Diteruskan ke DC',
+                done: false,
                 key: i.key,
             });
         });
 
         MUT.filter(m => m.type === 'waste').forEach(m => {
-            const reason = m.ref.replace('Waste · ', '');
             list.push({
                 id: 'w-' + m.id,
                 type: 'waste',
                 sort: m.date + ' ' + m.time,
-                title: 'Waste — ' + reason,
+                title: 'Waste — ' + wasteReason(m),
                 text: `${wasteLines(m)} · kerugian ${rp(wasteValue(m))}`,
                 when: fmtDate(m.date) + ' · ' + m.time,
                 done: !!wasteDone[m.id],
-                doneLabel: wasteDone[m.id] === 'direorder' ? 'Reorder ke DC' : 'Sudah Dievaluasi',
                 mut: m,
             });
         });
@@ -206,11 +201,8 @@
         $('stWaste').textContent      = waste.length + ' Laporan';
         $('stWasteSub').textContent   = waste.length ? rp(loss) + ' total kerugian' : 'Tidak ada waste baru';
 
-        const draftOpen = LOW.length && !draftApproved;
-        $('stDraft').textContent    = (draftOpen ? 1 : 0) + ' Draft';
-        $('stDraftSub').textContent = LOW.length
-            ? (draftApproved ? DRAFT_NO + ' sudah diteruskan ke DC' : DRAFT_NO + ' menunggu approval')
-            : 'Tidak ada draft';
+        $('stDraft').textContent    = (LOW.length ? 1 : 0) + ' Draft';
+        $('stDraftSub').textContent = LOW.length ? DRAFT_NO + ' menunggu approval' : 'Tidak ada draft';
     }
 
     function renderTable() {
@@ -238,7 +230,7 @@
                 <td>${a.text}</td>
                 <td class="col-nowrap">${a.when}</td>
                 <td>${a.done
-                    ? `<span class="status success">${a.doneLabel}</span>`
+                    ? '<span class="status success">Sudah Dievaluasi</span>'
                     : '<span class="status info">Baru</span>'}</td>
                 <td><button type="button" class="outline-button btn-sm" data-detail="${a.id}">Detail</button></td>
             </tr>`).join('');
@@ -258,7 +250,7 @@
     function showRestock(key) {
         const i    = ITEMS[key];
         const need = Math.max(0, i.min - i.stock);
-        const qty  = draftQty[key];
+        const qty  = suggest(i);
 
         openModal(`
             <div class="modal-box wide">
@@ -278,72 +270,13 @@
                     <div class="summary-line"><span><b>Estimasi biaya</b></span><span><b>${rp(qty * i.price)}</b></span></div>
                 </div>
 
-                <div class="info-note">${draftApproved
-                    ? `Draft ${DRAFT_NO} sudah disetujui dan diteruskan ke antrean DC.`
-                    : `Item ini termasuk dalam draft ${DRAFT_NO} (${LOW.length} item). Draft harus disetujui Manager sebelum diteruskan ke DC.`}</div>
+                <div class="info-note">Item ini termasuk dalam draft ${DRAFT_NO} (${LOW.length} item). Jumlah dapat disesuaikan dan draft disetujui di halaman Restock.</div>
 
                 <div class="modal-actions">
                     <button type="button" class="outline-button" data-close>Tutup</button>
-                    ${draftApproved ? '' : `<button type="button" class="primary-button" data-open-draft>Tinjau Draft</button>`}
+                    <button type="button" class="primary-button" data-go-restock>Buka di Restock</button>
                 </div>
             </div>`);
-    }
-
-    // ---- draft instruksi pengiriman (semua item) ----
-    const draftTotal = () => LOW.reduce((s, i) => s + (draftQty[i.key] || 0) * i.price, 0);
-    const draftCount = () => LOW.reduce((s, i) => s + (draftQty[i.key] || 0), 0);
-
-    function showDraft() {
-        openModal(`
-            <div class="modal-box wide" style="max-width:680px">
-                <h4>Draft Instruksi Pengiriman ${DRAFT_NO}</h4>
-                <p>Dibuat otomatis oleh sistem (stok minimum − stok aktual). Sesuaikan jumlah bila perlu, lalu setujui agar diteruskan ke DC.</p>
-
-                <div class="table-wrapper" style="margin-top:12px">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bahan</th>
-                                <th>Stok</th>
-                                <th>Minimum</th>
-                                <th>Jumlah Kirim</th>
-                                <th style="text-align:right">Estimasi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${LOW.map(i => `
-                            <tr>
-                                <td><strong>${i.name}</strong></td>
-                                <td>${fmtStock(i.key, i.stock)}</td>
-                                <td>${fmtStock(i.key, i.min)}</td>
-                                <td>
-                                    <div class="form-row">
-                                        <input type="number" min="0" step="1" class="table-input qty" data-qty="${i.key}" value="${draftQty[i.key]}">
-                                        <span class="form-unit">${i.pack}</span>
-                                    </div>
-                                </td>
-                                <td style="text-align:right" id="sub-${i.key}">${rp(draftQty[i.key] * i.price)}</td>
-                            </tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="summary-box">
-                    <div class="summary-line"><span><b>Total estimasi biaya</b></span><span><b id="draftTotal">${rp(draftTotal())}</b></span></div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="outline-button" data-close>Batal</button>
-                    <button type="button" class="primary-button" id="btnApproveDraft" ${draftCount() ? '' : 'disabled'}>Setujui &amp; Teruskan ke DC</button>
-                </div>
-            </div>`);
-    }
-
-    function approveDraft() {
-        draftApproved = true;
-        closeModal();
-        renderTable();
-        flash(`Draft ${DRAFT_NO} disetujui (${draftCount()} kemasan, ${rp(draftTotal())}) dan diteruskan ke antrean DC.`);
     }
 
     // ---- detail alert waste ----
@@ -351,8 +284,7 @@
         const m = MUT.find(x => x.id === Number(id));
         if (!m) return;
 
-        const reason = m.ref.replace('Waste · ', '');
-        const state  = wasteDone[m.id];
+        const done = !!wasteDone[m.id];
 
         const lines = m.lines.map(l => `
             <div class="summary-line">
@@ -362,7 +294,7 @@
 
         openModal(`
             <div class="modal-box wide">
-                <h4>Waste · ${reason}</h4>
+                <h4>Waste · ${wasteReason(m)}</h4>
                 <p>${fmtDate(m.date)} · ${m.time} · dicatat oleh Kepala Shift</p>
 
                 <div class="summary-box">
@@ -371,68 +303,15 @@
                     <div class="summary-line bad"><span><b>Total kerugian</b></span><span><b>${rp(wasteValue(m))}</b></span></div>
                 </div>
 
-                <div class="info-note">${state
-                    ? (state === 'direorder' ? 'Reorder manual sudah dikirim ke antrean DC.' : 'Alert ini sudah dievaluasi.')
-                    : 'Stok cabang sudah berkurang otomatis. Evaluasi dampaknya terhadap persediaan, lalu lakukan reorder manual ke DC bila dibutuhkan.'}</div>
+                <div class="info-note">${done
+                    ? 'Alert ini sudah dievaluasi.'
+                    : 'Stok cabang sudah berkurang otomatis. Evaluasi dampaknya terhadap persediaan dan kerugian cabang.'}</div>
 
                 <div class="modal-actions">
                     <button type="button" class="outline-button" data-close>Tutup</button>
-                    ${state ? '' : `
-                    <button type="button" class="outline-button" data-evaluate="${m.id}">Tandai Dievaluasi</button>
-                    <button type="button" class="primary-button" data-reorder="${m.id}">Reorder Manual</button>`}
+                    ${done ? '' : `<button type="button" class="primary-button" data-evaluate="${m.id}">Tandai Dievaluasi</button>`}
                 </div>
             </div>`);
-    }
-
-    // ---- reorder manual dari alert waste ----
-    function showReorder(id) {
-        const m = MUT.find(x => x.id === Number(id));
-        if (!m) return;
-
-        reorderQty = {};
-        m.lines.forEach(l => {
-            const i = ITEMS[l.item];
-            reorderQty[l.item] = Math.max(1, Math.ceil(Math.abs(l.amount) / i.size));
-        });
-
-        const total = () => Object.entries(reorderQty).reduce((s, [k, q]) => s + q * ITEMS[k].price, 0);
-
-        openModal(`
-            <div class="modal-box wide">
-                <h4>Reorder Manual ke DC</h4>
-                <p>Jumlah awal disesuaikan dengan barang yang terbuang. Ubah bila perlu.</p>
-
-                <div class="summary-box">
-                    ${m.lines.map(l => `
-                    <div class="form-field" style="margin-bottom:10px">
-                        <label class="form-label">${ITEMS[l.item].name}</label>
-                        <div class="form-row">
-                            <input type="number" min="0" step="1" class="form-input" data-reorder-qty="${l.item}" value="${reorderQty[l.item]}">
-                            <span class="form-unit">${ITEMS[l.item].pack}</span>
-                        </div>
-                    </div>`).join('')}
-                    <div class="summary-line"><span><b>Estimasi biaya</b></span><span><b id="reorderTotal">${rp(total())}</b></span></div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="outline-button" data-close>Batal</button>
-                    <button type="button" class="primary-button" id="btnSendReorder" data-wid="${m.id}">Kirim ke DC</button>
-                </div>
-            </div>`);
-    }
-
-    function sendReorder(id) {
-        const qty = Object.values(reorderQty).reduce((s, q) => s + q, 0);
-
-        if (qty <= 0) {
-            flash('Jumlah reorder belum diisi.');
-            return;
-        }
-
-        wasteDone[id] = 'direorder';
-        closeModal();
-        renderTable();
-        flash(`Reorder manual (${qty} kemasan) dikirim ke antrean DC.`);
     }
 
     // ---------- EVENT ----------
@@ -445,35 +324,20 @@
             return id.startsWith('r-') ? showRestock(id.slice(2)) : showWaste(id.slice(2));
         }
 
-        if (t.closest('[data-open-draft]')) return showDraft();
-        if (t.closest('[data-evaluate]'))   { wasteDone[t.closest('[data-evaluate]').dataset.evaluate] = 'dievaluasi'; closeModal(); renderTable(); return flash('Alert waste ditandai sudah dievaluasi.'); }
-        if (t.closest('[data-reorder]'))    return showReorder(t.closest('[data-reorder]').dataset.reorder);
+        if (t.closest('[data-go-restock]')) { window.location.href = RESTOCK_URL; return; }
+
+        if (t.closest('[data-evaluate]')) {
+            wasteDone[t.closest('[data-evaluate]').dataset.evaluate] = true;
+            closeModal();
+            renderTable();
+            return flash('Alert waste ditandai sudah dievaluasi.');
+        }
+
         if (t.closest('[data-close]') || t.id === 'modalBg') return closeModal();
-        if (t.id === 'btnApproveDraft')     return approveDraft();
-        if (t.id === 'btnSendReorder')      return sendReorder(t.dataset.wid);
     });
 
     document.addEventListener('input', e => {
-        const t = e.target;
-
-        if (t.id === 'alertSearch') { keyword = t.value; renderTable(); }
-
-        if (t.dataset.qty) {
-            const key = t.dataset.qty;
-            draftQty[key] = Math.max(0, parseInt(t.value, 10) || 0);
-
-            $('sub-' + key).textContent = rp(draftQty[key] * ITEMS[key].price);
-            $('draftTotal').textContent = rp(draftTotal());
-            $('btnApproveDraft').disabled = !draftCount();
-        }
-
-        if (t.dataset.reorderQty) {
-            const key = t.dataset.reorderQty;
-            reorderQty[key] = Math.max(0, parseInt(t.value, 10) || 0);
-
-            $('reorderTotal').textContent = rp(
-                Object.entries(reorderQty).reduce((s, [k, q]) => s + q * ITEMS[k].price, 0));
-        }
+        if (e.target.id === 'alertSearch') { keyword = e.target.value; renderTable(); }
     });
 
     document.addEventListener('change', e => {

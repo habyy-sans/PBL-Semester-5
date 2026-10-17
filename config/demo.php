@@ -4,19 +4,32 @@
 |--------------------------------------------------------------------------
 | DATA DEMO (sementara, sampai backend / database jadi)
 |--------------------------------------------------------------------------
-| Dibaca di halaman lewat config('demo.items'), config('demo.menus'), dst.
+| Dibaca di halaman lewat config('demo.items') dan config('demo.menus').
 | Nanti file ini diganti data dari database tanpa mengubah tampilan.
 |
 | items : barang / bahan di stok cabang
 |   pack  : nama kemasan (Botol, Kantong, Pack, Pcs ...)
 |   size  : isi tiap kemasan dalam satuan terkecil (700 = 700 ml per botol)
 |   unit  : satuan terkecil (ml / gr / Pcs)
-|   stock : stok cabang SAAT INI, dalam satuan terkecil
+|   (stok tiap store ada di 'stocks', dalam satuan terkecil)
 |           contoh: 3430 ml dengan isi 700 ml  =>  tampil "4 Botol 630 ml"
 |   min   : batas minimum stok, dalam satuan terkecil
 |   price : harga per 1 kemasan (Rp)
 |
-| shipments : Surat Jalan dari DC ke cabang. DC mengirim KEMASAN UTUH
+| default_store : store yang dipakai akun demo Kasir / IC / Manager
+|         (nanti dari akun yang login).
+| stores : daftar store. Tiap cabang maksimal 3 store; Manager, IC, dan Kasir
+|         terikat ke 1 store. DC dan Admin melihat semua store.
+| stocks : stok tiap store per barang, dalam satuan terkecil.
+|         Struktur: stocks[id store][id barang].
+| dc_stock : stok Distribution Center per barang, dalam KEMASAN
+|         (DC bekerja dengan kemasan utuh).
+| orders : pesanan restock yang sudah disetujui Manager, masuk antrean DC.
+|         status: baru | dikirim. Pesanan 'dikirim' memakai item dari
+|         Surat Jalan di 'shipment'; pesanan 'baru' memakai 'items'.
+|
+| shipments : Surat Jalan dari DC ke store ('store'), asal pesanan di 'order'.
+|         DC mengirim KEMASAN UTUH
 |         (Botol, Kantong, Pack, Pcs), jadi 'sent' dan 'received' dihitung
 |         dalam kemasan (bilangan bulat), bukan ml / gr. Saat IC mengonfirmasi,
 |         stok bertambah received x isi kemasan (satuan terkecil).
@@ -31,10 +44,6 @@
 | menus : menu kasir beserta resep (SOP). Setiap menu terjual, bahan di
 |         'recipe' berkurang sesuai jumlahnya. Key recipe = key di 'items',
 |         jumlah dalam satuan terkecil bahan itu.
-|   category : Kopi | Non-Kopi | Snack | Makanan Berat (tab di halaman Kasir)
-|   emoji    : ikon kartu menu di halaman Kasir
-|
-| branches : 5 cabang, masing-masing 3 store (data demo).
 */
 
 return [
@@ -44,159 +53,73 @@ return [
         'arabica-beans' => [
             'name' => 'Arabica Beans', 'category' => 'Bahan Baku',
             'pack' => 'Kantong', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 24000, 'min' => 10000, 'price' => 180000,
+            'min' => 10000, 'price' => 180000,
         ],
 
         'robusta-beans' => [
             'name' => 'Robusta Beans', 'category' => 'Bahan Baku',
             'pack' => 'Kantong', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 6000, 'min' => 8000, 'price' => 120000,
+            'min' => 8000, 'price' => 120000,
         ],
 
         'gula-cair' => [
             'name' => 'Gula Cair', 'category' => 'Bahan Baku',
             'pack' => 'Botol', 'size' => 1000, 'unit' => 'ml',
-            'stock' => 12600, 'min' => 5000, 'price' => 45000,
+            'min' => 5000, 'price' => 45000,
         ],
 
         'bubuk-matcha' => [
             'name' => 'Bubuk Matcha', 'category' => 'Bahan Baku',
             'pack' => 'Pack', 'size' => 500, 'unit' => 'gr',
-            'stock' => 0, 'min' => 1000, 'price' => 250000,
+            'min' => 1000, 'price' => 250000,
         ],
 
         'bubuk-cokelat' => [
             'name' => 'Bubuk Cokelat', 'category' => 'Bahan Baku',
             'pack' => 'Pack', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 3200, 'min' => 4000, 'price' => 140000,
+            'min' => 4000, 'price' => 140000,
         ],
 
         'fresh-milk' => [
             'name' => 'Fresh Milk', 'category' => 'Susu',
             'pack' => 'Botol', 'size' => 700, 'unit' => 'ml',
-            'stock' => 3430, 'min' => 7000, 'price' => 28000,
+            'min' => 7000, 'price' => 28000,
         ],
 
         'oat-milk' => [
             'name' => 'Oat Milk', 'category' => 'Susu',
             'pack' => 'Karton', 'size' => 1000, 'unit' => 'ml',
-            'stock' => 12000, 'min' => 6000, 'price' => 38000,
+            'min' => 6000, 'price' => 38000,
         ],
 
         'sirup-vanilla' => [
             'name' => 'Sirup Vanilla', 'category' => 'Sirup',
             'pack' => 'Botol', 'size' => 750, 'unit' => 'ml',
-            'stock' => 3150, 'min' => 6000, 'price' => 42500,
+            'min' => 6000, 'price' => 42500,
         ],
 
         'sirup-caramel' => [
             'name' => 'Sirup Caramel', 'category' => 'Sirup',
             'pack' => 'Botol', 'size' => 750, 'unit' => 'ml',
-            'stock' => 6600, 'min' => 4500, 'price' => 42500,
+            'min' => 4500, 'price' => 42500,
         ],
 
         'sirup-hazelnut' => [
             'name' => 'Sirup Hazelnut', 'category' => 'Sirup',
             'pack' => 'Botol', 'size' => 750, 'unit' => 'ml',
-            'stock' => 0, 'min' => 3750, 'price' => 42500,
+            'min' => 3750, 'price' => 42500,
         ],
 
         'cup-16oz' => [
             'name' => 'Cup 16 oz', 'category' => 'Kemasan',
             'pack' => 'Pcs', 'size' => 1, 'unit' => 'Pcs',
-            'stock' => 150, 'min' => 200, 'price' => 800,
+            'min' => 200, 'price' => 800,
         ],
 
         'tutup-cup' => [
             'name' => 'Tutup Cup', 'category' => 'Kemasan',
             'pack' => 'Pcs', 'size' => 1, 'unit' => 'Pcs',
-            'stock' => 180, 'min' => 200, 'price' => 300,
-        ],
-
-        // ---- bahan untuk menu makanan ----
-
-        'croissant' => [
-            'name' => 'Croissant Frozen', 'category' => 'Makanan',
-            'pack' => 'Box', 'size' => 12, 'unit' => 'Pcs',
-            'stock' => 30, 'min' => 12, 'price' => 96000,
-        ],
-
-        'kentang-beku' => [
-            'name' => 'Kentang Beku', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 2000, 'unit' => 'gr',
-            'stock' => 9000, 'min' => 4000, 'price' => 58000,
-        ],
-
-        'minyak-goreng' => [
-            'name' => 'Minyak Goreng', 'category' => 'Makanan',
-            'pack' => 'Jerigen', 'size' => 2000, 'unit' => 'ml',
-            'stock' => 7000, 'min' => 3000, 'price' => 36000,
-        ],
-
-        'roti-tawar' => [
-            'name' => 'Roti Tawar', 'category' => 'Makanan',
-            'pack' => 'Loaf', 'size' => 10, 'unit' => 'Lembar',
-            'stock' => 60, 'min' => 30, 'price' => 15000,
-        ],
-
-        'mentega' => [
-            'name' => 'Mentega', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 500, 'unit' => 'gr',
-            'stock' => 1500, 'min' => 500, 'price' => 38000,
-        ],
-
-        'selai-cokelat' => [
-            'name' => 'Selai Cokelat', 'category' => 'Makanan',
-            'pack' => 'Pot', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 2500, 'min' => 1000, 'price' => 65000,
-        ],
-
-        'keju-slice' => [
-            'name' => 'Keju Slice', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 20, 'unit' => 'Lembar',
-            'stock' => 45, 'min' => 20, 'price' => 32000,
-        ],
-
-        'beras' => [
-            'name' => 'Beras', 'category' => 'Makanan',
-            'pack' => 'Karung', 'size' => 5000, 'unit' => 'gr',
-            'stock' => 20000, 'min' => 8000, 'price' => 70000,
-        ],
-
-        'telur' => [
-            'name' => 'Telur Ayam', 'category' => 'Makanan',
-            'pack' => 'Tray', 'size' => 30, 'unit' => 'Pcs',
-            'stock' => 60, 'min' => 30, 'price' => 55000,
-        ],
-
-        'bumbu-nasgor' => [
-            'name' => 'Bumbu Nasi Goreng', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 500, 'unit' => 'gr',
-            'stock' => 1800, 'min' => 500, 'price' => 45000,
-        ],
-
-        'mie-instan' => [
-            'name' => 'Mie Goreng', 'category' => 'Makanan',
-            'pack' => 'Dus', 'size' => 40, 'unit' => 'Pcs',
-            'stock' => 80, 'min' => 40, 'price' => 110000,
-        ],
-
-        'ayam-fillet' => [
-            'name' => 'Ayam Fillet', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 5000, 'min' => 2000, 'price' => 48000,
-        ],
-
-        'tepung-panir' => [
-            'name' => 'Tepung Panir', 'category' => 'Makanan',
-            'pack' => 'Pack', 'size' => 1000, 'unit' => 'gr',
-            'stock' => 3000, 'min' => 1500, 'price' => 22000,
-        ],
-
-        'pisang' => [
-            'name' => 'Pisang Kepok', 'category' => 'Makanan',
-            'pack' => 'Sisir', 'size' => 12, 'unit' => 'Pcs',
-            'stock' => 36, 'min' => 12, 'price' => 25000,
+            'min' => 200, 'price' => 300,
         ],
 
     ],
@@ -204,20 +127,15 @@ return [
 
     'menus' => [
 
-        // ================= KOPI =================
-
-        'espresso' => [
-            'name' => 'Espresso', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 15000,
-            'recipe' => ['arabica-beans' => 18],
-        ],
-
         'americano' => [
-            'name' => 'Americano', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 18000,
-            'recipe' => ['arabica-beans' => 18],
+            'name' => 'Americano', 'price' => 18000,
+            'recipe' => [
+                'arabica-beans' => 18,
+            ],
         ],
 
         'caffe-latte' => [
-            'name' => 'Caffe Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 22000,
+            'name' => 'Caffe Latte', 'price' => 22000,
             'recipe' => [
                 'gula-cair'     => 40,
                 'fresh-milk'    => 70,
@@ -225,72 +143,8 @@ return [
             ],
         ],
 
-        'cappuccino' => [
-            'name' => 'Cappuccino', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 22000,
-            'recipe' => [
-                'arabica-beans' => 18,
-                'fresh-milk'    => 120,
-            ],
-        ],
-
-        'caramel-macchiato' => [
-            'name' => 'Caramel Macchiato', 'category' => 'Kopi', 'emoji' => '🍮', 'price' => 26000,
-            'recipe' => [
-                'arabica-beans' => 18,
-                'fresh-milk'    => 150,
-                'sirup-caramel' => 20,
-            ],
-        ],
-
-        'vanilla-latte' => [
-            'name' => 'Vanilla Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 25000,
-            'recipe' => [
-                'arabica-beans' => 18,
-                'fresh-milk'    => 150,
-                'sirup-vanilla' => 20,
-            ],
-        ],
-
-        'hazelnut-latte' => [
-            'name' => 'Hazelnut Latte', 'category' => 'Kopi', 'emoji' => '🌰', 'price' => 25000,
-            'recipe' => [
-                'arabica-beans'  => 18,
-                'fresh-milk'     => 150,
-                'sirup-hazelnut' => 20,
-            ],
-        ],
-
-        'mocha' => [
-            'name' => 'Mocha', 'category' => 'Kopi', 'emoji' => '🍫', 'price' => 25000,
-            'recipe' => [
-                'arabica-beans' => 18,
-                'bubuk-cokelat' => 20,
-                'fresh-milk'    => 150,
-            ],
-        ],
-
-        'oat-milk-latte' => [
-            'name' => 'Oat Milk Latte', 'category' => 'Kopi', 'emoji' => '🌾', 'price' => 28000,
-            'recipe' => [
-                'arabica-beans' => 18,
-                'oat-milk'      => 180,
-                'gula-cair'     => 15,
-            ],
-        ],
-
-        'es-kopi-susu' => [
-            'name' => 'Es Kopi Susu', 'category' => 'Kopi', 'emoji' => '🧋', 'price' => 20000,
-            'recipe' => [
-                'robusta-beans' => 18,
-                'fresh-milk'    => 100,
-                'gula-cair'     => 20,
-            ],
-        ],
-
-        // ================= NON-KOPI =================
-
         'chocolate' => [
-            'name' => 'Chocolate', 'category' => 'Non-Kopi', 'emoji' => '🍫', 'price' => 20000,
+            'name' => 'Chocolate', 'price' => 20000,
             'recipe' => [
                 'bubuk-cokelat' => 25,
                 'fresh-milk'    => 150,
@@ -299,7 +153,7 @@ return [
         ],
 
         'matcha' => [
-            'name' => 'Matcha', 'category' => 'Non-Kopi', 'emoji' => '🍵', 'price' => 23000,
+            'name' => 'Matcha', 'price' => 23000,
             'recipe' => [
                 'bubuk-matcha'  => 5,
                 'fresh-milk'    => 150,
@@ -307,147 +161,112 @@ return [
             ],
         ],
 
-        // ================= SNACK =================
-
-        'croissant' => [
-            'name' => 'Croissant Butter', 'category' => 'Snack', 'emoji' => '🥐', 'price' => 22000,
-            'recipe' => ['croissant' => 1],
-        ],
-
-        'french-fries' => [
-            'name' => 'French Fries', 'category' => 'Snack', 'emoji' => '🍟', 'price' => 20000,
-            'recipe' => [
-                'kentang-beku'  => 150,
-                'minyak-goreng' => 40,
-            ],
-        ],
-
-        'roti-bakar-cokelat' => [
-            'name' => 'Roti Bakar Cokelat', 'category' => 'Snack', 'emoji' => '🍞', 'price' => 18000,
-            'recipe' => [
-                'roti-tawar'    => 2,
-                'mentega'       => 10,
-                'selai-cokelat' => 30,
-            ],
-        ],
-
-        'roti-bakar-keju' => [
-            'name' => 'Roti Bakar Keju', 'category' => 'Snack', 'emoji' => '🧀', 'price' => 20000,
-            'recipe' => [
-                'roti-tawar' => 2,
-                'mentega'    => 10,
-                'keju-slice' => 2,
-            ],
-        ],
-
-        'pisang-goreng-keju' => [
-            'name' => 'Pisang Goreng Keju', 'category' => 'Snack', 'emoji' => '🍌', 'price' => 18000,
-            'recipe' => [
-                'pisang'        => 2,
-                'tepung-panir'  => 40,
-                'keju-slice'    => 1,
-                'minyak-goreng' => 60,
-            ],
-        ],
-
-        // ================= MAKANAN BERAT =================
-
-        'nasi-goreng-kampung' => [
-            'name' => 'Nasi Goreng Kampung', 'category' => 'Makanan Berat', 'emoji' => '🍳', 'price' => 28000,
-            'recipe' => [
-                'beras'         => 90,
-                'telur'         => 1,
-                'minyak-goreng' => 20,
-                'bumbu-nasgor'  => 15,
-            ],
-        ],
-
-        'mie-goreng' => [
-            'name' => 'Mie Goreng Spesial', 'category' => 'Makanan Berat', 'emoji' => '🍜', 'price' => 22000,
-            'recipe' => [
-                'mie-instan'    => 1,
-                'telur'         => 1,
-                'minyak-goreng' => 15,
-            ],
-        ],
-
-        'chicken-katsu-rice' => [
-            'name' => 'Chicken Katsu Rice', 'category' => 'Makanan Berat', 'emoji' => '🍛', 'price' => 32000,
-            'recipe' => [
-                'beras'         => 90,
-                'ayam-fillet'   => 120,
-                'tepung-panir'  => 40,
-                'minyak-goreng' => 80,
-            ],
-        ],
-
     ],
 
 
     'shipments' => [
-
         [
-            'no' => '#SJ-018', 'date' => '14 Okt 2026', 'origin' => 'Distribution Center',
+            'no' => '#SJ-018',
+            'date' => '14 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-1',
+            'order' => '#RS-024',
             'status' => 'dikirim',
             'items' => [
-                ['item' => 'arabica-beans',  'sent' => 5,   'received' => null, 'note' => ''],
-                ['item' => 'robusta-beans',  'sent' => 5,   'received' => null, 'note' => ''],
-                ['item' => 'gula-cair',      'sent' => 4,   'received' => null, 'note' => ''],
-                ['item' => 'bubuk-matcha',   'sent' => 3,   'received' => null, 'note' => ''],
-                ['item' => 'bubuk-cokelat',  'sent' => 4,   'received' => null, 'note' => ''],
-                ['item' => 'fresh-milk',     'sent' => 12,  'received' => null, 'note' => ''],
-                ['item' => 'oat-milk',       'sent' => 6,   'received' => null, 'note' => ''],
-                ['item' => 'sirup-vanilla',  'sent' => 4,   'received' => null, 'note' => ''],
-                ['item' => 'sirup-caramel',  'sent' => 4,   'received' => null, 'note' => ''],
-                ['item' => 'sirup-hazelnut', 'sent' => 4,   'received' => null, 'note' => ''],
-                ['item' => 'cup-16oz',       'sent' => 400, 'received' => null, 'note' => ''],
-                ['item' => 'tutup-cup',      'sent' => 400, 'received' => null, 'note' => ''],
+                ['item' => 'arabica-beans', 'sent' => 5, 'received' => null, 'note' => ''],
+                ['item' => 'robusta-beans', 'sent' => 5, 'received' => null, 'note' => ''],
+                ['item' => 'gula-cair', 'sent' => 4, 'received' => null, 'note' => ''],
+                ['item' => 'bubuk-matcha', 'sent' => 3, 'received' => null, 'note' => ''],
+                ['item' => 'bubuk-cokelat', 'sent' => 4, 'received' => null, 'note' => ''],
+                ['item' => 'fresh-milk', 'sent' => 12, 'received' => null, 'note' => ''],
+                ['item' => 'oat-milk', 'sent' => 6, 'received' => null, 'note' => ''],
+                ['item' => 'sirup-vanilla', 'sent' => 4, 'received' => null, 'note' => ''],
+                ['item' => 'sirup-caramel', 'sent' => 4, 'received' => null, 'note' => ''],
+                ['item' => 'sirup-hazelnut', 'sent' => 4, 'received' => null, 'note' => ''],
+                ['item' => 'cup-16oz', 'sent' => 400, 'received' => null, 'note' => ''],
+                ['item' => 'tutup-cup', 'sent' => 400, 'received' => null, 'note' => ''],
             ],
         ],
-
         [
-            'no' => '#SJ-016', 'date' => '13 Okt 2026', 'origin' => 'Distribution Center',
+            'no' => '#SJ-017',
+            'date' => '13 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-3',
+            'order' => '#RS-022',
+            'status' => 'diterima',
+            'items' => [
+                ['item' => 'oat-milk', 'sent' => 6, 'received' => 6, 'note' => ''],
+                ['item' => 'sirup-caramel', 'sent' => 4, 'received' => 4, 'note' => ''],
+            ],
+        ],
+        [
+            'no' => '#SJ-016',
+            'date' => '13 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-1',
+            'order' => '#RS-023',
             'status' => 'menunggu',
             'items' => [
-                ['item' => 'fresh-milk',     'sent' => 10,  'received' => null, 'note' => ''],
-                ['item' => 'sirup-vanilla',  'sent' => 6,   'received' => null, 'note' => ''],
-                ['item' => 'sirup-hazelnut', 'sent' => 6,   'received' => null, 'note' => ''],
-                ['item' => 'cup-16oz',       'sent' => 300, 'received' => null, 'note' => ''],
-                ['item' => 'tutup-cup',      'sent' => 300, 'received' => null, 'note' => ''],
+                ['item' => 'fresh-milk', 'sent' => 10, 'received' => null, 'note' => ''],
+                ['item' => 'sirup-vanilla', 'sent' => 6, 'received' => null, 'note' => ''],
+                ['item' => 'sirup-hazelnut', 'sent' => 6, 'received' => null, 'note' => ''],
+                ['item' => 'cup-16oz', 'sent' => 300, 'received' => null, 'note' => ''],
+                ['item' => 'tutup-cup', 'sent' => 300, 'received' => null, 'note' => ''],
             ],
         ],
-
         [
-            'no' => '#SJ-015', 'date' => '11 Okt 2026', 'origin' => 'Distribution Center',
+            'no' => '#SJ-015',
+            'date' => '11 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-1',
+            'order' => '#RS-021',
             'status' => 'diterima',
             'items' => [
                 ['item' => 'robusta-beans', 'sent' => 10, 'received' => 10, 'note' => ''],
-                ['item' => 'bubuk-matcha',  'sent' => 4,  'received' => 4,  'note' => ''],
-                ['item' => 'bubuk-cokelat', 'sent' => 6,  'received' => 6,  'note' => ''],
+                ['item' => 'bubuk-matcha', 'sent' => 4, 'received' => 4, 'note' => ''],
+                ['item' => 'bubuk-cokelat', 'sent' => 6, 'received' => 6, 'note' => ''],
             ],
         ],
-
         [
-            'no' => '#SJ-014', 'date' => '9 Okt 2026', 'origin' => 'Distribution Center',
+            'no' => '#SJ-014',
+            'date' => '9 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-1',
+            'order' => '#RS-020',
             'status' => 'diterima',
             'items' => [
-                ['item' => 'fresh-milk',    'sent' => 20, 'received' => 19, 'note' => 'Kemasan bocor saat pengiriman'],
-                ['item' => 'gula-cair',     'sent' => 6,  'received' => 6,  'note' => ''],
+                ['item' => 'fresh-milk', 'sent' => 20, 'received' => 19, 'note' => 'Kemasan bocor saat pengiriman'],
+                ['item' => 'gula-cair', 'sent' => 6, 'received' => 6, 'note' => ''],
                 ['item' => 'arabica-beans', 'sent' => 10, 'received' => 10, 'note' => ''],
-                ['item' => 'sirup-caramel', 'sent' => 4,  'received' => 4,  'note' => ''],
+                ['item' => 'sirup-caramel', 'sent' => 4, 'received' => 4, 'note' => ''],
             ],
         ],
-
         [
-            'no' => '#SJ-012', 'date' => '6 Okt 2026', 'origin' => 'Distribution Center',
+            'no' => '#SJ-013',
+            'date' => '7 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-2',
+            'order' => '#RS-019',
             'status' => 'diterima',
             'items' => [
-                ['item' => 'cup-16oz',  'sent' => 200, 'received' => 200, 'note' => ''],
+                ['item' => 'fresh-milk', 'sent' => 10, 'received' => 10, 'note' => ''],
+                ['item' => 'cup-16oz', 'sent' => 200, 'received' => 200, 'note' => ''],
+            ],
+        ],
+        [
+            'no' => '#SJ-012',
+            'date' => '6 Okt 2026',
+            'origin' => 'Distribution Center',
+            'store' => 'malang-1',
+            'order' => '#RS-018',
+            'status' => 'diterima',
+            'items' => [
+                ['item' => 'cup-16oz', 'sent' => 200, 'received' => 200, 'note' => ''],
                 ['item' => 'tutup-cup', 'sent' => 200, 'received' => 200, 'note' => ''],
             ],
         ],
-
     ],
+
 
     'mutations' => [
         [
@@ -706,12 +525,104 @@ return [
 
     ],
 
-    'branches' => [
-        'malang'   => ['name' => 'Cabang Malang',   'stores' => ['Store Dinoyo', 'Store Tlogomas', 'Store Soekarno-Hatta']],
-        'surabaya' => ['name' => 'Cabang Surabaya', 'stores' => ['Store Tunjungan', 'Store Gubeng', 'Store Rungkut']],
-        'jakarta'  => ['name' => 'Cabang Jakarta',  'stores' => ['Store Kemang', 'Store Sudirman', 'Store Kelapa Gading']],
-        'bandung'  => ['name' => 'Cabang Bandung',  'stores' => ['Store Dago', 'Store Braga', 'Store Buah Batu']],
-        'jogja'    => ['name' => 'Cabang Jogja',    'stores' => ['Store Malioboro', 'Store Prawirotaman', 'Store Seturan']],
+    'default_store' => 'malang-1',
+
+    'stores' => [
+        'malang-1' => ['name' => 'Malang · Store 1', 'cabang' => 'Malang'],
+        'malang-2' => ['name' => 'Malang · Store 2', 'cabang' => 'Malang'],
+        'malang-3' => ['name' => 'Malang · Store 3', 'cabang' => 'Malang'],
+    ],
+
+    'stocks' => [
+        'malang-1' => ['arabica-beans' => 24000, 'robusta-beans' => 6000, 'gula-cair' => 12600, 'bubuk-matcha' => 0, 'bubuk-cokelat' => 3200, 'fresh-milk' => 3430, 'oat-milk' => 12000, 'sirup-vanilla' => 3150, 'sirup-caramel' => 6600, 'sirup-hazelnut' => 0, 'cup-16oz' => 150, 'tutup-cup' => 180],
+        'malang-2' => ['arabica-beans' => 15000, 'robusta-beans' => 9500, 'gula-cair' => 8000, 'bubuk-matcha' => 1500, 'bubuk-cokelat' => 5200, 'fresh-milk' => 2100, 'oat-milk' => 7000, 'sirup-vanilla' => 1500, 'sirup-caramel' => 5200, 'sirup-hazelnut' => 4500, 'cup-16oz' => 80, 'tutup-cup' => 450],
+        'malang-3' => ['arabica-beans' => 2000, 'robusta-beans' => 11000, 'gula-cair' => 1500, 'bubuk-matcha' => 0, 'bubuk-cokelat' => 6500, 'fresh-milk' => 8400, 'oat-milk' => 6500, 'sirup-vanilla' => 6800, 'sirup-caramel' => 4800, 'sirup-hazelnut' => 3900, 'cup-16oz' => 520, 'tutup-cup' => 60],
+    ],
+
+    'dc_stock' => ['arabica-beans' => 60, 'robusta-beans' => 50, 'gula-cair' => 40, 'bubuk-matcha' => 30, 'bubuk-cokelat' => 35, 'fresh-milk' => 120, 'oat-milk' => 45, 'sirup-vanilla' => 30, 'sirup-caramel' => 28, 'sirup-hazelnut' => 25, 'cup-16oz' => 5000, 'tutup-cup' => 5000],
+
+    'orders' => [
+        [
+            'no' => '#RS-026',
+            'date' => '14 Okt 2026',
+            'store' => 'malang-3',
+            'status' => 'baru',
+            'shipment' => null,
+            'items' => [
+                ['item' => 'arabica-beans', 'qty' => 4],
+                ['item' => 'gula-cair', 'qty' => 3],
+                ['item' => 'bubuk-matcha', 'qty' => 2],
+                ['item' => 'tutup-cup', 'qty' => 300],
+            ],
+        ],
+        [
+            'no' => '#RS-025',
+            'date' => '14 Okt 2026',
+            'store' => 'malang-2',
+            'status' => 'baru',
+            'shipment' => null,
+            'items' => [
+                ['item' => 'fresh-milk', 'qty' => 8],
+                ['item' => 'sirup-vanilla', 'qty' => 4],
+                ['item' => 'cup-16oz', 'qty' => 300],
+            ],
+        ],
+        [
+            'no' => '#RS-024',
+            'date' => '13 Okt 2026',
+            'store' => 'malang-1',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-018',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-023',
+            'date' => '12 Okt 2026',
+            'store' => 'malang-1',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-016',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-022',
+            'date' => '12 Okt 2026',
+            'store' => 'malang-3',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-017',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-021',
+            'date' => '10 Okt 2026',
+            'store' => 'malang-1',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-015',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-020',
+            'date' => '8 Okt 2026',
+            'store' => 'malang-1',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-014',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-019',
+            'date' => '6 Okt 2026',
+            'store' => 'malang-2',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-013',
+            'items' => [],
+        ],
+        [
+            'no' => '#RS-018',
+            'date' => '5 Okt 2026',
+            'store' => 'malang-1',
+            'status' => 'dikirim',
+            'shipment' => '#SJ-012',
+            'items' => [],
+        ],
     ],
 
 ];

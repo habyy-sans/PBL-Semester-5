@@ -16,7 +16,7 @@
 
 @section('content')
 
-<section class="page active" x-data="mutationPage()">
+<section class="page active" x-data="mutationPage()" @keydown.escape.window="detail = null">
 
     <div class="page-card">
 
@@ -56,31 +56,28 @@
                         <th>Jenis</th>
                         <th>Referensi</th>
                         <th>Barang</th>
-                        <th>Jumlah</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
 
-                <!-- satu <tbody> per catatan; barang yang berubah ditulis berurutan di bawahnya -->
-                <template x-for="entry in filtered" :key="entry.id">
-                    <tbody>
+                <tbody>
 
-                        <template x-for="(line, index) in entry.lines" :key="line.item">
-                            <tr>
-                                <td x-text="index === 0 ? dateText(entry.date) + ' ' + entry.time : ''"></td>
-                                <td x-text="index === 0 ? types[entry.type] : ''"></td>
-                                <td x-text="index === 0 ? entry.ref : ''"></td>
-                                <td x-text="itemOf(line).name"></td>
-                                <td x-text="amountText(entry.type, line)"></td>
-                            </tr>
-                        </template>
+                    <template x-for="entry in filtered" :key="entry.id">
+                        <tr>
+                            <td x-text="dateText(entry.date) + ' ' + entry.time"></td>
+                            <td x-text="types[entry.type]"></td>
+                            <td x-text="entry.ref"></td>
+                            <td x-text="entry.lines.length + ' Barang'"></td>
+                            <td>
+                                <button type="button" class="outline-button" @click="detail = entry">Lihat Detail</button>
+                            </td>
+                        </tr>
+                    </template>
 
-                    </tbody>
-                </template>
-
-                <tbody x-show="filtered.length === 0" x-cloak>
-                    <tr>
+                    <tr x-show="filtered.length === 0" x-cloak>
                         <td colspan="5" class="page-empty">Tidak ada mutasi yang cocok dengan pencarian.</td>
                     </tr>
+
                 </tbody>
 
             </table>
@@ -89,6 +86,61 @@
         <p class="info-note">
             Penjualan digabung per menu per hari. Rincian tiap transaksi ada di Riwayat Transaksi (Kasir).
         </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         DIALOG DETAIL MUTASI
+    ====================================================== -->
+
+    <div class="modal-backdrop" x-show="detail" x-cloak @click.self="detail = null">
+
+        <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="mutation-detail-title">
+
+            <template x-if="detail">
+
+                <div>
+
+                    <h4 id="mutation-detail-title">Detail Mutasi Stok</h4>
+                    <p x-text="dateText(detail.date) + ' ' + detail.time"></p>
+
+                    <div class="summary-box">
+
+                        <div class="summary-line">
+                            <span>Jenis</span>
+                            <span x-text="types[detail.type]"></span>
+                        </div>
+
+                        <div class="summary-line">
+                            <span>Referensi</span>
+                            <span x-text="detail.ref"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="summary-box">
+
+                        <p class="summary-title" x-text="'Barang yang berubah (' + detail.lines.length + ')'"></p>
+
+                        <template x-for="line in detail.lines" :key="line.item">
+                            <div class="summary-line">
+                                <span x-text="itemOf(line).name"></span>
+                                <span x-text="amountText(detail.type, line)"></span>
+                            </div>
+                        </template>
+
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="outline-button btn-sm" @click="detail = null">Tutup</button>
+                    </div>
+
+                </div>
+
+            </template>
+
+        </div>
 
     </div>
 
@@ -112,6 +164,8 @@
             type: '',
             from: '',
             to: '',
+
+            detail: null,                  // catatan yang sedang dibuka di dialog
 
             types: {
                 masuk:  'Stok Masuk',
@@ -206,35 +260,22 @@
             },
 
 
-            // Pencarian nama barang: tampilkan hanya baris barang itu di tiap catatan.
-            // Pencarian nama menu / referensi: tampilkan semua barang di catatan itu.
+            // Pencarian cocok jika nama menu / referensi cocok,
+            // atau ada barang di dalam catatan itu yang namanya cocok.
             get filtered() {
 
                 const keyword = this.search.trim().toLowerCase();
 
-                return this.sorted
-                    .filter(entry =>
-                        (!this.type || entry.type === this.type)
-                        && (!this.from || entry.date >= this.from)
-                        && (!this.to || entry.date <= this.to)
+                return this.sorted.filter(entry =>
+                    (!this.type || entry.type === this.type)
+                    && (!this.from || entry.date >= this.from)
+                    && (!this.to || entry.date <= this.to)
+                    && (
+                        !keyword
+                        || entry.ref.toLowerCase().includes(keyword)
+                        || entry.lines.some(line => this.itemOf(line).name.toLowerCase().includes(keyword))
                     )
-                    .map(entry => {
-
-                        if (!keyword) {
-                            return entry;
-                        }
-
-                        const matched = entry.lines.filter(line =>
-                            this.itemOf(line).name.toLowerCase().includes(keyword)
-                        );
-
-                        if (matched.length > 0) {
-                            return { ...entry, lines: matched };
-                        }
-
-                        return entry.ref.toLowerCase().includes(keyword) ? entry : null;
-                    })
-                    .filter(entry => entry !== null);
+                );
             },
 
         };

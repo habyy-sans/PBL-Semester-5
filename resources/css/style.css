@@ -1527,6 +1527,110 @@ textarea.form-input {
 }
 
 
+/* FILTER TANGGAL + CATATAN DI BAWAH TABEL */
+
+.filter-label {
+
+    font-size: 9px;
+
+    color: #a98e79;
+}
+
+.date-input {
+
+    width: 128px;
+
+    height: 29px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 9px;
+
+    padding: 0 8px;
+
+    outline: none;
+}
+
+.date-input:focus {
+
+    border-color: var(--brown);
+}
+
+.page-card > .info-note {
+
+    margin-top: 14px;
+}
+
+
+/* CHECKBOX, TOMBOL NONAKTIF, DOKUMEN SURAT JALAN */
+
+.check-input {
+
+    width: 14px;
+    height: 14px;
+
+    accent-color: var(--brown);
+
+    cursor: pointer;
+}
+
+.primary-button:disabled {
+
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+.doc-sign {
+
+    display: flex;
+
+    gap: 24px;
+
+    margin-top: 36px;
+}
+
+.doc-sign div {
+
+    flex: 1;
+
+    padding-top: 8px;
+
+    border-top: 1px dashed var(--border);
+
+    text-align: center;
+
+    font-size: 9px;
+
+    color: #775b46;
+}
+
+@media print {
+
+    .sidebar,
+    .top-header,
+    .no-print,
+    .flash-success {
+
+        display: none !important;
+    }
+
+    .main-content {
+
+        margin-left: 0 !important;
+
+        width: 100% !important;
+    }
+}
+
+
 /* TABLE */
 
 .table-wrapper {

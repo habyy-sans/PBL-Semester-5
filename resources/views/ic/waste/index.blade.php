@@ -6,8 +6,11 @@
 @php
     // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
     // stock dan size disimpan dalam satuan terkecil (ml / gr / Pcs), harga per 1 kemasan.
+    // Stok diambil dari store default (config demo.default_store); nanti dari akun yang login.
+    $stocks = config('demo.stocks.' . config('demo.default_store'));
+
     $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
+        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
         ->values()
         ->all();
 
@@ -174,8 +177,8 @@
                     <span class="form-label">Jenis Waste</span>
 
                     <div class="segmented">
-                        <button type="button" :class="{ 'active': form.type === 'bahan' }" @click="setType('bahan')">Bahan / Barang</button>
-                        <button type="button" :class="{ 'active': form.type === 'menu' }" @click="setType('menu')">Menu (salah buat)</button>
+                        <button type="button" :class="{ 'active': form.type === 'bahan' }" @click="setType('bahan')">Barang</button>
+                        <button type="button" :class="{ 'active': form.type === 'menu' }" @click="setType('menu')">Menu </button>
                     </div>
                 </div>
 
