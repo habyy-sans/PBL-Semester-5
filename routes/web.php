@@ -86,17 +86,9 @@ Route::prefix('dc')->name('dc.')->group(function () use ($soon) {
 
 Route::prefix('admin')->name('admin.')->group(function () use ($soon) {
 
-    Route::view('/report', 'placeholder', $soon(
-        'Laporan Seluruh Cabang',
-        'Laporan mutasi stok dan laba rugi seluruh cabang.'
-    ))->name('report');
+    Route::view('/report', 'admin.laporan.index')->name('report');
 
-    Route::view('/user', 'admin.index')->name('user');
-
-    Route::view('/role', 'placeholder', $soon(
-        'Role & Hak Akses',
-        'Atur role dan hak akses pengguna.'
-    ))->name('role');
+    Route::view('/user', 'admin.kelola.index')->name('user');
 
     Route::view('/product', 'placeholder', $soon(
         'Produk & Kategori',
