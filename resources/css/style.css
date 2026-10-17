@@ -1600,6 +1600,46 @@ td {
 }
 
 
+/* TABEL RAPI (lebar kolom tetap, isi rata tengah secara vertikal) */
+
+.table-fixed {
+
+    table-layout: fixed;
+
+    min-width: 760px;
+}
+
+.table-fixed th,
+.table-fixed td {
+
+    vertical-align: middle;
+}
+
+.table-fixed td {
+
+    line-height: 1.5;
+
+    word-break: break-word;
+}
+
+.table-fixed tbody tr:hover {
+
+    background: #fbf6ed;
+}
+
+.table-fixed .col-nowrap {
+
+    white-space: nowrap;
+}
+
+.table-fixed .status {
+
+    min-width: 64px;
+
+    text-align: center;
+}
+
+
 /* =========================================================
    POS
 ========================================================= */

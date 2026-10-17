@@ -5,7 +5,21 @@
 
 @section('content')
 
+@php
+    $branchKey  = config('demo_manager.branch');
+    $branchName = config("demo.branches.$branchKey.name", 'Cabang');
+    $storeName  = config("demo.branches.$branchKey.stores." . config('demo_manager.store'), 'Store');
+@endphp
+
 <section class="page active">
+
+    <!-- INFO STORE -->
+    <div class="table-toolbar">
+
+        <span class="table-meta" id="dataDate" data-store="{{ $storeName }} · {{ $branchName }}"></span>
+
+    </div>
+
 
     <!-- STAT CARDS -->
     <div class="stats-grid">
@@ -14,8 +28,8 @@
             <div class="stat-icon">Rp</div>
             <div class="stat-content">
                 <span class="stat-label">Omzet Hari Ini</span>
-                <strong>Rp 4,82 jt</strong>
-                <small class="positive">+8,4% dari kemarin</small>
+                <strong id="statOmzet">Rp 0</strong>
+                <small id="statOmzetDelta" class="positive">-</small>
             </div>
         </div>
 
@@ -23,8 +37,8 @@
             <div class="stat-icon">≡</div>
             <div class="stat-content">
                 <span class="stat-label">Stok Menipis</span>
-                <strong>8 Item</strong>
-                <small class="warning">3 perlu approval</small>
+                <strong id="statLow">0 Item</strong>
+                <small id="statLowSub" class="warning">-</small>
             </div>
         </div>
 
@@ -32,8 +46,8 @@
             <div class="stat-icon">↻</div>
             <div class="stat-content">
                 <span class="stat-label">Pesanan DC</span>
-                <strong>5 Pesanan</strong>
-                <small>2 sedang dikirim</small>
+                <strong id="statDC">0 Pesanan</strong>
+                <small id="statDCSub">-</small>
             </div>
         </div>
 
@@ -41,8 +55,8 @@
             <div class="stat-icon">△</div>
             <div class="stat-content">
                 <span class="stat-label">Waste Hari Ini</span>
-                <strong>Rp 185 rb</strong>
-                <small class="danger-text">2 laporan baru</small>
+                <strong id="statWaste">Rp 0</strong>
+                <small id="statWasteSub" class="danger-text">-</small>
             </div>
         </div>
 
@@ -58,7 +72,7 @@
             <div class="card-header">
                 <div>
                     <h3>Pergerakan Stok</h3>
-                    <p>Stok masuk dan stok keluar</p>
+                    <p>Stok masuk, stok keluar, dan waste</p>
                 </div>
 
                 <select id="stockPeriod" class="select">
@@ -80,6 +94,11 @@
                 <div>
                     <span class="legend-dot keluar"></span>
                     Stok Keluar
+                </div>
+
+                <div>
+                    <span class="legend-dot" style="background: var(--red)"></span>
+                    Waste
                 </div>
             </div>
 
@@ -123,44 +142,10 @@
                     <p>Perlu perhatian</p>
                 </div>
 
-                <span class="alert-count">5</span>
+                <span class="alert-count" id="alertCount">0</span>
             </div>
 
-            <div class="alert-list">
-
-                <div class="alert-item">
-                    <span class="alert-dot orange"></span>
-                    <div>
-                        <strong>Fresh Milk</strong>
-                        <p>Stok di bawah minimum</p>
-                    </div>
-                </div>
-
-                <div class="alert-item">
-                    <span class="alert-dot red"></span>
-                    <div>
-                        <strong>Waste — Sirup</strong>
-                        <p>2 botol dilaporkan rusak</p>
-                    </div>
-                </div>
-
-                <div class="alert-item">
-                    <span class="alert-dot brown"></span>
-                    <div>
-                        <strong>Draft Restock #RS-024</strong>
-                        <p>Menunggu approval Manager</p>
-                    </div>
-                </div>
-
-                <div class="alert-item">
-                    <span class="alert-dot green"></span>
-                    <div>
-                        <strong>Pengiriman #SJ-018</strong>
-                        <p>Dalam perjalanan</p>
-                    </div>
-                </div>
-
-            </div>
+            <div class="alert-list" id="alertList"></div>
 
         </div>
 
@@ -174,29 +159,29 @@
                     <p>Berdasarkan omzet, HPP, dan waste</p>
                 </div>
 
-                <button class="outline-button">Lihat Detail</button>
+                <button class="outline-button" type="button" onclick="window.location.href='{{ route('manager.report') }}'">Lihat Detail</button>
             </div>
 
             <div class="profit-summary">
 
                 <div>
                     <span>Omzet</span>
-                    <strong>Rp 4.820.000</strong>
+                    <strong id="profitOmzet">Rp 0</strong>
                 </div>
 
                 <div>
                     <span>HPP</span>
-                    <strong>Rp 1.930.000</strong>
+                    <strong id="profitHpp">Rp 0</strong>
                 </div>
 
                 <div>
                     <span>Waste</span>
-                    <strong class="danger-text">Rp 185.000</strong>
+                    <strong class="danger-text" id="profitWaste">Rp 0</strong>
                 </div>
 
                 <div class="profit-total">
                     <span>Estimasi Laba</span>
-                    <strong>Rp 2.705.000</strong>
+                    <strong id="profitLaba">Rp 0</strong>
                 </div>
 
             </div>
@@ -206,6 +191,17 @@
     </div>
 
 </section>
+
+<script>
+    // DATA DEMO (nanti diganti data dari backend)
+    window.KOPSYNC = {
+        items:        @json(config('demo.items')),
+        menus:        @json(config('demo.menus')),
+        transactions: @json(config('demo_transactions.list')),
+        mutations:    @json(config('demo.mutations')),
+        shipments:    @json(config('demo.shipments')),
+    };
+</script>
 
 @endsection
 

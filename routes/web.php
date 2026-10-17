@@ -56,10 +56,7 @@ Route::prefix('manager')->name('manager.')->group(function () use ($soon) {
 
     Route::view('/dashboard', 'manager.dashboard.index')->name('dashboard');
 
-    Route::view('/alert', 'placeholder', $soon(
-        'Alert',
-        'Alert restock dan alert waste yang perlu perhatian.'
-    ))->name('alert');
+    Route::view('/alert', 'manager.alert.index')->name('alert');
 
     Route::view('/restock', 'manager.restock.index')->name('restock');
 
@@ -76,15 +73,9 @@ Route::prefix('dc')->name('dc.')->group(function () use ($soon) {
 
     Route::view('/stock', 'dc.inventory.index')->name('stock');
 
-    Route::view('/order', 'placeholder', $soon(
-        'Pesanan Masuk',
-        'Pesanan yang sudah disetujui Manajer dan siap diproses.'
-    ))->name('order');
+    Route::view('/order', 'dc.pesanan.index')->name('order');
 
-    Route::view('/shipment', 'placeholder', $soon(
-        'Pengiriman & Surat Jalan',
-        'Proses pengiriman, Surat Jalan digital, dan status pengiriman.'
-    ))->name('shipment');
+    Route::view('/shipment', 'dc.pengiriman.index')->name('shipment');
 
 });
 

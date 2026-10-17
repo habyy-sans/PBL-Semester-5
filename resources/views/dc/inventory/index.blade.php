@@ -1,6 +1,6 @@
 @extends('layouts.app')
  
-@section('title', 'Inventory / Stok')
+@section('title', 'Inventory')
 @section('description', 'Pantau kondisi stok bahan dan produk.')
  
 @section('content')
