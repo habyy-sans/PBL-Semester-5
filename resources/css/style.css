@@ -1710,6 +1710,328 @@ td {
 }
 
 
+/* POS KASIR: TAB KATEGORI, BADGE STOK, KERANJANG, BAYAR */
+
+.pos-tabs {
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-bottom: 14px;
+}
+
+.pos-tab {
+
+    border: 1px solid var(--border);
+
+    background: white;
+
+    color: var(--brown);
+
+    border-radius: 20px;
+
+    padding: 6px 13px;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.pos-tab:hover {
+
+    background: #fff5e7;
+}
+
+.pos-tab.active {
+
+    background: var(--brown);
+
+    border-color: var(--brown);
+
+    color: white;
+}
+
+.product-card.disabled {
+
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+.product-card.disabled:hover {
+
+    border-color: var(--border);
+
+    transform: none;
+}
+
+.pos-card-foot {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 6px;
+
+    margin-top: 8px;
+
+    min-height: 18px;
+}
+
+.pos-badge {
+
+    font-style: normal;
+
+    font-size: 7px;
+
+    padding: 3px 7px;
+
+    border-radius: 20px;
+}
+
+.pos-badge.out {
+
+    background: #f9e0df;
+
+    color: #b44141;
+}
+
+.pos-badge.low {
+
+    background: #fff0d5;
+
+    color: #b27626;
+}
+
+.pos-sop-link {
+
+    margin-left: auto;
+
+    border: none;
+
+    background: transparent;
+
+    color: var(--muted);
+
+    font-family: inherit;
+
+    font-size: 8px;
+
+    text-decoration: underline;
+
+    cursor: pointer;
+}
+
+.pos-sop-link:hover {
+
+    color: var(--brown);
+}
+
+.cart-card {
+
+    position: sticky;
+
+    top: 92px;
+
+    align-self: start;
+}
+
+.cart-lines {
+
+    margin-bottom: 10px;
+}
+
+.cart-line {
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 9px 0;
+
+    border-bottom: 1px solid #eee1d0;
+}
+
+.cart-line-info {
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+.cart-line-info strong {
+
+    display: block;
+
+    font-size: 10px;
+
+    color: var(--text);
+}
+
+.cart-line-info small {
+
+    font-size: 8px;
+
+    color: var(--muted);
+}
+
+.cart-line-total {
+
+    min-width: 62px;
+
+    text-align: right;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    color: var(--brown);
+}
+
+.qty-control {
+
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+}
+
+.qty-control button {
+
+    width: 20px;
+    height: 20px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    background: white;
+
+    color: var(--brown);
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.qty-control button:hover {
+
+    background: #fff5e7;
+}
+
+.qty-control b {
+
+    min-width: 14px;
+
+    text-align: center;
+
+    font-size: 10px;
+}
+
+.cart-total {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 0;
+
+    margin-bottom: 8px;
+
+    font-size: 10px;
+
+    color: #775b46;
+}
+
+.cart-total strong {
+
+    font-size: 16px;
+
+    color: var(--brown);
+}
+
+.quick-cash {
+
+    display: flex;
+
+    gap: 6px;
+
+    margin-top: 7px;
+}
+
+.quick-cash button {
+
+    flex: 1;
+
+    height: 26px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 7px;
+
+    background: white;
+
+    color: var(--brown);
+
+    font-family: inherit;
+
+    font-size: 8px;
+
+    cursor: pointer;
+}
+
+.quick-cash button:hover {
+
+    background: #fff5e7;
+}
+
+.pay-button {
+
+    width: 100%;
+
+    padding: 12px;
+
+    font-size: 10px;
+
+    margin-top: 4px;
+}
+
+.pay-button:disabled {
+
+    opacity: 0.45;
+
+    cursor: not-allowed;
+}
+
+.pos-toast {
+
+    position: fixed;
+
+    bottom: 24px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 300;
+
+    padding: 10px 16px;
+
+    border-radius: 10px;
+
+    background: var(--brown-dark);
+
+    color: white;
+
+    font-size: 10px;
+}
+
+
 /* =========================================================
    REPORT
 ========================================================= */
@@ -1808,6 +2130,11 @@ td {
 
         grid-template-columns:
             repeat(2, 1fr);
+    }
+
+    .cart-card {
+
+        position: static;
     }
 }
 

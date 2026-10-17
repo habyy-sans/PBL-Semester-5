@@ -4,7 +4,7 @@
 |--------------------------------------------------------------------------
 | DATA DEMO (sementara, sampai backend / database jadi)
 |--------------------------------------------------------------------------
-| Dibaca di halaman lewat config('demo.items') dan config('demo.menus').
+| Dibaca di halaman lewat config('demo.items'), config('demo.menus'), dst.
 | Nanti file ini diganti data dari database tanpa mengubah tampilan.
 |
 | items : barang / bahan di stok cabang
@@ -31,6 +31,10 @@
 | menus : menu kasir beserta resep (SOP). Setiap menu terjual, bahan di
 |         'recipe' berkurang sesuai jumlahnya. Key recipe = key di 'items',
 |         jumlah dalam satuan terkecil bahan itu.
+|   category : Kopi | Non-Kopi | Snack | Makanan Berat (tab di halaman Kasir)
+|   emoji    : ikon kartu menu di halaman Kasir
+|
+| branches : 5 cabang, masing-masing 3 store (data demo).
 */
 
 return [
@@ -109,20 +113,111 @@ return [
             'stock' => 180, 'min' => 200, 'price' => 300,
         ],
 
+        // ---- bahan untuk menu makanan ----
+
+        'croissant' => [
+            'name' => 'Croissant Frozen', 'category' => 'Makanan',
+            'pack' => 'Box', 'size' => 12, 'unit' => 'Pcs',
+            'stock' => 30, 'min' => 12, 'price' => 96000,
+        ],
+
+        'kentang-beku' => [
+            'name' => 'Kentang Beku', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 2000, 'unit' => 'gr',
+            'stock' => 9000, 'min' => 4000, 'price' => 58000,
+        ],
+
+        'minyak-goreng' => [
+            'name' => 'Minyak Goreng', 'category' => 'Makanan',
+            'pack' => 'Jerigen', 'size' => 2000, 'unit' => 'ml',
+            'stock' => 7000, 'min' => 3000, 'price' => 36000,
+        ],
+
+        'roti-tawar' => [
+            'name' => 'Roti Tawar', 'category' => 'Makanan',
+            'pack' => 'Loaf', 'size' => 10, 'unit' => 'Lembar',
+            'stock' => 60, 'min' => 30, 'price' => 15000,
+        ],
+
+        'mentega' => [
+            'name' => 'Mentega', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 500, 'unit' => 'gr',
+            'stock' => 1500, 'min' => 500, 'price' => 38000,
+        ],
+
+        'selai-cokelat' => [
+            'name' => 'Selai Cokelat', 'category' => 'Makanan',
+            'pack' => 'Pot', 'size' => 1000, 'unit' => 'gr',
+            'stock' => 2500, 'min' => 1000, 'price' => 65000,
+        ],
+
+        'keju-slice' => [
+            'name' => 'Keju Slice', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 20, 'unit' => 'Lembar',
+            'stock' => 45, 'min' => 20, 'price' => 32000,
+        ],
+
+        'beras' => [
+            'name' => 'Beras', 'category' => 'Makanan',
+            'pack' => 'Karung', 'size' => 5000, 'unit' => 'gr',
+            'stock' => 20000, 'min' => 8000, 'price' => 70000,
+        ],
+
+        'telur' => [
+            'name' => 'Telur Ayam', 'category' => 'Makanan',
+            'pack' => 'Tray', 'size' => 30, 'unit' => 'Pcs',
+            'stock' => 60, 'min' => 30, 'price' => 55000,
+        ],
+
+        'bumbu-nasgor' => [
+            'name' => 'Bumbu Nasi Goreng', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 500, 'unit' => 'gr',
+            'stock' => 1800, 'min' => 500, 'price' => 45000,
+        ],
+
+        'mie-instan' => [
+            'name' => 'Mie Goreng', 'category' => 'Makanan',
+            'pack' => 'Dus', 'size' => 40, 'unit' => 'Pcs',
+            'stock' => 80, 'min' => 40, 'price' => 110000,
+        ],
+
+        'ayam-fillet' => [
+            'name' => 'Ayam Fillet', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 1000, 'unit' => 'gr',
+            'stock' => 5000, 'min' => 2000, 'price' => 48000,
+        ],
+
+        'tepung-panir' => [
+            'name' => 'Tepung Panir', 'category' => 'Makanan',
+            'pack' => 'Pack', 'size' => 1000, 'unit' => 'gr',
+            'stock' => 3000, 'min' => 1500, 'price' => 22000,
+        ],
+
+        'pisang' => [
+            'name' => 'Pisang Kepok', 'category' => 'Makanan',
+            'pack' => 'Sisir', 'size' => 12, 'unit' => 'Pcs',
+            'stock' => 36, 'min' => 12, 'price' => 25000,
+        ],
+
     ],
 
 
     'menus' => [
 
+        // ================= KOPI =================
+
+        'espresso' => [
+            'name' => 'Espresso', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 15000,
+            'recipe' => ['arabica-beans' => 18],
+        ],
+
         'americano' => [
-            'name' => 'Americano', 'price' => 18000,
-            'recipe' => [
-                'arabica-beans' => 18,
-            ],
+            'name' => 'Americano', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 18000,
+            'recipe' => ['arabica-beans' => 18],
         ],
 
         'caffe-latte' => [
-            'name' => 'Caffe Latte', 'price' => 22000,
+            'name' => 'Caffe Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 22000,
             'recipe' => [
                 'gula-cair'     => 40,
                 'fresh-milk'    => 70,
@@ -130,8 +225,72 @@ return [
             ],
         ],
 
+        'cappuccino' => [
+            'name' => 'Cappuccino', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 22000,
+            'recipe' => [
+                'arabica-beans' => 18,
+                'fresh-milk'    => 120,
+            ],
+        ],
+
+        'caramel-macchiato' => [
+            'name' => 'Caramel Macchiato', 'category' => 'Kopi', 'emoji' => '🍮', 'price' => 26000,
+            'recipe' => [
+                'arabica-beans' => 18,
+                'fresh-milk'    => 150,
+                'sirup-caramel' => 20,
+            ],
+        ],
+
+        'vanilla-latte' => [
+            'name' => 'Vanilla Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 25000,
+            'recipe' => [
+                'arabica-beans' => 18,
+                'fresh-milk'    => 150,
+                'sirup-vanilla' => 20,
+            ],
+        ],
+
+        'hazelnut-latte' => [
+            'name' => 'Hazelnut Latte', 'category' => 'Kopi', 'emoji' => '🌰', 'price' => 25000,
+            'recipe' => [
+                'arabica-beans'  => 18,
+                'fresh-milk'     => 150,
+                'sirup-hazelnut' => 20,
+            ],
+        ],
+
+        'mocha' => [
+            'name' => 'Mocha', 'category' => 'Kopi', 'emoji' => '🍫', 'price' => 25000,
+            'recipe' => [
+                'arabica-beans' => 18,
+                'bubuk-cokelat' => 20,
+                'fresh-milk'    => 150,
+            ],
+        ],
+
+        'oat-milk-latte' => [
+            'name' => 'Oat Milk Latte', 'category' => 'Kopi', 'emoji' => '🌾', 'price' => 28000,
+            'recipe' => [
+                'arabica-beans' => 18,
+                'oat-milk'      => 180,
+                'gula-cair'     => 15,
+            ],
+        ],
+
+        'es-kopi-susu' => [
+            'name' => 'Es Kopi Susu', 'category' => 'Kopi', 'emoji' => '🧋', 'price' => 20000,
+            'recipe' => [
+                'robusta-beans' => 18,
+                'fresh-milk'    => 100,
+                'gula-cair'     => 20,
+            ],
+        ],
+
+        // ================= NON-KOPI =================
+
         'chocolate' => [
-            'name' => 'Chocolate', 'price' => 20000,
+            'name' => 'Chocolate', 'category' => 'Non-Kopi', 'emoji' => '🍫', 'price' => 20000,
             'recipe' => [
                 'bubuk-cokelat' => 25,
                 'fresh-milk'    => 150,
@@ -140,11 +299,85 @@ return [
         ],
 
         'matcha' => [
-            'name' => 'Matcha', 'price' => 23000,
+            'name' => 'Matcha', 'category' => 'Non-Kopi', 'emoji' => '🍵', 'price' => 23000,
             'recipe' => [
                 'bubuk-matcha'  => 5,
                 'fresh-milk'    => 150,
                 'sirup-vanilla' => 10,
+            ],
+        ],
+
+        // ================= SNACK =================
+
+        'croissant' => [
+            'name' => 'Croissant Butter', 'category' => 'Snack', 'emoji' => '🥐', 'price' => 22000,
+            'recipe' => ['croissant' => 1],
+        ],
+
+        'french-fries' => [
+            'name' => 'French Fries', 'category' => 'Snack', 'emoji' => '🍟', 'price' => 20000,
+            'recipe' => [
+                'kentang-beku'  => 150,
+                'minyak-goreng' => 40,
+            ],
+        ],
+
+        'roti-bakar-cokelat' => [
+            'name' => 'Roti Bakar Cokelat', 'category' => 'Snack', 'emoji' => '🍞', 'price' => 18000,
+            'recipe' => [
+                'roti-tawar'    => 2,
+                'mentega'       => 10,
+                'selai-cokelat' => 30,
+            ],
+        ],
+
+        'roti-bakar-keju' => [
+            'name' => 'Roti Bakar Keju', 'category' => 'Snack', 'emoji' => '🧀', 'price' => 20000,
+            'recipe' => [
+                'roti-tawar' => 2,
+                'mentega'    => 10,
+                'keju-slice' => 2,
+            ],
+        ],
+
+        'pisang-goreng-keju' => [
+            'name' => 'Pisang Goreng Keju', 'category' => 'Snack', 'emoji' => '🍌', 'price' => 18000,
+            'recipe' => [
+                'pisang'        => 2,
+                'tepung-panir'  => 40,
+                'keju-slice'    => 1,
+                'minyak-goreng' => 60,
+            ],
+        ],
+
+        // ================= MAKANAN BERAT =================
+
+        'nasi-goreng-kampung' => [
+            'name' => 'Nasi Goreng Kampung', 'category' => 'Makanan Berat', 'emoji' => '🍳', 'price' => 28000,
+            'recipe' => [
+                'beras'         => 90,
+                'telur'         => 1,
+                'minyak-goreng' => 20,
+                'bumbu-nasgor'  => 15,
+            ],
+        ],
+
+        'mie-goreng' => [
+            'name' => 'Mie Goreng Spesial', 'category' => 'Makanan Berat', 'emoji' => '🍜', 'price' => 22000,
+            'recipe' => [
+                'mie-instan'    => 1,
+                'telur'         => 1,
+                'minyak-goreng' => 15,
+            ],
+        ],
+
+        'chicken-katsu-rice' => [
+            'name' => 'Chicken Katsu Rice', 'category' => 'Makanan Berat', 'emoji' => '🍛', 'price' => 32000,
+            'recipe' => [
+                'beras'         => 90,
+                'ayam-fillet'   => 120,
+                'tepung-panir'  => 40,
+                'minyak-goreng' => 80,
             ],
         ],
 
@@ -471,6 +704,14 @@ return [
             ],
         ],
 
+    ],
+
+    'branches' => [
+        'malang'   => ['name' => 'Cabang Malang',   'stores' => ['Store Dinoyo', 'Store Tlogomas', 'Store Soekarno-Hatta']],
+        'surabaya' => ['name' => 'Cabang Surabaya', 'stores' => ['Store Tunjungan', 'Store Gubeng', 'Store Rungkut']],
+        'jakarta'  => ['name' => 'Cabang Jakarta',  'stores' => ['Store Kemang', 'Store Sudirman', 'Store Kelapa Gading']],
+        'bandung'  => ['name' => 'Cabang Bandung',  'stores' => ['Store Dago', 'Store Braga', 'Store Buah Batu']],
+        'jogja'    => ['name' => 'Cabang Jogja',    'stores' => ['Store Malioboro', 'Store Prawirotaman', 'Store Seturan']],
     ],
 
 ];
