@@ -35,34 +35,274 @@ function lineDataset(label, data, color, background) {
     };
 }
 
+const $ = (id) => document.getElementById(id);
+
+// Rp 4,82 jt  /  Rp 465 rb
+function formatSingkat(value) {
+    if (value >= 1000000) {
+        return 'Rp ' + (value / 1000000).toFixed(2).replace('.', ',') + ' jt';
+    }
+
+    return 'Rp ' + Math.round(value / 1000).toLocaleString('id-ID') + ' rb';
+}
+
+
+/* =========================================================
+   DATA DEMO (dikirim dari blade, nanti dari backend)
+========================================================= */
+
+const DATA = window.KOPSYNC ?? {};
+
+const ITEMS  = DATA.items ?? {};
+const MENUS  = DATA.menus ?? {};
+const TRX    = DATA.transactions ?? [];
+const MUT    = DATA.mutations ?? [];
+const SHIP   = DATA.shipments ?? [];
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const DAYS   = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+const pad = (n) => String(n).padStart(2, '0');
+
+const parseDate = (s) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+};
+
+const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+const addDays = (d, n) => {
+    const copy = new Date(d);
+    copy.setDate(copy.getDate() + n);
+    return copy;
+};
+
+const fmtDate = (s) => {
+    const d = parseDate(s);
+    return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+const toMinutes = (time) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+};
+
+// "Hari ini" pada demo = tanggal transaksi terakhir di data demo
+const DONE        = TRX.filter((t) => t.status === 'selesai');
+const LATEST_DATE = TRX.map((t) => t.date).sort().pop() ?? null;
+const PREV_DATE   = LATEST_DATE ? toKey(addDays(parseDate(LATEST_DATE), -1)) : null;
+
+const todayDone = DONE.filter((t) => t.date === LATEST_DATE);
+const LAST_TIME = todayDone.reduce((max, t) => Math.max(max, toMinutes(t.time)), 0);
+
+const trxTotal = (t) => t.items.reduce((s, i) => s + MENUS[i.menu].price * i.qty, 0);
+
+const recipeCost = (menuId) => Object.entries(MENUS[menuId].recipe)
+    .reduce((c, [item, amt]) => c + amt * (ITEMS[item].price / ITEMS[item].size), 0);
+
+const trxHpp = (t) => t.items.reduce((s, i) => s + i.qty * recipeCost(i.menu), 0);
+
+const sum = (list, fn) => list.reduce((s, x) => s + fn(x), 0);
+
+// nilai rupiah dari mutasi waste pada satu tanggal
+function wasteOnDate(date) {
+    const records = MUT.filter((m) => m.type === 'waste' && m.date === date);
+
+    const value = sum(records, (m) => sum(m.lines, (l) =>
+        (Math.abs(l.amount) / ITEMS[l.item].size) * ITEMS[l.item].price));
+
+    return { count: records.length, value };
+}
+
+// stok di bawah / sama dengan batas minimum
+const lowItems = () => Object.entries(ITEMS)
+    .filter(([, i]) => i.stock <= i.min)
+    .map(([key, i]) => ({ key, ...i }));
+
+
+/* =========================================================
+   STAT CARDS, PROFIT, ALERT
+========================================================= */
+
+function renderSummary() {
+    if (!LATEST_DATE) {
+        return;
+    }
+
+    // ---- omzet, HPP, waste hari ini ----
+    const omzet = sum(todayDone, trxTotal);
+    const hpp   = sum(todayDone, trxHpp);
+    const waste = wasteOnDate(LATEST_DATE).value;
+    const wasteCount = wasteOnDate(LATEST_DATE).count;
+    const laba  = omzet - hpp - waste;
+
+    // dibanding kemarin pada jam yang sama (supaya adil, hari ini belum selesai)
+    const prevOmzet = sum(
+        DONE.filter((t) => t.date === PREV_DATE && toMinutes(t.time) <= LAST_TIME),
+        trxTotal
+    );
+
+    const delta = $('statOmzetDelta');
+
+    if (prevOmzet > 0) {
+        const pct = ((omzet - prevOmzet) / prevOmzet) * 100;
+
+        delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin (jam sama)';
+        delta.className = pct >= 0 ? 'positive' : 'danger-text';
+    } else {
+        delta.textContent = 'Belum ada pembanding kemarin';
+        delta.className = '';
+    }
+
+    $('statOmzet').textContent = formatSingkat(omzet);
+    $('statWaste').textContent = formatSingkat(waste);
+    $('statWasteSub').textContent = wasteCount + ' laporan hari ini';
+
+    // ---- stok menipis ----
+    const low   = lowItems();
+    const habis = low.filter((i) => i.stock <= 0).length;
+
+    $('statLow').textContent = low.length + ' Item';
+    $('statLowSub').textContent = habis > 0 ? habis + ' item habis' : 'Belum ada yang habis';
+
+    // ---- pesanan DC (surat jalan yang belum diterima IC) ----
+    const pending = SHIP.filter((s) => s.status !== 'diterima');
+    const sent    = pending.filter((s) => s.status === 'dikirim').length;
+
+    $('statDC').textContent = pending.length + ' Pesanan';
+    $('statDCSub').textContent = sent + ' sedang dikirim';
+
+    // ---- laba rugi ----
+    $('profitOmzet').textContent = formatRupiah(omzet);
+    $('profitHpp').textContent   = formatRupiah(hpp);
+    $('profitWaste').textContent = formatRupiah(waste);
+    $('profitLaba').textContent  = formatRupiah(laba);
+
+    const label = $('dataDate');
+
+    label.textContent = (label.dataset.store ? label.dataset.store + ' · ' : '') + 'Data demo per ' + fmtDate(LATEST_DATE);
+}
+
+function renderAlerts() {
+    const alerts = [];
+    const low    = lowItems();
+
+    // 1. waste terbaru
+    const lastWaste = MUT
+        .filter((m) => m.type === 'waste')
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
+
+    if (lastWaste) {
+        const reason = lastWaste.ref.replace('Waste · ', '');
+        const lines  = lastWaste.lines.slice(0, 2)
+            .map((l) => `${ITEMS[l.item].name} ${Math.abs(l.amount).toLocaleString('id-ID')} ${ITEMS[l.item].unit}`)
+            .join(', ');
+
+        alerts.push({ color: 'red', title: 'Waste — ' + reason, text: lines });
+    }
+
+    // 2. stok habis
+    low.filter((i) => i.stock <= 0).forEach((i) => {
+        alerts.push({ color: 'red', title: i.name, text: 'Stok habis' });
+    });
+
+    // 3. draft restock otomatis (kebutuhan = stok minimum - stok aktual)
+    if (low.length) {
+        alerts.push({
+            color: 'brown',
+            title: 'Draft Restock #RS-024',
+            text: low.length + ' item menunggu approval Manager',
+        });
+    }
+
+    // 4. pengiriman dari DC yang belum diterima
+    SHIP.filter((s) => s.status !== 'diterima').forEach((s) => {
+        alerts.push({
+            color: 'green',
+            title: 'Pengiriman ' + s.no,
+            text: s.status === 'dikirim' ? 'Dalam perjalanan' : 'Menunggu konfirmasi IC',
+        });
+    });
+
+    // 5. stok di bawah minimum (yang paling kritis dulu)
+    low.filter((i) => i.stock > 0)
+        .sort((a, b) => a.stock / a.min - b.stock / b.min)
+        .forEach((i) => {
+            alerts.push({ color: 'orange', title: i.name, text: 'Stok di bawah minimum' });
+        });
+
+    $('alertCount').textContent = alerts.length;
+
+    $('alertList').innerHTML = alerts.slice(0, 6).map((a) => `
+        <div class="alert-item">
+            <span class="alert-dot ${a.color}"></span>
+            <div>
+                <strong>${a.title}</strong>
+                <p>${a.text}</p>
+            </div>
+        </div>`).join('');
+}
+
 
 /* =========================================================
    STOCK CHART
 ========================================================= */
 
-const stockCanvas = document.getElementById('stockChart');
+const stockCanvas = $('stockChart');
 
 let stockChart = null;
 
-const stockData = {
-    '7': {
-        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-        masuk: [38, 45, 32, 50, 42, 55, 48],
-        keluar: [28, 34, 27, 39, 35, 44, 40],
-    },
-    '30': {
-        labels: ['1', '3', '5', '7', '9', '11', '13', '15', '17', '19', '21', '23', '25', '27', '29'],
-        masuk: [35, 40, 32, 48, 44, 51, 46, 55, 49, 58, 52, 60, 56, 63, 59],
-        keluar: [25, 30, 28, 36, 34, 40, 37, 43, 39, 46, 43, 48, 44, 50, 47],
-    },
-};
+// satuan grafik = kemasan (jumlah satuan terkecil dibagi isi kemasan)
+function buildStockData(period) {
+    const days   = Number(period);
+    const bucket = days === 7 ? 1 : 2;
+    const count  = days / bucket;
+    const end    = parseDate(LATEST_DATE);
+
+    const labels = [];
+    const masuk  = [];
+    const keluar = [];
+    const waste  = [];
+
+    for (let b = 0; b < count; b++) {
+        let m = 0;
+        let k = 0;
+        let w = 0;
+        let lastDay = null;
+
+        for (let j = 0; j < bucket; j++) {
+            const offset = days - 1 - (b * bucket + j);
+            const day    = addDays(end, -offset);
+
+            lastDay = day;
+
+            MUT.filter((x) => x.date === toKey(day)).forEach((x) => {
+                x.lines.forEach((l) => {
+                    const pack = Math.abs(l.amount) / ITEMS[l.item].size;
+
+                    if (x.type === 'masuk') m += pack;
+                    if (x.type === 'keluar') k += pack;
+                    if (x.type === 'waste') w += pack;
+                });
+            });
+        }
+
+        labels.push(bucket === 1 ? `${DAYS[lastDay.getDay()]} ${lastDay.getDate()}` : String(lastDay.getDate()));
+
+        masuk.push(Math.round(m * 10) / 10);
+        keluar.push(Math.round(k * 10) / 10);
+        waste.push(Math.round(w * 10) / 10);
+    }
+
+    return { labels, masuk, keluar, waste };
+}
 
 function createStockChart(period = '7') {
-    if (!stockCanvas) {
+    if (!stockCanvas || !LATEST_DATE) {
         return;
     }
 
-    const data = stockData[period] ?? stockData['7'];
+    const data = buildStockData(period);
 
     if (stockChart) {
         stockChart.destroy();
@@ -76,6 +316,7 @@ function createStockChart(period = '7') {
             datasets: [
                 lineDataset('Stok Masuk', data.masuk, '#8f4713', 'rgba(143, 71, 19, 0.08)'),
                 lineDataset('Stok Keluar', data.keluar, '#d99a4e', 'rgba(217, 154, 78, 0.05)'),
+                lineDataset('Waste', data.waste, '#c94c4c', 'rgba(201, 76, 76, 0.04)'),
             ],
         },
 
@@ -112,7 +353,7 @@ function createStockChart(period = '7') {
                     ticks: axisTicks,
                     title: {
                         display: true,
-                        text: 'Jumlah',
+                        text: 'Jumlah (kemasan)',
                         color: '#aa917e',
                         font: font(8),
                     },
@@ -122,9 +363,7 @@ function createStockChart(period = '7') {
     });
 }
 
-createStockChart('7');
-
-const stockPeriod = document.getElementById('stockPeriod');
+const stockPeriod = $('stockPeriod');
 
 if (stockPeriod) {
     stockPeriod.addEventListener('change', (event) => {
@@ -137,34 +376,61 @@ if (stockPeriod) {
    OMZET CHART
 ========================================================= */
 
-const omzetCanvas = document.getElementById('omzetChart');
+const omzetCanvas = $('omzetChart');
 
 let omzetChart = null;
 
-const omzetData = {
-    daily: {
-        labels: ['08.00', '10.00', '12.00', '14.00', '16.00', '18.00', '20.00', '22.00'],
-        values: [450000, 720000, 1100000, 1450000, 1900000, 2700000, 3800000, 4820000],
-    },
+// Harian dihitung dari transaksi demo (kumulatif per 2 jam, sampai jam transaksi terakhir).
+// Bulanan & tahunan BELUM ada datanya, jadi masih angka dummy (total per minggu / per bulan).
+const omzetDummy = {
     monthly: {
         labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'],
-        values: [8200000, 10800000, 13200000, 15800000],
+        values: [4200000, 4900000, 5400000, 5900000],
     },
     yearly: {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
         values: [
-            28000000, 31000000, 34000000, 36000000, 39000000, 42000000,
-            45000000, 47000000, 49000000, 51000000, 54000000, 56000000,
+            17500000, 18200000, 19400000, 20100000, 21000000, 21800000,
+            22600000, 23000000, 23900000, 24500000, null, null,
         ],
     },
 };
 
+function buildOmzetData(period) {
+    if (period !== 'daily') {
+        const dummy = omzetDummy[period];
+
+        return {
+            labels: dummy.labels,
+            values: dummy.values.map((v) => (v === null ? null : Math.round(v))),
+        };
+    }
+
+    const slots = [8, 10, 12, 14, 16, 18, 20, 22];
+    const used  = [];
+
+    for (const hour of slots) {
+        used.push(hour);
+
+        if (hour * 60 >= LAST_TIME) {
+            break;
+        }
+    }
+
+    return {
+        labels: used.map((h) => pad(h) + '.00'),
+        values: used.map((h) => Math.round(
+            sum(todayDone.filter((t) => toMinutes(t.time) <= h * 60), trxTotal)
+        )),
+    };
+}
+
 function createOmzetChart(period = 'daily') {
-    if (!omzetCanvas) {
+    if (!omzetCanvas || !LATEST_DATE) {
         return;
     }
 
-    const data = omzetData[period] ?? omzetData.daily;
+    const data = buildOmzetData(period);
 
     if (omzetChart) {
         omzetChart.destroy();
@@ -231,8 +497,6 @@ function createOmzetChart(period = 'daily') {
     });
 }
 
-createOmzetChart('daily');
-
 
 /* =========================================================
    OMZET PERIOD BUTTON
@@ -249,3 +513,13 @@ periodButtons.forEach((button) => {
         createOmzetChart(button.dataset.period);
     });
 });
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+renderSummary();
+renderAlerts();
+createStockChart('7');
+createOmzetChart('daily');
