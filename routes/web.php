@@ -26,10 +26,7 @@ Route::prefix('kasir')->name('kasir.')->group(function () use ($soon) {
 
     Route::view('/pos', 'kasir.pos.index')->name('pos');
 
-    Route::view('/history', 'placeholder', $soon(
-        'Riwayat Transaksi',
-        'Lihat daftar transaksi penjualan yang sudah dilakukan.'
-    ))->name('history');
+    Route::view('/history', 'kasir.riwayat-transaksi.index')->name('history');
 
 });
 
@@ -46,10 +43,7 @@ Route::prefix('ic')->name('ic.')->group(function () use ($soon) {
 
     Route::view('/waste', 'ic.Waste.index')->name('waste');
 
-    Route::view('/mutation', 'placeholder', $soon(
-        'Histori Mutasi Stok',
-        'Riwayat stok masuk, stok keluar, dan waste.'
-    ))->name('mutation');
+    Route::view('/mutation', 'ic.mutasi.index')->name('mutation');
 
 });
 
