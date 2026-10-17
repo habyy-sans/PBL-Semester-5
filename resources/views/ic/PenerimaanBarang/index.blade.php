@@ -7,12 +7,20 @@
     // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
     // DC mengirim KEMASAN UTUH, jadi sent / received dihitung dalam kemasan (Botol, Kantong, Pack, Pcs).
     // Saat dikonfirmasi, stok bertambah received x isi kemasan (dalam satuan terkecil ml / gr / Pcs).
+    // Stok dan Surat Jalan diambil untuk store default (config demo.default_store);
+    // nanti dari akun yang login.
+    $store  = config('demo.default_store');
+    $stocks = config('demo.stocks.' . $store);
+
     $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
+        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
         ->keyBy('id')
         ->all();
 
-    $shipments = config('demo.shipments');
+    $shipments = collect(config('demo.shipments'))
+        ->where('store', $store)
+        ->values()
+        ->all();
 @endphp
 
 @section('content')

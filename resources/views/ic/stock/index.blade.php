@@ -1,14 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Stok Cabang')
+@section('title', 'Stock Store')
 @section('description', 'Pantau stok cabang secara real-time.')
 
 @php
     // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
     // stock dan min disimpan dalam satuan terkecil (ml / gr / Pcs),
     // lalu ditampilkan per kemasan di halaman ini (contoh: 3430 ml => "4 Botol 630 ml").
+    // Stok diambil dari store default (config demo.default_store); nanti dari akun yang login.
+    $stocks = config('demo.stocks.' . config('demo.default_store'));
+
     $stockItems = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
+        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
         ->values()
         ->all();
 @endphp
