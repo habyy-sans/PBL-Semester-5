@@ -1,43 +1,57 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Dc\InventoryController;
+use App\Http\Controllers\Ic\StockController;
+use App\Http\Controllers\Kasir\PosController;
+use App\Http\Controllers\Kasir\RiwayatController;
 use Illuminate\Support\Facades\Route;
 
 // Data untuk halaman "segera hadir"
 $soon = fn (string $title, string $description) => [
-    'title'       => $title,
+    'title' => $title,
     'description' => $description,
 ];
-
 
 /* =========================================================
    LOGIN
 ========================================================= */
 
-Route::redirect('/', '/login');
+Route::get('/', function () {
+    $user = auth()->user();
 
-Route::view('/login', 'auth.login.index')->name('login');
+    return $user
+        ? redirect()->route($user->home_route)
+        : redirect()->route('login');
+});
 
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'create'])->name('login');
+    Route::post('/login', [AuthController::class, 'store'])->name('login.attempt');
+});
+
+Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 /* =========================================================
    KASIR
 ========================================================= */
 
-Route::prefix('kasir')->name('kasir.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->group(function () {
 
-    Route::view('/pos', 'kasir.pos.index')->name('pos');
+    Route::get('/pos', [PosController::class, 'index'])->name('pos');
+    Route::post('/pos', [PosController::class, 'store']);
 
-    Route::view('/history', 'kasir.riwayat-transaksi.index')->name('history');
+    Route::get('/history', [RiwayatController::class, 'index'])->name('history');
 
 });
-
 
 /* =========================================================
    KEPALA SHIFT / IC
 ========================================================= */
 
-Route::prefix('ic')->name('ic.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(function () {
 
-    Route::view('/stock', 'ic.stock.index')->name('stock');
+    Route::get('/stock', [StockController::class, 'index'])->name('stock');
 
     Route::view('/receiving', 'ic.PenerimaanBarang.index')->name('receiving');
 
@@ -47,12 +61,11 @@ Route::prefix('ic')->name('ic.')->group(function () use ($soon) {
 
 });
 
-
 /* =========================================================
    MANAJER CABANG
 ========================================================= */
 
-Route::prefix('manager')->name('manager.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
 
     Route::view('/dashboard', 'manager.dashboard.index')->name('dashboard');
 
@@ -64,14 +77,13 @@ Route::prefix('manager')->name('manager.')->group(function () use ($soon) {
 
 });
 
-
 /* =========================================================
    DC EKSTERNAL
 ========================================================= */
 
-Route::prefix('dc')->name('dc.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(function () {
 
-    Route::view('/stock', 'dc.inventory.index')->name('stock');
+    Route::get('/stock', [InventoryController::class, 'index'])->name('stock');
 
     Route::view('/order', 'dc.pesanan.index')->name('order');
 
@@ -79,16 +91,20 @@ Route::prefix('dc')->name('dc.')->group(function () use ($soon) {
 
 });
 
-
 /* =========================================================
    ADMIN SISTEM
 ========================================================= */
 
-Route::prefix('admin')->name('admin.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () use ($soon) {
 
     Route::view('/report', 'admin.laporan.index')->name('report');
 
     Route::view('/user', 'admin.kelola.index')->name('user');
+
+    Route::view('/role', 'placeholder', $soon(
+        'Role & Hak Akses',
+        'Kelola role dan hak akses pengguna.'
+    ))->name('role');
 
     Route::view('/product', 'placeholder', $soon(
         'Produk & Kategori',

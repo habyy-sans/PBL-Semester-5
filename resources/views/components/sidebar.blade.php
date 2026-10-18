@@ -43,12 +43,16 @@
  
     </nav>
  
-    <!-- LOGOUT (DEMO: kembali ke /login. Nanti jadi form POST + @csrf) -->
+    <!-- LOGOUT -->
     <div class="sidebar-bottom">
-        <a href="{{ route('login') }}" class="logout-button">
-            <span>↪</span>
-            Logout
-        </a>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+
+            <button type="submit" class="logout-button">
+                <span>↪</span>
+                Logout
+            </button>
+        </form>
     </div>
  
 </aside>

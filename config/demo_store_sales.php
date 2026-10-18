@@ -57,7 +57,6 @@ return [
         ['no' => '#TRX-2113', 'store' => 'malang-2', 'date' => '2026-10-14', 'time' => '14:00', 'cashier' => 'Kasir 02', 'method' => 'qris',  'cash' => null, 'status' => 'selesai',
             'items' => [['menu' => 'mie-goreng', 'qty' => 2]]],
 
-
         // ================= MALANG · STORE 3 =================
 
         ['no' => '#TRX-3101', 'store' => 'malang-3', 'date' => '2026-10-12', 'time' => '11:00', 'cashier' => 'Kasir 03', 'method' => 'tunai', 'cash' => 100000, 'status' => 'selesai',
@@ -84,7 +83,6 @@ return [
             'items' => [['menu' => 'oat-milk-latte', 'qty' => 1], ['menu' => 'pisang-goreng-keju', 'qty' => 1]]],
 
     ],
-
 
     'waste' => [
 

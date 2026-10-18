@@ -3,18 +3,9 @@
 @section('title', 'Stock Store')
 @section('description', 'Pantau stok cabang secara real-time.')
 
-@php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // stock dan min disimpan dalam satuan terkecil (ml / gr / Pcs),
-    // lalu ditampilkan per kemasan di halaman ini (contoh: 3430 ml => "4 Botol 630 ml").
-    // Stok diambil dari store default (config demo.default_store); nanti dari akun yang login.
-    $stocks = config('demo.stocks.' . config('demo.default_store'));
-
-    $stockItems = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
-        ->values()
-        ->all();
-@endphp
+{{-- $stockItems dikirim StockController: stok & minimum dalam satuan
+     terkecil (ml / gr / Pcs), ditampilkan per kemasan di halaman ini
+     (contoh: 3430 ml => "4 Botol 630 ml"). --}}
 
 @section('content')
 
@@ -143,7 +134,7 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari $stockItems di atas. Nanti diganti data dari database.
+    // DATA dari database (via StockController).
     function stockPage() {
 
         return {

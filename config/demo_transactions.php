@@ -54,7 +54,6 @@ return [
         ['no' => '#TRX-0122', 'date' => '2026-10-14', 'time' => '09:40', 'cashier' => 'Kasir 01', 'method' => 'tunai', 'cash' => 50000, 'status' => 'selesai',
             'items' => [['menu' => 'americano', 'qty' => 2]]],
 
-
         // ================= 13 OKT 2026 =================
 
         ['no' => '#TRX-0121', 'date' => '2026-10-13', 'time' => '20:10', 'cashier' => 'Kasir 01', 'method' => 'tunai', 'cash' => 110000, 'status' => 'selesai',
@@ -93,7 +92,6 @@ return [
 
         ['no' => '#TRX-0110', 'date' => '2026-10-13', 'time' => '09:20', 'cashier' => 'Kasir 01', 'method' => 'tunai', 'cash' => 100000, 'status' => 'selesai',
             'items' => [['menu' => 'americano', 'qty' => 3]]],
-
 
         // ================= 12 OKT 2026 =================
 

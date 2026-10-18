@@ -3,27 +3,7 @@
 @section('title', 'inventory')
 @section('description', 'Pantau stok setiap store secara real-time.')
 
-@php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // stock dan min dalam satuan terkecil (ml / gr / Pcs), ditampilkan per kemasan.
-    $storeList = collect(config('demo.stores'))
-        ->map(fn ($store, $id) => ['id' => $id] + $store)
-        ->values()
-        ->all();
-
-    $rows = [];
-
-    foreach (config('demo.stores') as $storeId => $store) {
-        foreach (config('demo.items') as $itemId => $item) {
-            $rows[] = [
-                'key'       => $storeId . '|' . $itemId,
-                'store'     => $storeId,
-                'storeName' => $store['name'],
-                'stock'     => config("demo.stocks.$storeId.$itemId") ?? 0,
-            ] + $item;
-        }
-    }
-@endphp
+{{-- $storeList dan $rows dikirim InventoryController (stok_cabang per cabang). --}}
 
 @section('content')
 
@@ -113,7 +93,7 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database.
+    // DATA dari database (via InventoryController).
     function dcStockPage() {
 
         return {
