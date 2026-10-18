@@ -37,9 +37,9 @@
 <script>
 (() => {
 
-    // ---------- DATA (nanti dari backend) ----------
-    const ITEMS = @json(config('demo.items'));
-    const MENUS = @json(config('demo.menus'));
+    // DATA dari database (via PosController), bentuk sama dengan config dummy lama.
+    const ITEMS = @json($items);
+    const MENUS = @json($menus);
 
     const stock = {};                          // stok berjalan (satuan terkecil)
     Object.keys(ITEMS).forEach(k => stock[k] = ITEMS[k].stock);
@@ -270,34 +270,50 @@
             </div>`);
     }
 
-    function processPay() {
+        function processPay() {
         const t = total();
         const u = usage();
-        const no = '#TRX-' + String(Date.now()).slice(-6);
-        const change = method === 'tunai' ? cash - t : 0;
 
-        // potong stok sesuai SOP (di backend: dilakukan di server dalam 1 DB transaction)
-        Object.entries(u).forEach(([item, amt]) => stock[item] -= amt);
-
-        const cut = Object.entries(u).map(([item, amt]) =>
-            `<div class="summary-line"><span>${ITEMS[item].name}</span><span>−${amt} ${ITEMS[item].unit}</span></div>`
-        ).join('');
-
-        cart = {}; cash = 0; method = 'tunai';
-        refresh();
-
-        openModal(`
-            <div class="modal-box wide">
-                <h4>✔ Transaksi Berhasil</h4>
-                <p>${no} · ${rp(t)}${change ? ' · Kembalian ' + rp(change) : ''}</p>
-                <div class="summary-box">
-                    <div class="summary-title">STOK BAHAN TERPOTONG OTOMATIS</div>
-                    ${cut}
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="primary-button" data-close>Selesai</button>
-                </div>
-            </div>`);
+        fetch('/kasir/pos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                items: Object.entries(cart).map(([menu, qty]) => ({ menu: Number(menu), qty })),
+                method,
+                cash: method === 'tunai' ? cash : null,
+            }),
+        })
+        .then(async r => {
+            const json = await r.json();
+            if (!r.ok) throw new Error(json.message || 'Gagal memproses transaksi.');
+            return json;
+        })
+        .then(json => {
+            Object.entries(u).forEach(([item, amt]) => stock[item] -= amt);
+            const cut = json.cuts.map(c =>
+                '<div class="summary-line"><span>' + c.name + '</span><span>-' + c.amount + ' ' + c.unit + '</span></div>'
+            ).join('');
+            cart = {}; cash = 0; method = 'tunai';
+            refresh();
+            openModal('<div class="modal-box wide">\n' +
+                '<h4>✔ Transaksi Berhasil</h4>\n' +
+                '<p>' + json.no + ' · ' + rp(json.total) + (json.change ? ' · Kembalian ' + rp(json.change) : '') + '</p>\n' +
+                '<div class="summary-box">\n' +
+                '<div class="summary-title">STOK BAHAN TERPOTONG OTOMATIS</div>\n' +
+                cut + '\n' +
+                '</div>\n' +
+                '<div class="modal-actions">\n' +
+                '<button type="button" class="primary-button" data-close>Selesai</button>\n' +
+                '</div>\n' +
+                '</div>');
+        })
+        .catch(err => {
+            flash(err.message || 'Gagal memproses transaksi.');
+        });
     }
 
     // ---------- EVENT ----------

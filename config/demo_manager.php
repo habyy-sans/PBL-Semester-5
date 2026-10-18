@@ -17,6 +17,6 @@ return [
 
     'branch' => 'malang',
 
-    'store'  => 0,   // Store Dinoyo
+    'store' => 0,   // Store Dinoyo
 
 ];

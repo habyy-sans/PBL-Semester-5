@@ -212,8 +212,6 @@ return [
 
     ],
 
-
-
     'menus' => [
 
         // ================= KOPI =================
@@ -231,8 +229,8 @@ return [
         'caffe-latte' => [
             'name' => 'Caffe Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 22000,
             'recipe' => [
-                'gula-cair'     => 40,
-                'fresh-milk'    => 70,
+                'gula-cair' => 40,
+                'fresh-milk' => 70,
                 'arabica-beans' => 10,
             ],
         ],
@@ -241,7 +239,7 @@ return [
             'name' => 'Cappuccino', 'category' => 'Kopi', 'emoji' => '☕', 'price' => 22000,
             'recipe' => [
                 'arabica-beans' => 18,
-                'fresh-milk'    => 120,
+                'fresh-milk' => 120,
             ],
         ],
 
@@ -249,7 +247,7 @@ return [
             'name' => 'Caramel Macchiato', 'category' => 'Kopi', 'emoji' => '🍮', 'price' => 26000,
             'recipe' => [
                 'arabica-beans' => 18,
-                'fresh-milk'    => 150,
+                'fresh-milk' => 150,
                 'sirup-caramel' => 20,
             ],
         ],
@@ -258,7 +256,7 @@ return [
             'name' => 'Vanilla Latte', 'category' => 'Kopi', 'emoji' => '🥛', 'price' => 25000,
             'recipe' => [
                 'arabica-beans' => 18,
-                'fresh-milk'    => 150,
+                'fresh-milk' => 150,
                 'sirup-vanilla' => 20,
             ],
         ],
@@ -266,8 +264,8 @@ return [
         'hazelnut-latte' => [
             'name' => 'Hazelnut Latte', 'category' => 'Kopi', 'emoji' => '🌰', 'price' => 25000,
             'recipe' => [
-                'arabica-beans'  => 18,
-                'fresh-milk'     => 150,
+                'arabica-beans' => 18,
+                'fresh-milk' => 150,
                 'sirup-hazelnut' => 20,
             ],
         ],
@@ -277,7 +275,7 @@ return [
             'recipe' => [
                 'arabica-beans' => 18,
                 'bubuk-cokelat' => 20,
-                'fresh-milk'    => 150,
+                'fresh-milk' => 150,
             ],
         ],
 
@@ -285,8 +283,8 @@ return [
             'name' => 'Oat Milk Latte', 'category' => 'Kopi', 'emoji' => '🌾', 'price' => 28000,
             'recipe' => [
                 'arabica-beans' => 18,
-                'oat-milk'      => 180,
-                'gula-cair'     => 15,
+                'oat-milk' => 180,
+                'gula-cair' => 15,
             ],
         ],
 
@@ -294,8 +292,8 @@ return [
             'name' => 'Es Kopi Susu', 'category' => 'Kopi', 'emoji' => '🧋', 'price' => 20000,
             'recipe' => [
                 'robusta-beans' => 18,
-                'fresh-milk'    => 100,
-                'gula-cair'     => 20,
+                'fresh-milk' => 100,
+                'gula-cair' => 20,
             ],
         ],
 
@@ -305,16 +303,16 @@ return [
             'name' => 'Chocolate', 'category' => 'Non-Kopi', 'emoji' => '🍫', 'price' => 20000,
             'recipe' => [
                 'bubuk-cokelat' => 25,
-                'fresh-milk'    => 150,
-                'gula-cair'     => 20,
+                'fresh-milk' => 150,
+                'gula-cair' => 20,
             ],
         ],
 
         'matcha' => [
             'name' => 'Matcha', 'category' => 'Non-Kopi', 'emoji' => '🍵', 'price' => 23000,
             'recipe' => [
-                'bubuk-matcha'  => 5,
-                'fresh-milk'    => 150,
+                'bubuk-matcha' => 5,
+                'fresh-milk' => 150,
                 'sirup-vanilla' => 10,
             ],
         ],
@@ -329,7 +327,7 @@ return [
         'french-fries' => [
             'name' => 'French Fries', 'category' => 'Snack', 'emoji' => '🍟', 'price' => 20000,
             'recipe' => [
-                'kentang-beku'  => 150,
+                'kentang-beku' => 150,
                 'minyak-goreng' => 40,
             ],
         ],
@@ -337,8 +335,8 @@ return [
         'roti-bakar-cokelat' => [
             'name' => 'Roti Bakar Cokelat', 'category' => 'Snack', 'emoji' => '🍞', 'price' => 18000,
             'recipe' => [
-                'roti-tawar'    => 2,
-                'mentega'       => 10,
+                'roti-tawar' => 2,
+                'mentega' => 10,
                 'selai-cokelat' => 30,
             ],
         ],
@@ -347,7 +345,7 @@ return [
             'name' => 'Roti Bakar Keju', 'category' => 'Snack', 'emoji' => '🧀', 'price' => 20000,
             'recipe' => [
                 'roti-tawar' => 2,
-                'mentega'    => 10,
+                'mentega' => 10,
                 'keju-slice' => 2,
             ],
         ],
@@ -355,9 +353,9 @@ return [
         'pisang-goreng-keju' => [
             'name' => 'Pisang Goreng Keju', 'category' => 'Snack', 'emoji' => '🍌', 'price' => 18000,
             'recipe' => [
-                'pisang'        => 2,
-                'tepung-panir'  => 40,
-                'keju-slice'    => 1,
+                'pisang' => 2,
+                'tepung-panir' => 40,
+                'keju-slice' => 1,
                 'minyak-goreng' => 60,
             ],
         ],
@@ -367,18 +365,18 @@ return [
         'nasi-goreng-kampung' => [
             'name' => 'Nasi Goreng Kampung', 'category' => 'Makanan Berat', 'emoji' => '🍳', 'price' => 28000,
             'recipe' => [
-                'beras'         => 90,
-                'telur'         => 1,
+                'beras' => 90,
+                'telur' => 1,
                 'minyak-goreng' => 20,
-                'bumbu-nasgor'  => 15,
+                'bumbu-nasgor' => 15,
             ],
         ],
 
         'mie-goreng' => [
             'name' => 'Mie Goreng Spesial', 'category' => 'Makanan Berat', 'emoji' => '🍜', 'price' => 22000,
             'recipe' => [
-                'mie-instan'    => 1,
-                'telur'         => 1,
+                'mie-instan' => 1,
+                'telur' => 1,
                 'minyak-goreng' => 15,
             ],
         ],
@@ -386,15 +384,14 @@ return [
         'chicken-katsu-rice' => [
             'name' => 'Chicken Katsu Rice', 'category' => 'Makanan Berat', 'emoji' => '🍛', 'price' => 32000,
             'recipe' => [
-                'beras'         => 90,
-                'ayam-fillet'   => 120,
-                'tepung-panir'  => 40,
+                'beras' => 90,
+                'ayam-fillet' => 120,
+                'tepung-panir' => 40,
                 'minyak-goreng' => 80,
             ],
         ],
 
     ],
-
 
     'shipments' => [
         [
@@ -498,7 +495,6 @@ return [
             ],
         ],
     ],
-
 
     'mutations' => [
         [
@@ -767,15 +763,15 @@ return [
 
     'stocks' => [
         'malang-1' => ['arabica-beans' => 24000, 'robusta-beans' => 6000, 'gula-cair' => 12600, 'bubuk-matcha' => 0, 'bubuk-cokelat' => 3200, 'fresh-milk' => 3430, 'oat-milk' => 12000, 'sirup-vanilla' => 3150, 'sirup-caramel' => 6600, 'sirup-hazelnut' => 0, 'cup-16oz' => 150, 'tutup-cup' => 180,
-                       'croissant' => 30, 'kentang-beku' => 9000, 'minyak-goreng' => 7000, 'roti-tawar' => 60, 'mentega' => 1500, 'selai-cokelat' => 2500, 'keju-slice' => 45, 'beras' => 20000, 'telur' => 60, 'bumbu-nasgor' => 1800, 'mie-instan' => 80, 'ayam-fillet' => 5000, 'tepung-panir' => 3000, 'pisang' => 36],
+            'croissant' => 30, 'kentang-beku' => 9000, 'minyak-goreng' => 7000, 'roti-tawar' => 60, 'mentega' => 1500, 'selai-cokelat' => 2500, 'keju-slice' => 45, 'beras' => 20000, 'telur' => 60, 'bumbu-nasgor' => 1800, 'mie-instan' => 80, 'ayam-fillet' => 5000, 'tepung-panir' => 3000, 'pisang' => 36],
         'malang-2' => ['arabica-beans' => 15000, 'robusta-beans' => 9500, 'gula-cair' => 8000, 'bubuk-matcha' => 1500, 'bubuk-cokelat' => 5200, 'fresh-milk' => 2100, 'oat-milk' => 7000, 'sirup-vanilla' => 1500, 'sirup-caramel' => 5200, 'sirup-hazelnut' => 4500, 'cup-16oz' => 80, 'tutup-cup' => 450,
-                       'croissant' => 24, 'kentang-beku' => 6000, 'minyak-goreng' => 5000, 'roti-tawar' => 40, 'mentega' => 900, 'selai-cokelat' => 1800, 'keju-slice' => 30, 'beras' => 15000, 'telur' => 45, 'bumbu-nasgor' => 1200, 'mie-instan' => 60, 'ayam-fillet' => 3500, 'tepung-panir' => 2200, 'pisang' => 24],
+            'croissant' => 24, 'kentang-beku' => 6000, 'minyak-goreng' => 5000, 'roti-tawar' => 40, 'mentega' => 900, 'selai-cokelat' => 1800, 'keju-slice' => 30, 'beras' => 15000, 'telur' => 45, 'bumbu-nasgor' => 1200, 'mie-instan' => 60, 'ayam-fillet' => 3500, 'tepung-panir' => 2200, 'pisang' => 24],
         'malang-3' => ['arabica-beans' => 2000, 'robusta-beans' => 11000, 'gula-cair' => 1500, 'bubuk-matcha' => 0, 'bubuk-cokelat' => 6500, 'fresh-milk' => 8400, 'oat-milk' => 6500, 'sirup-vanilla' => 6800, 'sirup-caramel' => 4800, 'sirup-hazelnut' => 3900, 'cup-16oz' => 520, 'tutup-cup' => 60,
-                       'croissant' => 18, 'kentang-beku' => 5000, 'minyak-goreng' => 4000, 'roti-tawar' => 36, 'mentega' => 800, 'selai-cokelat' => 1500, 'keju-slice' => 25, 'beras' => 12000, 'telur' => 25, 'bumbu-nasgor' => 900, 'mie-instan' => 50, 'ayam-fillet' => 1800, 'tepung-panir' => 2000, 'pisang' => 18],
+            'croissant' => 18, 'kentang-beku' => 5000, 'minyak-goreng' => 4000, 'roti-tawar' => 36, 'mentega' => 800, 'selai-cokelat' => 1500, 'keju-slice' => 25, 'beras' => 12000, 'telur' => 25, 'bumbu-nasgor' => 900, 'mie-instan' => 50, 'ayam-fillet' => 1800, 'tepung-panir' => 2000, 'pisang' => 18],
     ],
 
     'dc_stock' => ['arabica-beans' => 60, 'robusta-beans' => 50, 'gula-cair' => 40, 'bubuk-matcha' => 30, 'bubuk-cokelat' => 35, 'fresh-milk' => 120, 'oat-milk' => 45, 'sirup-vanilla' => 30, 'sirup-caramel' => 28, 'sirup-hazelnut' => 25, 'cup-16oz' => 5000, 'tutup-cup' => 5000,
-                   'croissant' => 40, 'kentang-beku' => 60, 'minyak-goreng' => 50, 'roti-tawar' => 80, 'mentega' => 40, 'selai-cokelat' => 30, 'keju-slice' => 50, 'beras' => 60, 'telur' => 40, 'bumbu-nasgor' => 35, 'mie-instan' => 30, 'ayam-fillet' => 45, 'tepung-panir' => 55, 'pisang' => 30],
+        'croissant' => 40, 'kentang-beku' => 60, 'minyak-goreng' => 50, 'roti-tawar' => 80, 'mentega' => 40, 'selai-cokelat' => 30, 'keju-slice' => 50, 'beras' => 60, 'telur' => 40, 'bumbu-nasgor' => 35, 'mie-instan' => 30, 'ayam-fillet' => 45, 'tepung-panir' => 55, 'pisang' => 30],
 
     'orders' => [
         [

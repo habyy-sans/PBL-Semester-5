@@ -6,49 +6,44 @@ return [
     |--------------------------------------------------------------------------
     | Data role
     |--------------------------------------------------------------------------
-    | name / branch : tampil di sidebar dan topbar (DATA DEMO, nanti dari akun login)
-    | home          : nama route halaman awal setelah login
+    | db    : nilai kolom pengguna.role di database (sumber kebenaran role)
+    | home  : nama route halaman awal setelah login
+    | label : tampilan role di sidebar / pesan akses
     */
 
     'roles' => [
 
         'kasir' => [
-            'label'  => 'Kasir',
-            'name'   => 'Kasir 01',
-            'branch' => 'Cabang Malang',
-            'home'   => 'kasir.pos',
+            'label' => 'Kasir',
+            'db' => 'Kasir',
+            'home' => 'kasir.pos',
         ],
 
         'ic' => [
-            'label'  => 'Kepala Shift / IC',
-            'name'   => 'Kepala Shift',
-            'branch' => 'Cabang Malang',
-            'home'   => 'ic.stock',
+            'label' => 'Kepala Shift / IC',
+            'db' => 'Kepala Shift/Inventory Control (IC)',
+            'home' => 'ic.stock',
         ],
 
         'manager' => [
-            'label'  => 'Manajer Cabang',
-            'name'   => 'Manager Cabang',
-            'branch' => 'Cabang Malang',
-            'home'   => 'manager.dashboard',
+            'label' => 'Manajer Cabang',
+            'db' => 'Manajer Cabang',
+            'home' => 'manager.dashboard',
         ],
 
         'dc' => [
-            'label'  => 'DC Eksternal',
-            'name'   => 'Staf DC',
-            'branch' => 'Distribution Center',
-            'home'   => 'dc.stock',
+            'label' => 'DC Eksternal',
+            'db' => 'DC Eksternal',
+            'home' => 'dc.stock',
         ],
 
         'admin' => [
-            'label'  => 'Admin Sistem',
-            'name'   => 'Admin Sistem',
-            'branch' => 'Seluruh Cabang',
-            'home'   => 'admin.user',
+            'label' => 'Admin Sistem',
+            'db' => 'Admin Sistem',
+            'home' => 'admin.user',
         ],
 
     ],
-
 
     /*
     |--------------------------------------------------------------------------

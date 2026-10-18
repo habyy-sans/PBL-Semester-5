@@ -1,8 +1,9 @@
 @props(['role'])
 
 @php
-    $meta    = config("menu.roles.$role");
-    $initial = strtoupper(mb_substr($meta['name'], 0, 1));
+    $user    = auth()->user();
+    $initial = strtoupper(mb_substr($user->nama_lengkap, 0, 1));
+    $branch  = $user->cabang?->nama_cabang ?? $user->dc?->nama_dc ?? 'Seluruh Cabang';
 @endphp
 
 <header class="top-header">
@@ -36,8 +37,8 @@
             <div class="profile-avatar">{{ $initial }}</div>
 
             <div class="profile-info">
-                <strong>{{ $meta['name'] }}</strong>
-                <span>{{ $meta['branch'] }}</span>
+                <strong>{{ $user->nama_lengkap }}</strong>
+                <span>{{ $branch }}</span>
             </div>
         </div>
 

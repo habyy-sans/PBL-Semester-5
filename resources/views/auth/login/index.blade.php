@@ -2,18 +2,6 @@
 
 @section('title', 'Login')
 
-@php
-    // DEMO: akun contoh untuk testing frontend (hapus saat backend jadi)
-    $demoAccounts = collect(config('menu.roles'))->map(fn ($meta, $key) => [
-        'role'     => $key,
-        'label'    => $meta['label'],
-        'username' => $key,
-        'email'    => $key . '@kopsync.test',
-        'password' => 'password123',
-        'url'      => route($meta['home']),
-    ])->values();
-@endphp
-
 @section('content')
 
 <div class="login-page">
@@ -53,7 +41,7 @@
 
     <main class="login-panel">
 
-        <div class="login-card" x-data="loginForm()" x-init="$refs.identifier.focus()">
+        <div class="login-card" x-data="{ showPassword: false }" x-init="$refs.identifier.focus()">
 
             <!-- brand (hanya tampil di HP) -->
             <div class="login-card-brand">
@@ -68,11 +56,16 @@
             <h2 class="login-title">Masuk ke akun</h2>
             <p class="login-subtitle">Gunakan akun yang diberikan oleh Admin.</p>
 
-            <!-- ERROR UMUM -->
-            <div class="login-alert" x-show="errors.general" x-text="errors.general" x-cloak role="alert"></div>
+            <!-- ERROR UMUM (validasi server) -->
+            @if ($errors->any())
+                <div class="login-alert" role="alert">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
-            <!-- DEMO: saat backend jadi, hapus @submit.prevent dan tambahkan method="POST" action="..." + @csrf -->
-            <form class="login-form" @submit.prevent="submit()" novalidate>
+            <form class="login-form" method="POST" action="{{ route('login.attempt') }}" novalidate>
+
+                @csrf
 
                 <!-- EMAIL / USERNAME -->
                 <div class="login-field">
@@ -82,17 +75,16 @@
                         id="identifier"
                         name="identifier"
                         type="text"
-                        class="login-input"
-                        :class="{ 'has-error': errors.identifier }"
+                        class="login-input @error('identifier') has-error @enderror"
                         placeholder="Masukkan email atau username"
                         autocomplete="username"
+                        value="{{ old('identifier') }}"
                         x-ref="identifier"
-                        x-model="identifier"
-                        @input="errors.identifier = ''; errors.general = ''"
-                        :aria-invalid="errors.identifier ? 'true' : 'false'"
                     >
 
-                    <p class="login-error" x-show="errors.identifier" x-text="errors.identifier" x-cloak></p>
+                    @error('identifier')
+                        <p class="login-error">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- PASSWORD -->
@@ -104,13 +96,9 @@
                             id="password"
                             name="password"
                             :type="showPassword ? 'text' : 'password'"
-                            class="login-input"
-                            :class="{ 'has-error': errors.password }"
+                            class="login-input @error('password') has-error @enderror"
                             placeholder="Masukkan password"
                             autocomplete="current-password"
-                            x-model="password"
-                            @input="errors.password = ''; errors.general = ''"
-                            :aria-invalid="errors.password ? 'true' : 'false'"
                         >
 
                         <button
@@ -121,13 +109,15 @@
                         >Lihat</button>
                     </div>
 
-                    <p class="login-error" x-show="errors.password" x-text="errors.password" x-cloak></p>
+                    @error('password')
+                        <p class="login-error">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- OPSI -->
                 <div class="login-options">
                     <label class="login-check">
-                        <input type="checkbox" name="remember" x-model="remember">
+                        <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
                         Ingat saya
                     </label>
 
@@ -135,12 +125,7 @@
                 </div>
 
                 <!-- SUBMIT -->
-                <button
-                    type="submit"
-                    class="login-submit"
-                    :disabled="loading"
-                    x-text="loading ? 'Memproses...' : 'Masuk'"
-                >Masuk</button>
+                <button type="submit" class="login-submit">Masuk</button>
 
             </form>
 
@@ -155,87 +140,3 @@
 </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    // DEMO: seluruh fungsi ini diganti oleh login backend (Laravel) nanti.
-    function loginForm() {
-
-        return {
-
-            identifier: '',
-            password: '',
-            remember: false,
-            showPassword: false,
-            loading: false,
-
-            errors: {
-                identifier: '',
-                password: '',
-                general: '',
-            },
-
-            accounts: @json($demoAccounts),
-
-
-            fill(account) {
-
-                this.identifier = account.username;
-                this.password = account.password;
-
-                this.errors = { identifier: '', password: '', general: '' };
-            },
-
-
-            validate() {
-
-                this.errors = { identifier: '', password: '', general: '' };
-
-                if (!this.identifier.trim()) {
-                    this.errors.identifier = 'Email atau username wajib diisi.';
-                }
-
-                if (!this.password) {
-                    this.errors.password = 'Password wajib diisi.';
-                } else if (this.password.length < 6) {
-                    this.errors.password = 'Password minimal 6 karakter.';
-                }
-
-                return !this.errors.identifier && !this.errors.password;
-            },
-
-
-            submit() {
-
-                if (!this.validate()) {
-                    return;
-                }
-
-                this.loading = true;
-
-                setTimeout(() => {
-
-                    const input = this.identifier.trim().toLowerCase();
-
-                    const account = this.accounts.find(item =>
-                        (item.username === input || item.email === input)
-                        && item.password === this.password
-                    );
-
-                    if (!account) {
-
-                        this.errors.general = 'Email/username atau password salah.';
-                        this.loading = false;
-
-                        return;
-                    }
-
-                    window.location.href = account.url;
-
-                }, 500);
-            },
-
-        };
-    }
-</script>
-@endpush

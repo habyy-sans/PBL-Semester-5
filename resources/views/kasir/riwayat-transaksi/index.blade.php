@@ -97,10 +97,8 @@
 <script>
 (() => {
 
-    // ---------- DATA (nanti dari backend) ----------
-    const ITEMS = @json(config('demo.items'));
-    const MENUS = @json(config('demo.menus'));
-    const TRX   = @json(config('demo_transactions.list'));
+    // ---------- DATA (dari backend) ----------
+    const TRX = @json($transactions ?? []);
 
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const METHOD_LABEL = { tunai: 'Tunai', qris: 'QRIS', debit: 'Debit' };
@@ -126,25 +124,15 @@
     };
 
     // ---------- HITUNGAN ----------
-    const trxTotal = t => t.items.reduce((s, i) => s + MENUS[i.menu].price * i.qty, 0);
+    const trxTotal = t => t.items.reduce((s, i) => s + i.subtotal, 0);
     const trxQty   = t => t.items.reduce((s, i) => s + i.qty, 0);
 
-    const trxHpp = t => t.items.reduce((s, i) =>
-        s + i.qty * Object.entries(MENUS[i.menu].recipe)
-            .reduce((c, [item, amt]) => c + amt * (ITEMS[item].price / ITEMS[item].size), 0), 0);
+    const trxHpp = t => 0;
 
     // bahan terpakai (satuan terkecil) sesuai SOP
-    const trxUsage = t => {
-        const u = {};
-        t.items.forEach(i => {
-            Object.entries(MENUS[i.menu].recipe).forEach(([item, amt]) => {
-                u[item] = (u[item] || 0) + amt * i.qty;
-            });
-        });
-        return u;
-    };
+    const trxUsage = t => t.usage || {};
 
-    const itemText = t => t.items.map(i => `${MENUS[i.menu].name} × ${i.qty}`).join(', ');
+    const itemText = t => t.items.map(i => `${i.menu} × ${i.qty}`).join(', ');
 
     // ---------- SHIFT & JAM ----------
     const toMinutes = time => {
@@ -234,8 +222,8 @@
 
         const lines = t.items.map(i => `
             <div class="summary-line">
-                <span>${MENUS[i.menu].name} × ${i.qty}</span>
-                <span>${rp(MENUS[i.menu].price * i.qty)}</span>
+                <span>${i.menu} × ${i.qty}</span>
+                <span>${rp(i.subtotal)}</span>
             </div>`).join('');
 
         const pay = `
@@ -251,8 +239,8 @@
         } else {
             const used = Object.entries(trxUsage(t)).map(([item, amt]) => `
                 <div class="summary-line">
-                    <span>${ITEMS[item].name}</span>
-                    <span>−${amt.toLocaleString('id-ID')} ${ITEMS[item].unit}</span>
+                    <span>${amt.name}</span>
+                    <span>−${amt.amount.toLocaleString('id-ID')} ${amt.unit}</span>
                 </div>`).join('');
             const cost = trxHpp(t);
 

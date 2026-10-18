@@ -17,8 +17,6 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "@supabase/server": "^1.9.2",
-        "@supabase/supabase-js": "^2.118.0",
         "alpinejs": "^3.17.4",
         "chart.js": "^4.5.1"
     }

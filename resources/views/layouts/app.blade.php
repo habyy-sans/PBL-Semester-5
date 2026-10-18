@@ -1,8 +1,7 @@
 @php
-    // DEMO: role dibaca dari URL (/kasir/..., /ic/..., dst.)
-    // Nanti diganti: role dari akun yang sedang login.
-    $segment = (string) request()->segment(1);
-    $role = array_key_exists($segment, config('menu.roles')) ? $segment : 'manager';
+    // Role diambil dari akun yang sedang login (sudah lewat middleware auth + role).
+    $user = auth()->user();
+    $role = $user->role_key;
 @endphp
 
 <!DOCTYPE html>
@@ -11,6 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>KopSync - POS Management</title>
 
