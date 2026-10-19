@@ -6,9 +6,8 @@
 @section('content')
 
 @php
-    $branchKey  = config('demo_manager.branch');
-    $branchName = config("demo.branches.$branchKey.name", 'Cabang');
-    $storeName  = config("demo.branches.$branchKey.stores." . config('demo_manager.store'), 'Store');
+    $branchName = $branchName ?? 'Cabang';
+    $storeName  = $storeName ?? 'Store';
 @endphp
 
 <section class="page active">
@@ -16,7 +15,7 @@
     <!-- INFO STORE -->
     <div class="table-toolbar">
 
-        <span class="table-meta" id="dataDate" data-store="{{ $storeName }} · {{ $branchName }}"></span>
+        <span class="table-meta" id="dataDate" data-store="{{ $storeName }}"></span>
 
     </div>
 
@@ -193,14 +192,8 @@
 </section>
 
 <script>
-    // DATA DEMO (nanti diganti data dari backend)
-    window.KOPSYNC = {
-        items:        @json(config('demo.items')),
-        menus:        @json(config('demo.menus')),
-        transactions: @json(config('demo_transactions.list')),
-        mutations:    @json(config('demo.mutations')),
-        shipments:    @json(config('demo.shipments')),
-    };
+    // Data dari backend (lihat Manager\DashboardController)
+    window.KOPSYNC = @json($payload);
 </script>
 
 @endsection

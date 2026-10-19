@@ -58,7 +58,6 @@
                 <option value="approval">Menunggu Approval</option>
                 <option value="disetujui">Diteruskan ke DC</option>
                 <option value="dikirim">Dikirim DC</option>
-                <option value="konfirmasi">Menunggu Konfirmasi IC</option>
                 <option value="diterima">Diterima</option>
             </select>
             <select id="rsSource" class="select">
@@ -105,115 +104,126 @@
 <script>
 (() => {
 
-    // ---------- DATA (nanti dari backend) ----------
-    const ITEMS = @json(config('demo.items'));
-    const MUT   = @json(config('demo.mutations'));
-    const SHIP  = @json(config('demo.shipments'));
-    const ORD   = @json(config('demo_restock.orders'));
+    // ---------- ENDPOINT BACKEND ----------
+    const URLS = {
+        draft:  @json(route('manager.restock.draft')),
+        approve: @json(route('manager.restock.approve')),
+    };
 
-    const DRAFT_NO = '#RS-024';
-    const MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const CSRF  = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
     const STATUS = {
         approval:   { label: 'Menunggu Approval',     cls: 'warning' },
         disetujui:  { label: 'Diteruskan ke DC',      cls: 'info'    },
         dikirim:    { label: 'Dikirim DC',            cls: 'info'    },
-        konfirmasi: { label: 'Menunggu Konfirmasi IC', cls: 'warning' },
         diterima:   { label: 'Diterima',              cls: 'success' },
     };
 
-    // status Surat Jalan => status Instruksi Pengiriman
-    const SHIP_MAP = { dikirim: 'dikirim', menunggu: 'konfirmasi', diterima: 'diterima' };
+    const INFO = {
+        approval:   'Menunggu persetujuan Manager.',
+        disetujui:  'Sudah disetujui dan masuk antrean kerja DC. DC akan menyiapkan barang dan menerbitkan Surat Jalan Digital.',
+        dikirim:    'DC sudah mengirim barang. Menunggu barang tiba di cabang, lalu dikonfirmasi Kepala Shift (IC).',
+        diterima:   'Barang sudah dikonfirmasi IC dan stok cabang sudah bertambah.',
+    };
 
     const REASONS = ['Lonjakan pengunjung', 'Pengganti barang waste', 'Stok kurang dari perkiraan', 'Lainnya'];
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
 
-    const fmtDate = d => {
-        const [y, m, day] = d.split('-');
-        return `${Number(day)} ${MONTHS[Number(m) - 1]} ${y}`;
-    };
+    // ---------- STATE (diisi dari backend) ----------
+    let ITEMS      = {};     // info bahan, kunci = bahan_id
+    let draftItems = [];     // usulan restock real-time (stok < minimum)
+    let orders     = [];     // riwayat instruksi (draft_instruksi)
 
-    // 3430 ml (isi 700) => "4 Botol 630 ml"
-    const fmtStock = (key, amount) => {
-        const i = ITEMS[key];
-        if (i.size === 1) return `${amount.toLocaleString('id-ID')} ${i.pack}`;
-        const p = Math.floor(amount / i.size);
-        const r = amount % i.size;
-        return `${p} ${i.pack}` + (r ? ` ${r.toLocaleString('id-ID')} ${i.unit}` : '');
-    };
+    let keyword  = '';
+    let fStatus  = 'semua';
+    let fSource  = 'semua';
 
-    // ---------- STATE ----------
-    let keyword = '';
-    let fStatus = 'semua';
-    let fSource = 'semua';
-
-    // "hari ini" pada demo = tanggal mutasi terakhir
-    const lastMut = [...MUT].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
-
-    // bahan di bawah / sama dengan batas minimum => isi draft otomatis
-    const LOW = Object.entries(ITEMS)
-        .filter(([, i]) => i.stock <= i.min)
-        .map(([key, i]) => ({ key, ...i }));
-
-    // kebutuhan = stok minimum - stok aktual, dibulatkan ke atas ke kemasan utuh
-    const suggest = i => Math.max(1, Math.ceil((i.min - i.stock) / i.size));
-
-    const draftQty = {};
-    LOW.forEach(i => draftQty[i.key] = suggest(i));
-
-    let draftApproved = false;
-    const created = [];                    // reorder manual yang dibuat di sesi ini
+    let draftQty = {};       // jumlah kemasan per bahan pada draft otomatis
 
     // reorder manual (dialog)
     let mLines  = {};
-    let mPick   = Object.keys(ITEMS)[0];
+    let mPick   = null;
     let mAdd    = 1;
     let mReason = REASONS[0];
     let mNote   = '';
 
-    // ---------- BANGUN DAFTAR INSTRUKSI ----------
-    const history = () => ORD.map(o => {
-        const sh = SHIP.find(s => s.no === o.shipment);
-        return {
-            no: o.no, date: o.date, source: o.source, reason: o.reason || '',
-            shipment: o.shipment,
-            status: SHIP_MAP[sh.status],
-            items: sh.items.map(i => ({ key: i.item, qty: i.sent, sent: i.sent, received: i.received, note: i.note })),
-        };
-    });
+    // 3430 ml (isi 700) => "4 Kotak 630 ml"
+    const fmtStock = (item, amount) => {
+        if (!item) return String(amount);
+        const size = Number(item.isi_per_kemasan) || 1;
+        if (size <= 1) return `${amount.toLocaleString('id-ID')} ${item.satuan}`;
+        const p = Math.floor(amount / size);
+        const r = Math.round((amount - p * size) * 100) / 100;
+        return `${p.toLocaleString('id-ID')} ${item.nama_kemasan}` + (r ? ` ${r.toLocaleString('id-ID')} ${item.satuan}` : '');
+    };
 
-    const draftOrder = () => ({
-        no: DRAFT_NO, date: lastMut.date, source: 'otomatis', reason: '', shipment: null,
-        status: draftApproved ? 'disetujui' : 'approval',
-        items: LOW.filter(i => draftApproved ? draftQty[i.key] > 0 : true)
-                  .map(i => ({ key: i.key, qty: draftQty[i.key] })),
-    });
+    const today = () => {
+        const d = new Date();
+        return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    };
+
+    // kebutuhan (satuan dasar) dibulatkan ke atas ke kemasan utuh
+    const suggestPacks = i => Math.max(1, Math.ceil(i.kebutuhan / (Number(i.isi_per_kemasan) || 1)));
+
+    const orderCost = o => o.draft
+        ? o.items.reduce((s, l) => s + l.qty * ITEMS[l.bahan_id].harga_beli, 0)
+        : o.items.reduce((s, l) => s + l.qty_base * l.harga_beli, 0);
+
+    // ---------- MUAT DATA DARI BACKEND ----------
+    async function loadData() {
+        $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Memuat data...</div></td></tr>';
+
+        const res  = await fetch(URLS.draft, { headers: { 'Accept': 'application/json' } });
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok || !json) {
+            $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Gagal memuat data. Muat ulang halaman.</div></td></tr>';
+            return;
+        }
+
+        ITEMS = {};
+        json.items.forEach(i => ITEMS[String(i.bahan_id)] = i);
+        draftItems = json.items;
+        orders = json.orders || [];
+
+        draftQty = {};
+        draftItems.forEach(i => draftQty[i.bahan_id] = suggestPacks(i));
+
+        if (mPick === null) mPick = Object.keys(ITEMS)[0] ?? null;
+
+        renderTable();
+    }
+
+    // ---------- BANGUN DAFTAR INSTRUKSI ----------
+    const draftOrder = () => draftItems.length ? [{
+        draft: true,
+        no: 'DRAFT',
+        date: today(),
+        source: 'otomatis',
+        status: 'approval',
+        items: draftItems.map(i => ({ bahan_id: i.bahan_id, qty: draftQty[i.bahan_id] || 0 })),
+    }] : [];
 
     const allOrders = () => [
-        ...(LOW.length ? [draftOrder()] : []),
-        ...created.slice().reverse(),
-        ...history(),
+        ...draftOrder(),
+        ...orders.map(o => ({ ...o, draft: false })),
     ];
-
-    const orderCost = o => o.items.reduce((s, i) => s + i.qty * ITEMS[i.key].price, 0);
-
-    const draftTotal = () => LOW.reduce((s, i) => s + (draftQty[i.key] || 0) * i.price, 0);
-    const draftCount = () => LOW.reduce((s, i) => s + (draftQty[i.key] || 0), 0);
 
     // ---------- RENDER ----------
     function renderStats(all) {
         const count = st => all.filter(o => o.status === st).length;
 
-        const approval = count('approval');
-        const ship     = count('dikirim') + count('konfirmasi');
+        const hasDraft = draftItems.length > 0;
+        const ship     = count('dikirim');
 
-        $('stApproval').textContent    = approval + ' Draft';
-        $('stApprovalSub').textContent = approval ? DRAFT_NO + ' perlu ditinjau' : 'Tidak ada draft';
+        $('stApproval').textContent    = hasDraft ? '1 Draft' : '0 Draft';
+        $('stApprovalSub').textContent = hasDraft ? draftItems.length + ' bahan di bawah minimum' : 'Tidak ada draft';
         $('stQueue').textContent       = count('disetujui') + ' Instruksi';
         $('stShip').textContent        = ship + ' Instruksi';
-        $('stShipSub').textContent     = count('konfirmasi') + ' menunggu konfirmasi IC';
+        $('stShipSub').textContent     = ship ? 'Menunggu konfirmasi IC' : 'Tidak ada pengiriman';
         $('stDone').textContent        = count('diterima') + ' Instruksi';
     }
 
@@ -224,7 +234,7 @@
         const list = all.filter(o =>
             (fStatus === 'semua' || o.status === fStatus) &&
             (fSource === 'semua' || o.source === fSource) &&
-            o.no.toLowerCase().includes(keyword.toLowerCase()));
+            (String(o.no) + ' ' + (o.draft ? 'draft usulan' : '')).toLowerCase().includes(keyword.toLowerCase()));
 
         $('rsMeta').textContent = list.length + ' instruksi';
 
@@ -235,8 +245,8 @@
 
         $('rsBody').innerHTML = list.map(o => `
             <tr>
-                <td><strong>${o.no}</strong></td>
-                <td class="col-nowrap">${fmtDate(o.date)}</td>
+                <td><strong>${o.draft ? 'Draft Otomatis' : o.no}</strong></td>
+                <td class="col-nowrap">${o.date}</td>
                 <td><span class="status info">${o.source === 'otomatis' ? 'Otomatis' : 'Manual'}</span></td>
                 <td>${o.items.length} jenis</td>
                 <td style="text-align:right"><strong>${rp(orderCost(o))}</strong></td>
@@ -251,17 +261,23 @@
     const openModal  = html => $('modalRoot').innerHTML = `<div class="modal-backdrop" id="modalBg">${html}</div>`;
     const closeModal = () => $('modalRoot').innerHTML = '';
 
-    function flash(msg) {
-        $('flashRoot').innerHTML = `<div class="flash-success">${msg}</div>`;
-        setTimeout(() => $('flashRoot').innerHTML = '', 4000);
+    function flash(msg, ok = true) {
+        $('flashRoot').innerHTML = `<div class="flash-success" style="${ok ? '' : 'background:#fdecea;color:#b3261e'}">${msg}</div>`;
+        setTimeout(() => $('flashRoot').innerHTML = '', 5000);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ---- tinjau draft otomatis ----
+    const dSubtotal = i => (draftQty[i.bahan_id] || 0) * i.harga_beli;
+    const dTotal    = () => draftItems.reduce((s, i) => s + dSubtotal(i), 0);
+    const dCount    = () => draftItems.reduce((s, i) => s + (draftQty[i.bahan_id] || 0), 0);
+
     function showDraft() {
+        if (!draftItems.length) return;
+
         openModal(`
             <div class="modal-box wide" style="max-width:680px">
-                <h4>Draft Instruksi Pengiriman ${DRAFT_NO}</h4>
+                <h4>Draft Instruksi Pengiriman (Usulan Otomatis)</h4>
                 <p>Dibuat otomatis oleh sistem (stok minimum − stok aktual). Sesuaikan jumlah bila perlu, lalu setujui agar diteruskan ke antrean DC.</p>
 
                 <div class="table-wrapper" style="margin-top:12px">
@@ -276,39 +292,63 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${LOW.map(i => `
+                            ${draftItems.map(i => `
                             <tr>
-                                <td><strong>${i.name}</strong></td>
-                                <td>${fmtStock(i.key, i.stock)}</td>
-                                <td>${fmtStock(i.key, i.min)}</td>
+                                <td><strong>${i.nama_bahan}</strong></td>
+                                <td>${fmtStock(i, i.stok_aktual)}</td>
+                                <td>${fmtStock(i, i.stok_minimum)}</td>
                                 <td>
                                     <div class="form-row">
-                                        <input type="number" min="0" step="1" class="table-input qty" data-qty="${i.key}" value="${draftQty[i.key]}">
-                                        <span class="form-unit">${i.pack}</span>
+                                        <input type="number" min="0" step="1" class="table-input qty" data-qty="${i.bahan_id}" value="${draftQty[i.bahan_id]}">
+                                        <span class="form-unit">${i.nama_kemasan}</span>
                                     </div>
                                 </td>
-                                <td style="text-align:right" id="sub-${i.key}">${rp(draftQty[i.key] * i.price)}</td>
+                                <td style="text-align:right" id="sub-${i.bahan_id}">${rp(dSubtotal(i))}</td>
                             </tr>`).join('')}
                         </tbody>
                     </table>
                 </div>
 
                 <div class="summary-box">
-                    <div class="summary-line"><span><b>Total estimasi biaya</b></span><span><b id="draftTotal">${rp(draftTotal())}</b></span></div>
+                    <div class="summary-line"><span><b>Total estimasi biaya</b></span><span><b id="draftTotal">${rp(dTotal())}</b></span></div>
                 </div>
 
                 <div class="modal-actions">
                     <button type="button" class="outline-button" data-close>Batal</button>
-                    <button type="button" class="primary-button" id="btnApprove" ${draftCount() ? '' : 'disabled'}>Setujui &amp; Teruskan ke DC</button>
+                    <button type="button" class="primary-button" id="btnApprove" ${dCount() ? '' : 'disabled'}>Setujui &amp; Teruskan ke DC</button>
                 </div>
             </div>`);
     }
 
-    function approveDraft() {
-        draftApproved = true;
+    async function approveDraft() {
+        const payload = {
+            asal: 'otomatis',
+            items: draftItems
+                .map(i => ({
+                    bahan_id: i.bahan_id,
+                    qty_diminta: (draftQty[i.bahan_id] || 0) * (Number(i.isi_per_kemasan) || 1),
+                }))
+                .filter(i => i.qty_diminta > 0),
+        };
+
+        if (!payload.items.length) return;
+
+        const res  = await fetch(URLS.approve, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const json = await res.json().catch(() => ({}));
+
         closeModal();
-        renderTable();
-        flash(`Draft ${DRAFT_NO} disetujui (${draftCount()} kemasan, ${rp(draftTotal())}) dan diteruskan ke antrean DC.`);
+
+        if (!res.ok) {
+            flash(json.message || 'Persetujuan draft gagal. Coba lagi.', false);
+            return;
+        }
+
+        flash(`Draft ${json.no} disetujui (${json.count} jenis bahan) dan diteruskan ke antrean DC.`);
+        await loadData();
     }
 
     // ---- detail instruksi ----
@@ -316,37 +356,23 @@
         const o = allOrders().find(x => x.no === no);
         if (!o) return;
 
-        const hasShip = !!o.shipment;
-
-        const rows = o.items.map(i => {
-            const it = ITEMS[i.key];
+        const rows = o.items.map(l => {
+            const it = ITEMS[String(l.item)] || {};
+            const pack = l.pack || it.nama_kemasan || '';
+            const name = l.name || it.nama_bahan || '-';
             return `
             <tr>
-                <td><strong>${it.name}</strong></td>
-                <td>${i.qty} ${it.pack}</td>
-                ${hasShip ? `
-                <td>${i.sent} ${it.pack}</td>
-                <td>${i.received === null || i.received === undefined ? '-' : i.received + ' ' + it.pack}</td>` : ''}
-                <td style="text-align:right">${rp(i.qty * it.price)}</td>
+                <td><strong>${name}</strong></td>
+                <td>${l.qty} ${pack}</td>
+                <td>${l.qty_base.toLocaleString('id-ID')} ${it.satuan || ''}</td>
+                <td style="text-align:right">${rp(l.qty_base * l.harga_beli)}</td>
             </tr>`;
         }).join('');
-
-        const notes = hasShip
-            ? o.items.filter(i => i.note).map(i => `${ITEMS[i.key].name}: ${i.note}`).join('. ')
-            : '';
-
-        const info = {
-            approval:   'Menunggu persetujuan Manager.',
-            disetujui:  'Sudah disetujui dan masuk antrean kerja DC. DC akan menyiapkan barang dan menerbitkan Surat Jalan Digital.',
-            dikirim:    `DC sudah mengirim barang lewat Surat Jalan ${o.shipment}. Menunggu barang tiba di cabang.`,
-            konfirmasi: `Surat Jalan ${o.shipment} sudah tiba dan menunggu Kepala Shift (IC) memeriksa serta mengonfirmasi penerimaan.`,
-            diterima:   `Surat Jalan ${o.shipment} sudah dikonfirmasi IC dan stok cabang sudah bertambah.`,
-        }[o.status];
 
         openModal(`
             <div class="modal-box wide" style="max-width:680px">
                 <h4>Instruksi Pengiriman ${o.no}</h4>
-                <p>${fmtDate(o.date)} · ${o.source === 'otomatis' ? 'Otomatis dari alert restock' : 'Reorder manual' + (o.reason ? ' · ' + o.reason : '')}${hasShip ? ' · ' + o.shipment : ''}</p>
+                <p>${o.date} · ${o.source === 'otomatis' ? 'Otomatis dari alert restock' : 'Reorder manual'}</p>
 
                 <div class="table-wrapper" style="margin-top:12px">
                     <table>
@@ -354,7 +380,7 @@
                             <tr>
                                 <th>Bahan</th>
                                 <th>Dipesan</th>
-                                ${hasShip ? '<th>Dikirim</th><th>Diterima</th>' : ''}
+                                <th>Satuan Dasar</th>
                                 <th style="text-align:right">Estimasi</th>
                             </tr>
                         </thead>
@@ -367,8 +393,7 @@
                     <div class="summary-line"><span>Status</span><span>${STATUS[o.status].label}</span></div>
                 </div>
 
-                <div class="info-note">${info}</div>
-                ${notes ? `<div class="info-note error">Catatan penerimaan — ${notes}</div>` : ''}
+                <div class="info-note">${INFO[o.status]}</div>
 
                 <div class="modal-actions">
                     <button type="button" class="primary-button" data-close>Tutup</button>
@@ -377,15 +402,15 @@
     }
 
     // ---- reorder manual ----
-    const mTotal = () => Object.entries(mLines).reduce((s, [k, q]) => s + q * ITEMS[k].price, 0);
+    const mTotal = () => Object.entries(mLines).reduce((s, [k, q]) => s + q * (ITEMS[k]?.harga_beli || 0), 0);
     const mCount = () => Object.values(mLines).reduce((s, q) => s + q, 0);
 
     function showManual() {
         const keys = Object.keys(mLines);
 
         const options = Object.entries(ITEMS)
-            .sort((a, b) => a[1].name.localeCompare(b[1].name))
-            .map(([k, i]) => `<option value="${k}" ${k === mPick ? 'selected' : ''}>${i.name} (${i.pack})</option>`)
+            .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
+            .map(([k, i]) => `<option value="${k}" ${k === mPick ? 'selected' : ''}>${i.nama_bahan} (${i.nama_kemasan})</option>`)
             .join('');
 
         openModal(`
@@ -400,16 +425,16 @@
                         <input type="number" min="1" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
                         <button type="button" class="outline-button" data-madd>Tambah</button>
                     </div>
-                    <div class="form-hint">Jumlah dalam kemasan (${ITEMS[mPick].pack}).</div>
+                    <div class="form-hint">Jumlah dalam kemasan.</div>
                 </div>
 
                 <div class="summary-box">
                     <div class="summary-title">DAFTAR BAHAN</div>
                     ${keys.length ? keys.map(k => `
                     <div class="form-row" style="margin-bottom:8px">
-                        <span style="flex:1;font-size:10px">${ITEMS[k].name}</span>
+                        <span style="flex:1;font-size:10px">${ITEMS[k].nama_bahan}</span>
                         <input type="number" min="0" step="1" class="table-input qty" data-mqty="${k}" value="${mLines[k]}">
-                        <span class="form-unit">${ITEMS[k].pack}</span>
+                        <span class="form-unit">${ITEMS[k].nama_kemasan}</span>
                         <button type="button" class="outline-button btn-sm" data-mremove="${k}">Hapus</button>
                     </div>`).join('') : '<div class="form-hint">Belum ada bahan dipilih.</div>'}
                     <div class="summary-line"><span><b>Estimasi biaya</b></span><span><b id="mTotal">${rp(mTotal())}</b></span></div>
@@ -434,24 +459,38 @@
             </div>`);
     }
 
-    function sendManual() {
+    async function sendManual() {
         if (!mCount()) return;
 
-        const no = '#RS-' + String(25 + created.length).padStart(3, '0');
+        const payload = {
+            asal: 'manual',
+            reason: mNote ? `${mReason} — ${mNote}` : mReason,
+            items: Object.entries(mLines)
+                .filter(([, q]) => q > 0)
+                .map(([k, q]) => ({
+                    bahan_id: Number(k),
+                    qty_diminta: q * (Number(ITEMS[k].isi_per_kemasan) || 1),
+                })),
+        };
 
-        created.push({
-            no, date: lastMut.date, source: 'manual', reason: mReason, note: mNote, shipment: null,
-            status: 'disetujui',
-            items: Object.entries(mLines).filter(([, q]) => q > 0).map(([key, qty]) => ({ key, qty })),
+        const res  = await fetch(URLS.approve, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify(payload),
         });
+        const json = await res.json().catch(() => ({}));
 
-        const total = mTotal();
+        if (!res.ok) {
+            closeModal();
+            flash(json.message || 'Reorder manual gagal dikirim. Coba lagi.', false);
+            return;
+        }
 
         mLines = {}; mAdd = 1; mReason = REASONS[0]; mNote = '';
 
         closeModal();
-        renderTable();
-        flash(`Reorder manual ${no} (${rp(total)}) dikirim ke antrean DC.`);
+        flash(`Reorder manual ${json.no} (${json.count} jenis bahan) dikirim ke antrean DC.`);
+        await loadData();
     }
 
     // ---------- EVENT ----------
@@ -461,7 +500,9 @@
         if (t.closest('[data-review]'))  return showDraft();
         if (t.closest('[data-detail]'))  return showOrder(t.closest('[data-detail]').dataset.detail);
         if (t.closest('[data-madd]')) {
-            mLines[mPick] = (mLines[mPick] || 0) + Math.max(1, mAdd);
+            if (mPick && ITEMS[mPick]) {
+                mLines[mPick] = (mLines[mPick] || 0) + Math.max(1, mAdd);
+            }
             mAdd = 1;
             return showManual();
         }
@@ -478,12 +519,12 @@
         if (t.id === 'rsSearch') { keyword = t.value; renderTable(); }
 
         if (t.dataset.qty) {
-            const key = t.dataset.qty;
-            draftQty[key] = Math.max(0, parseInt(t.value, 10) || 0);
+            const id = t.dataset.qty;
+            draftQty[id] = Math.max(0, parseInt(t.value, 10) || 0);
 
-            $('sub-' + key).textContent = rp(draftQty[key] * ITEMS[key].price);
-            $('draftTotal').textContent = rp(draftTotal());
-            $('btnApprove').disabled = !draftCount();
+            $('sub-' + id).textContent = rp(draftQty[id] * ITEMS[id].harga_beli);
+            $('draftTotal').textContent = rp(dTotal());
+            $('btnApprove').disabled = !dCount();
         }
 
         if (t.dataset.mqty) {
@@ -506,7 +547,7 @@
         if (t.id === 'mReason')  { mReason = t.value; }
     });
 
-    renderTable();
+    loadData();
 
 })();
 </script>

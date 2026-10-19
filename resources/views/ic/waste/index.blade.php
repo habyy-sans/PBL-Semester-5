@@ -4,72 +4,21 @@
 @section('description', 'Catat barang rusak atau terbuang beserta alasannya.')
 
 @php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // stock dan size disimpan dalam satuan terkecil (ml / gr / Pcs), harga per 1 kemasan.
-    // Stok diambil dari store default (config demo.default_store); nanti dari akun yang login.
-    $stocks = config('demo.stocks.' . config('demo.default_store'));
+    // Data diisi dari backend via GET /ic/waste/items dan /ic/waste/menus (diload via JS).
+    $user = auth()->user();
+    $by = $user->nama_lengkap;
+    $items = [];
+    $menus = [];
 
-    $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
-        ->values()
-        ->all();
-
-    $menus = collect(config('demo.menus'))
-        ->map(fn ($menu, $id) => ['id' => $id] + $menu)
-        ->values()
-        ->all();
-
-    // Nama pencatat (nanti dari akun yang login)
-    $by = config('menu.roles.ic.name');
-
-    // DEMO: riwayat waste contoh
-    $history = [
-        [
-            'id' => 5, 'time' => '14 Okt 2026 09:15', 'type' => 'bahan',
-            'name' => 'Fresh Milk', 'qty' => '1 Botol', 'reason' => 'Rusak / Pecah',
-            'note' => 'Botol jatuh dan pecah saat dipindahkan', 'value' => 28000, 'by' => $by,
-            'deductions' => [['name' => 'Fresh Milk', 'text' => '700 ml (1 Botol)']],
-        ],
-        [
-            'id' => 4, 'time' => '13 Okt 2026 16:40', 'type' => 'menu',
-            'name' => 'Matcha', 'qty' => '1 Porsi', 'reason' => 'Salah Buat',
-            'note' => '', 'value' => 9067, 'by' => $by,
-            'deductions' => [
-                ['name' => 'Bubuk Matcha',  'text' => '5 gr'],
-                ['name' => 'Fresh Milk',    'text' => '150 ml'],
-                ['name' => 'Sirup Vanilla', 'text' => '10 ml'],
-            ],
-        ],
-        [
-            'id' => 3, 'time' => '12 Okt 2026 11:20', 'type' => 'bahan',
-            'name' => 'Sirup Vanilla', 'qty' => '150 ml', 'reason' => 'Tumpah',
-            'note' => '', 'value' => 8500, 'by' => $by,
-            'deductions' => [['name' => 'Sirup Vanilla', 'text' => '150 ml']],
-        ],
-        [
-            'id' => 2, 'time' => '10 Okt 2026 14:05', 'type' => 'bahan',
-            'name' => 'Fresh Milk', 'qty' => '2 Botol', 'reason' => 'Kedaluwarsa',
-            'note' => '', 'value' => 56000, 'by' => $by,
-            'deductions' => [['name' => 'Fresh Milk', 'text' => '1.400 ml (2 Botol)']],
-        ],
-        [
-            'id' => 1, 'time' => '9 Okt 2026 15:30', 'type' => 'menu',
-            'name' => 'Caffe Latte', 'qty' => '2 Porsi', 'reason' => 'Salah Buat',
-            'note' => '', 'value' => 12800, 'by' => $by,
-            'deductions' => [
-                ['name' => 'Gula Cair',     'text' => '80 ml'],
-                ['name' => 'Fresh Milk',    'text' => '140 ml'],
-                ['name' => 'Arabica Beans', 'text' => '20 gr'],
-            ],
-        ],
-    ];
+    // DEMO: riwayat waste contoh (nanti diganti data dari database).
+    $history = [];
 @endphp
 
 @section('content')
 
 <section
     class="page active"
-    x-data="wastePage()"
+    x-data="wastePage()" x-init="init()"
     @keydown.escape.window="closeTop()"
 >
 
@@ -527,6 +476,7 @@
 
             items: @json($items),
             menus: @json($menus),
+            itemKeyToId: {},
             history: @json($history),
             by: @json($by),
 
@@ -802,40 +752,103 @@
             },
 
 
-            save() {
+            // Muat katalog dari backend saat komponen diinisialisasi.
+            async init() {
+                try {
+                    const [itemsRes, menusRes] = await Promise.all([
+                        fetch('/ic/waste/items', {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            },
+                        }),
+                        fetch('/ic/waste/menus', {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            },
+                        }),
+                    ]);
+                    if (itemsRes.ok) {
+                        const itemsData = await itemsRes.json();
+                        this.items = itemsData;
+                        Object.entries(itemsData).forEach(([dbId, item]) => {
+                            this.itemKeyToId[item.name] = dbId;
+                        });
+                    }
+                    if (menusRes.ok) {
+                        this.menus = await menusRes.json();
+                    }
+                } catch (e) {
+                    console.warn('Gagal memuat katalog dari backend:', e);
+                }
+            },
 
+            save() {
                 const lines = this.lines;
 
-                const entry = {
-                    id: Date.now(),
-                    time: this.now(),
-                    type: this.form.type,
-                    name: this.entryName,
-                    qty: this.entryQty,
-                    reason: this.form.reason,
-                    note: this.form.note.trim(),
-                    value: this.totalValue,
-                    by: this.by,
-                    deductions: lines.map(line => ({
-                        name: line.item.name,
-                        text: this.format(line.need) + ' ' + line.item.unit
-                            + ((line.item.size > 1 && line.need >= line.item.size)
-                                ? ' (' + this.display(line.item, line.need) + ')'
-                                : ''),
-                    })),
-                };
+                // Bangun payload untuk backend: 1 baris waste_log per bahan
+                const itemsPayload = lines.map(line => {
+                    const dbId = this.itemKeyToId[line.item.name] || line.item.id;
+                    return {
+                        bahan_id: dbId,
+                        qty: line.need,
+                        alasan: this.form.reason,
+                        keterangan: this.form.note.trim() || null,
+                    };
+                });
 
-                // Kurangi stok di tampilan (di backend dilakukan server)
-                lines.forEach(line => { line.item.stock = line.after; });
+                return fetch('/ic/waste', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ items: itemsPayload }),
+                })
+                .then(async r => {
+                    const json = await r.json();
+                    if (!r.ok) throw new Error(json.message || 'Gagal mencatat waste.');
+                    return json;
+                })
+                .then(json => {
+                    // Kurangi stok di tampilan
+                    lines.forEach(line => { line.item.stock = line.after; });
 
-                this.history.unshift(entry);
+                    const entry = {
+                        id: Date.now(),
+                        time: this.now(),
+                        type: this.form.type,
+                        name: this.entryName,
+                        qty: this.entryQty,
+                        reason: this.form.reason,
+                        note: this.form.note.trim(),
+                        value: this.totalValue,
+                        by: this.by,
+                        deductions: lines.map(line => ({
+                            name: line.item.name,
+                            text: this.format(line.need) + ' ' + line.item.unit
+                                + ((line.item.size > 1 && line.need >= line.item.size)
+                                    ? ' (' + this.display(line.item, line.need) + ')'
+                                    : ''),
+                        })),
+                    };
 
-                this.confirming = false;
-                this.formOpen = false;
+                    this.history.unshift(entry);
+                    this.confirming = false;
+                    this.formOpen = false;
+                    this.submitted = false;
+                    this.form = Object.assign({}, this.form, { amount: '', portions: 1, note: '' });
 
-                this.flash = 'Waste berhasil dicatat. Stok cabang diperbarui dan alert dikirim ke Manager.';
-
-                setTimeout(() => { this.flash = ''; }, 5000);
+                    this.flash = 'Waste berhasil dicatat. Stok cabang diperbarui.';
+                    setTimeout(() => { this.flash = ''; }, 5000);
+                })
+                .catch(err => {
+                    this.confirming = false;
+                    this.flash = err.message || 'Gagal mencatat waste.';
+                    setTimeout(() => { this.flash = ''; }, 5000);
+                });
             },
 
         };
