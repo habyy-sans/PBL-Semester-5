@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
+use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Ic\StockController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
@@ -88,6 +89,18 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::view('/order', 'dc.pesanan.index')->name('order');
 
     Route::view('/shipment', 'dc.pengiriman.index')->name('shipment');
+
+    Route::get('/bahan-baku', [BahanBakuController::class, 'index'])
+        ->name('bahan-baku.index');
+
+    Route::post('/bahan-baku', [BahanBakuController::class, 'store'])
+        ->name('bahan-baku.store');
+
+    Route::put('/bahan-baku/{bahanBaku}', [BahanBakuController::class, 'update'])
+        ->name('bahan-baku.update');
+
+    Route::post('/bahan-baku/{bahanBaku}/tambah-stok', [BahanBakuController::class, 'addStock'])
+        ->name('bahan-baku.add-stock');
 
 });
 
