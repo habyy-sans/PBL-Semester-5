@@ -97,10 +97,17 @@
 <script>
 (() => {
 
-    // ---------- DATA (nanti dari backend) ----------
-    const STORES = @json(config('demo.stores'));
-    const ROLES  = @json(collect(config('roles.roles'))->map(fn ($r) => $r['label']));
-    const USERS  = @json(config('demo_users.list'));
+    // ---------- DATA (dari Admin\UserController@index) ----------
+    const STORES = @json($stores);
+    const ROLES  = @json($roles);
+    const USERS  = @json($users);
+
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    const URL_USERS  = @json(route('admin.user.data'));
+    const URL_STORE  = @json(route('admin.user.store'));
+    const URL_UPDATE = id => @json(route('admin.user.update', 0)).replace('/0/', `/${id}/`);
+    const URL_STATUS = id => @json(route('admin.user.status', 0)).replace('/0/', `/${id}/`);
 
     // role yang terikat ke 1 store (DC dan Admin melihat semua store)
     const STORE_ROLES = ['kasir', 'ic', 'manager'];
@@ -116,7 +123,6 @@
 
     // ---------- STATE ----------
     let users   = USERS.map(u => ({ ...u }));
-    let nextId  = Math.max(...users.map(u => u.id)) + 1;
 
     let keyword = '';
     let fRole   = 'semua';
@@ -236,9 +242,10 @@
 
                     <div class="form-field">
                         <label class="form-label">Role</label>
-                        <select class="form-input" data-f="role" id="fRoleSel">
+                        <select class="form-input${errClass('role')}" data-f="role" id="fRoleSel">
                             ${ROLE_KEYS.map(r => `<option value="${r}" ${r === form.role ? 'selected' : ''}>${esc(ROLES[r])}</option>`).join('')}
                         </select>
+                        ${fieldError('role')}
                     </div>
 
                     <div class="form-field">
@@ -324,6 +331,45 @@
         return e;
     }
 
+    // ---------- API ----------
+    async function api(url, method, payload) {
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+            },
+            body: payload ? JSON.stringify(payload) : null,
+        });
+
+        const body = await res.json().catch(() => ({}));
+        return { ok: res.ok, body };
+    }
+
+    function applyErrors(body) {
+        errors = {};
+
+        if (body.errors) {
+            Object.keys(body.errors).forEach(key => { errors[key] = body.errors[key][0]; });
+        }
+
+        return Object.keys(errors).length > 0;
+    }
+
+    async function loadUsers() {
+        try {
+            const { ok, body } = await api(URL_USERS, 'GET');
+
+            if (ok && Array.isArray(body.users)) {
+                users = body.users.map(u => ({ ...u }));
+                renderTable();
+            }
+        } catch {
+            // data lama tetap dipakai bila gagal muat
+        }
+    }
+
     function saveUser() {
         errors = validate();
 
@@ -332,30 +378,54 @@
             return;
         }
 
-        const data = {
+        const payload = {
             name: form.name.trim(),
             email: form.email.trim().toLowerCase(),
             role: form.role,
-            store: needsStore(form.role) ? form.store : null,
+            store: needsStore(form.role) && form.store ? Number(form.store) : null,
             status: form.status,
+            password: form.password || null,
         };
 
-        let msg;
+        const editing = form.id !== null;
 
-        if (form.id === null) {
-            users.push({ id: nextId++, ...data, last_login: '-' });
-            msg = `Pengguna ${esc(data.name)} berhasil ditambahkan.`;
-        } else {
-            Object.assign(users.find(u => u.id === form.id), data);
-            msg = `Data ${esc(data.name)} berhasil diperbarui${form.password ? ' dan password diubah' : ''}.`;
-        }
+        api(editing ? URL_UPDATE(form.id) : URL_STORE, editing ? 'PUT' : 'POST', payload)
+            .then(({ ok, body }) => {
+                if (!ok) {
+                    if (applyErrors(body)) {
+                        showForm();
+                    } else {
+                        flash(esc(body.message || 'Gagal menyimpan data.'), true);
+                    }
+                    return;
+                }
 
-        closeModal();
-        renderTable();
-        flash(msg);
+                closeModal();
+                renderTable();
+                flash(esc(body.message));
+                return loadUsers();
+            })
+            .catch(() => flash('Terjadi kesalahan jaringan. Coba lagi.', true));
     }
 
     // ---------- AKTIF / NONAKTIF ----------
+    function setStatus(u, status, closeFirst = false) {
+        api(URL_STATUS(u.id), 'PATCH', { status })
+            .then(({ ok, body }) => {
+                if (closeFirst) closeModal();
+
+                if (!ok) {
+                    flash(esc(body.message || (body.errors && Object.values(body.errors).flat()[0]) || 'Gagal mengubah status.'), true);
+                    return;
+                }
+
+                renderTable();
+                flash(esc(body.message));
+                return loadUsers();
+            })
+            .catch(() => flash('Terjadi kesalahan jaringan. Coba lagi.', true));
+    }
+
     function askToggle(id) {
         const u = users.find(x => x.id === id);
 
@@ -384,17 +454,12 @@
             }
         }
 
-        u.status = 'aktif';
-        renderTable();
-        flash(`${esc(u.name)} diaktifkan kembali.`);
+        setStatus(u, 'aktif');
     }
 
     function confirmOff(id) {
         const u = users.find(x => x.id === id);
-        u.status = 'nonaktif';
-        closeModal();
-        renderTable();
-        flash(`${esc(u.name)} dinonaktifkan.`);
+        setStatus(u, 'nonaktif', true);
     }
 
     // ---------- EVENT ----------

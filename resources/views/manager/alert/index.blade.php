@@ -99,12 +99,12 @@
 <script>
 (() => {
 
-    // ---------- DATA (nanti dari backend) ----------
-    const ITEMS = @json(config('demo.items'));
-    const MUT   = @json(config('demo.mutations'));
+    // ---------- DATA (dari Manager\DashboardController@alert) ----------
+    const ITEMS = @json($items);
+    const MUT   = @json($mutations);
 
     const RESTOCK_URL = "{{ route('manager.restock') }}";
-    const DRAFT_NO    = '#RS-024';
+    const DRAFT_NO    = @json($draftNo) ?? '#RS-DRAFT';
     const MONTHS      = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
     const $  = id => document.getElementById(id);
@@ -131,7 +131,8 @@
     const wasteDone = {};                // { idMutasi: true } = sudah dievaluasi
 
     // waktu alert restock = waktu mutasi terakhir (stok terakhir berubah)
-    const lastMut = [...MUT].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
+    const latestMut = [...MUT].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
+    const lastMut = latestMut ?? { date: new Date().toISOString().slice(0, 10), time: '00:00' };
 
     // ---------- HELPER ----------
     // 3430 ml (isi 700) => "4 Botol 630 ml"

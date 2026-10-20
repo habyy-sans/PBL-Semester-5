@@ -4,40 +4,7 @@
 @section('description', 'Pesanan yang sudah disetujui Manajer dan siap diproses.')
 
 @php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // DC bekerja dengan KEMASAN UTUH, jadi jumlah pesanan dihitung dalam kemasan.
-    $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
-        ->keyBy('id')
-        ->all();
-
-    $storeList = collect(config('demo.stores'))
-        ->map(fn ($store, $id) => ['id' => $id] + $store)
-        ->values()
-        ->all();
-
-    $shipments = collect(config('demo.shipments'))->keyBy('no');
-
-    // Pesanan 'dikirim' memakai item dari Surat Jalan-nya; pesanan 'baru' memakai item sendiri.
-    $orders = collect(config('demo.orders'))
-        ->map(function ($order) use ($shipments) {
-
-            $lines = $order['shipment']
-                ? collect($shipments[$order['shipment']]['items'])
-                    ->map(fn ($line) => ['item' => $line['item'], 'qty' => $line['sent']])
-                    ->all()
-                : $order['items'];
-
-            return $order + ['lines' => $lines];
-        })
-        ->values()
-        ->all();
-
-    $dcStock = config('demo.dc_stock');
-
-    // Nomor Surat Jalan berikutnya (di backend dibuat oleh server)
-    $lastNumber   = $shipments->keys()->map(fn ($no) => (int) substr($no, 4))->max();
-    $nextShipment = '#SJ-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+    // Data dari OrderController@index (database), format sama dengan demo lama.
 @endphp
 
 @section('content')
@@ -340,7 +307,7 @@
 
                 <div class="summary-line">
                     <span>No. Surat Jalan</span>
-                    <span x-text="nextNo"></span>
+                    <span class="muted">No. SJ dibuat otomatis oleh sistem</span>
                 </div>
 
             </div>
@@ -502,35 +469,62 @@
             },
 
 
-            // Nomor Surat Jalan berikutnya: #SJ-019 => #SJ-020
+            // Nomor Surat Jalan dibuat oleh server (tidak lagi dihitung di tampilan).
             followingNo(no) {
 
-                const number = parseInt(no.slice(4), 10) + 1;
-
-                return '#SJ-' + String(number).padStart(3, '0');
+                return no;
             },
 
 
-            issue() {
+            async issue() {
 
                 if (!this.allReady) {
                     return;
                 }
 
-                const target = this.orders.find(order => order.no === this.current.no);
-                const issued = this.nextNo;
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const order = this.current;
+                const target = this.orders.find(o => o.no === order.no);
 
-                target.status = 'dikirim';
-                target.shipment = issued;
+                try {
+                    const res = await fetch('/dc/shipment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                        body: JSON.stringify({
+                            draft_id: order.id,
+                            items: order.lines.map(line => ({ bahan_id: Number(line.item), qty_dikirim: line.qty })),
+                        }),
+                    });
 
-                this.nextNo = this.followingNo(issued);
+                    const json = await res.json().catch(() => ({}));
 
-                this.flash = 'Surat Jalan ' + issued + ' untuk pesanan ' + target.no
-                    + ' berhasil diterbitkan dan dikirim ke ' + this.storeName(target.store) + '.';
+                    if (!res.ok) {
+                        this.flash = json.message || 'Gagal menerbitkan Surat Jalan.';
+                        this.confirming = false;
+                        return;
+                    }
 
-                setTimeout(() => { this.flash = ''; }, 6000);
+                    const issued = json.no;
 
-                this.back();
+                    target.status = 'dikirim';
+                    target.shipment = issued;
+
+                    // Langsung tandai dikirim agar IC bisa memeriksa.
+                    await fetch(`/dc/shipment/${json.surat_jalan_id}/kirim`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    });
+
+                    this.flash = 'Surat Jalan ' + issued + ' untuk pesanan ' + target.no
+                        + ' berhasil diterbitkan dan dikirim ke ' + this.storeName(target.store) + '.';
+
+                    setTimeout(() => { this.flash = ''; }, 6000);
+
+                    this.back();
+                } catch (e) {
+                    this.flash = 'Gagal menerbitkan Surat Jalan. Periksa koneksi lalu coba lagi.';
+                    this.confirming = false;
+                }
             },
 
         };

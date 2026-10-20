@@ -17,6 +17,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'keterangan',
     'kelompok_id',
 ])]
+/**
+ * Mutasi stok (DC maupun cabang).
+ *
+ * Kontrak referensi (disepakati, tanpa perubahan schema):
+ * - referensi_id (bigint) SELALU menunjuk ke baris dokumen sumber, bukan UUID:
+ *   - jenis_mutasi 'waste'           => waste_log.waste_id
+ *   - jenis_mutasi 'penerimaan_cabang' => surat_jalan.surat_jalan_id
+ *   - jenis_mutasi 'penjualan'       => transaksi_penjualan.transaksi_id
+ * - kelompok_id (uuid) dipakai untuk mengelompokkan banyak baris dari satu
+ *   transaksi yang sama (misal 1 POST waste multi-bahan). UUID tidak pernah
+ *   dimasukkan ke referensi_id karena kolomnya bertipe bigint.
+ */
 class StockMovement extends Model
 {
     protected $table = 'stock_movements';

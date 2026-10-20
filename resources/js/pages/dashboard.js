@@ -87,9 +87,9 @@ const toMinutes = (time) => {
     return h * 60 + m;
 };
 
-// "Hari ini" pada demo = tanggal transaksi terakhir di data demo
+// "Hari ini" = tanggal transaksi terakhir; fallback: summary dari backend / hari ini
 const DONE        = TRX.filter((t) => t.status === 'selesai');
-const LATEST_DATE = TRX.map((t) => t.date).sort().pop() ?? null;
+const LATEST_DATE = TRX.map((t) => t.date).sort().pop() ?? DATA.summary?.date ?? toKey(new Date());
 const PREV_DATE   = LATEST_DATE ? toKey(addDays(parseDate(LATEST_DATE), -1)) : null;
 
 const todayDone = DONE.filter((t) => t.date === LATEST_DATE);
@@ -129,29 +129,38 @@ function renderSummary() {
         return;
     }
 
-    // ---- omzet, HPP, waste hari ini ----
-    const omzet = sum(todayDone, trxTotal);
-    const hpp   = sum(todayDone, trxHpp);
-    const waste = wasteOnDate(LATEST_DATE).value;
-    const wasteCount = wasteOnDate(LATEST_DATE).count;
-    const laba  = omzet - hpp - waste;
+    // Ringkasan dari backend (ReportService) lebih akurat; fallback hitung lokal.
+    const s = DATA.summary ?? null;
 
-    // dibanding kemarin pada jam yang sama (supaya adil, hari ini belum selesai)
-    const prevOmzet = sum(
-        DONE.filter((t) => t.date === PREV_DATE && toMinutes(t.time) <= LAST_TIME),
-        trxTotal
-    );
+    // ---- omzet, HPP, waste hari ini ----
+    const omzet = s ? s.omzet : sum(todayDone, trxTotal);
+    const hpp   = s ? s.hpp : sum(todayDone, trxHpp);
+    const waste = s ? s.waste : wasteOnDate(LATEST_DATE).value;
+    const wasteCount = s ? s.waste_count : wasteOnDate(LATEST_DATE).count;
+    const laba  = s ? s.laba : omzet - hpp - waste;
 
     const delta = $('statOmzetDelta');
 
-    if (prevOmzet > 0) {
-        const pct = ((omzet - prevOmzet) / prevOmzet) * 100;
-
-        delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin (jam sama)';
+    if (s && s.delta_pct !== null && s.delta_pct !== undefined) {
+        const pct = s.delta_pct;
+        delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin';
         delta.className = pct >= 0 ? 'positive' : 'danger-text';
     } else {
-        delta.textContent = 'Belum ada pembanding kemarin';
-        delta.className = '';
+        // dibanding kemarin pada jam yang sama (supaya adil, hari ini belum selesai)
+        const prevOmzet = sum(
+            DONE.filter((t) => t.date === PREV_DATE && toMinutes(t.time) <= LAST_TIME),
+            trxTotal
+        );
+
+        if (prevOmzet > 0) {
+            const pct = ((omzet - prevOmzet) / prevOmzet) * 100;
+
+            delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin (jam sama)';
+            delta.className = pct >= 0 ? 'positive' : 'danger-text';
+        } else {
+            delta.textContent = 'Belum ada pembanding kemarin';
+            delta.className = '';
+        }
     }
 
     $('statOmzet').textContent = formatSingkat(omzet);
@@ -180,7 +189,7 @@ function renderSummary() {
 
     const label = $('dataDate');
 
-    label.textContent = (label.dataset.store ? label.dataset.store + ' · ' : '') + 'Data demo per ' + fmtDate(LATEST_DATE);
+    label.textContent = (label.dataset.store ? label.dataset.store + ' · ' : '') + 'Data per ' + fmtDate(s ? s.date : LATEST_DATE);
 }
 
 function renderAlerts() {
@@ -210,7 +219,7 @@ function renderAlerts() {
     if (low.length) {
         alerts.push({
             color: 'brown',
-            title: 'Draft Restock #RS-024',
+            title: 'Draft Restock ' + (DATA.draftNo ?? '#RS-024'),
             text: low.length + ' item menunggu approval Manager',
         });
     }

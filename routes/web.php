@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\BahanBakuController;
+use App\Http\Controllers\Dc\OrderController;
+use App\Http\Controllers\Dc\ShipmentController;
+use App\Http\Controllers\Ic\ReceivingController;
 use App\Http\Controllers\Ic\StockController;
+use App\Http\Controllers\Ic\WasteController;
+use App\Http\Controllers\Manager\DashboardController;
+use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
 use Illuminate\Support\Facades\Route;
@@ -54,9 +61,13 @@ Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(functio
 
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
 
-    Route::view('/receiving', 'ic.PenerimaanBarang.index')->name('receiving');
+    Route::get('/receiving', [ReceivingController::class, 'index'])->name('receiving');
+    Route::post('/receiving/{id}/confirm', [ReceivingController::class, 'confirm'])->name('receiving.confirm');
 
     Route::view('/waste', 'ic.Waste.index')->name('waste');
+    Route::get('/waste/items', [WasteController::class, 'items'])->name('waste.items');
+    Route::get('/waste/menus', [WasteController::class, 'menus'])->name('waste.menus');
+    Route::post('/waste', [WasteController::class, 'store'])->name('waste.store');
 
     Route::view('/mutation', 'ic.mutasi.index')->name('mutation');
 
@@ -68,11 +79,13 @@ Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(functio
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
 
-    Route::view('/dashboard', 'manager.dashboard.index')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::view('/alert', 'manager.alert.index')->name('alert');
+    Route::get('/alert', [DashboardController::class, 'alert'])->name('alert');
 
     Route::view('/restock', 'manager.restock.index')->name('restock');
+    Route::get('/restock/draft', [RestockController::class, 'index'])->name('restock.draft');
+    Route::post('/restock/approve', [RestockController::class, 'approve'])->name('restock.approve');
 
     Route::view('/report', 'manager.reports.index')->name('report');
 
@@ -86,9 +99,11 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
 
     Route::get('/stock', [InventoryController::class, 'index'])->name('stock');
 
-    Route::view('/order', 'dc.pesanan.index')->name('order');
+    Route::get('/order', [OrderController::class, 'index'])->name('order');
 
-    Route::view('/shipment', 'dc.pengiriman.index')->name('shipment');
+    Route::get('/shipment', [ShipmentController::class, 'index'])->name('shipment');
+    Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
+    Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
 
     Route::get('/bahan-baku', [BahanBakuController::class, 'index'])
         ->name('bahan-baku.index');
@@ -112,7 +127,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::view('/report', 'admin.laporan.index')->name('report');
 
-    Route::view('/user', 'admin.kelola.index')->name('user');
+    Route::get('/user', [UserController::class, 'index'])->name('user');
+    Route::get('/user/data', [UserController::class, 'users'])->name('user.data');
+    Route::post('/user', [UserController::class, 'store'])->name('user.store');
+    Route::put('/user/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::patch('/user/{user}/status', [UserController::class, 'updateStatus'])->name('user.status');
 
     Route::view('/role', 'placeholder', $soon(
         'Role & Hak Akses',

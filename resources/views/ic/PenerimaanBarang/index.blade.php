@@ -4,23 +4,7 @@
 @section('description', 'Cocokkan barang yang datang dengan Surat Jalan dan konfirmasi penerimaan.')
 
 @php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // DC mengirim KEMASAN UTUH, jadi sent / received dihitung dalam kemasan (Botol, Kantong, Pack, Pcs).
-    // Saat dikonfirmasi, stok bertambah received x isi kemasan (dalam satuan terkecil ml / gr / Pcs).
-    // Stok dan Surat Jalan diambil untuk store default (config demo.default_store);
-    // nanti dari akun yang login.
-    $store  = config('demo.default_store');
-    $stocks = config('demo.stocks.' . $store);
-
-    $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id, 'stock' => $stocks[$id] ?? 0] + $item)
-        ->keyBy('id')
-        ->all();
-
-    $shipments = collect(config('demo.shipments'))
-        ->where('store', $store)
-        ->values()
-        ->all();
+    // Data dari ReceivingController@index (database), format sama dengan demo lama.
 @endphp
 
 @section('content')
@@ -606,11 +590,32 @@
             },
 
 
-            confirmReceipt() {
+            async confirmReceipt() {
 
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
                 const target = this.shipments.find(sj => sj.no === this.current.no);
 
-                // Tambah stok (di tampilan; di backend dilakukan server)
+                // Sinkron ke server, lalu perbarui tampilan dari hasilnya
+                const res = await fetch(`/ic/receiving/${this.current.id}/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        items: this.current.items.map(line => ({
+                            bahan_id: Number(line.item),
+                            qty_diterima: line.received,
+                            catatan: line.note || null,
+                        })),
+                    }),
+                });
+
+                const json = await res.json().catch(() => ({}));
+
+                if (! res.ok) {
+                    this.flash = json.message || 'Konfirmasi gagal. Coba lagi.';
+                    this.confirming = false;
+                    return;
+                }
+
                 this.current.items.forEach(line => {
                     if (!this.invalidQty(line)) {
                         const item = this.itemOf(line);
@@ -625,6 +630,7 @@
 
                 setTimeout(() => { this.flash = ''; }, 5000);
 
+                this.confirming = false;
                 this.back();
             },
 

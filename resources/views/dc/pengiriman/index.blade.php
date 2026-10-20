@@ -4,20 +4,7 @@
 @section('description', 'Proses pengiriman, Surat Jalan digital, dan status pengiriman.')
 
 @php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // DC melihat Surat Jalan semua store. Status penerimaan diubah oleh IC (halaman Penerimaan Barang),
-    // jadi di sini hanya dibaca.
-    $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
-        ->keyBy('id')
-        ->all();
-
-    $storeList = collect(config('demo.stores'))
-        ->map(fn ($store, $id) => ['id' => $id] + $store)
-        ->values()
-        ->all();
-
-    $shipments = config('demo.shipments');
+    // Data dari ShipmentController@index (database), format sama dengan demo lama.
 @endphp
 
 @section('content')
