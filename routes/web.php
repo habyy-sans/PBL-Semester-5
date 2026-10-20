@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
+use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
 use App\Http\Controllers\Ic\ReceivingController;
@@ -103,6 +104,18 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::get('/shipment', [ShipmentController::class, 'index'])->name('shipment');
     Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
+
+    Route::get('/bahan-baku', [BahanBakuController::class, 'index'])
+        ->name('bahan-baku.index');
+
+    Route::post('/bahan-baku', [BahanBakuController::class, 'store'])
+        ->name('bahan-baku.store');
+
+    Route::put('/bahan-baku/{bahanBaku}', [BahanBakuController::class, 'update'])
+        ->name('bahan-baku.update');
+
+    Route::post('/bahan-baku/{bahanBaku}/tambah-stok', [BahanBakuController::class, 'addStock'])
+        ->name('bahan-baku.add-stock');
 
 });
 

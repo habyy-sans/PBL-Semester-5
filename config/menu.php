@@ -87,6 +87,7 @@ return [
                 ['route' => 'dc.stock',    'icon' => '▤', 'label' => 'Stock DC'],
                 ['route' => 'dc.order',    'icon' => '↻', 'label' => 'Pesanan Masuk'],
                 ['route' => 'dc.shipment', 'icon' => '▱', 'label' => 'Pengiriman & Surat Jalan'],
+                ['route' => 'dc.bahan-baku.index','icon' => '▦','label' => 'Kelola Bahan Baku'],
             ],
         ],
 
