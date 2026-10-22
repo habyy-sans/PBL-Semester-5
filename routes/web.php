@@ -133,10 +133,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/user/{user}', [UserController::class, 'update'])->name('user.update');
     Route::patch('/user/{user}/status', [UserController::class, 'updateStatus'])->name('user.status');
 
-    Route::view('/role', 'placeholder', $soon(
-        'Role & Hak Akses',
-        'Kelola role dan hak akses pengguna.'
-    ))->name('role');
+    Route::view('/role', 'admin.akses.index')->name('role');
 
     Route::view('/product', 'placeholder', $soon(
         'Produk & Kategori',
