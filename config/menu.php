@@ -40,7 +40,7 @@ return [
         'admin' => [
             'label' => 'Admin Sistem',
             'db' => 'Admin Sistem',
-            'home' => 'admin.user',
+            'home' => 'admin.dashboard',
         ],
 
     ],
@@ -87,19 +87,26 @@ return [
                 ['route' => 'dc.stock',    'icon' => '▤', 'label' => 'Stock DC'],
                 ['route' => 'dc.order',    'icon' => '↻', 'label' => 'Pesanan Masuk'],
                 ['route' => 'dc.shipment', 'icon' => '▱', 'label' => 'Pengiriman & Surat Jalan'],
-                ['route' => 'dc.bahan-baku.index','icon' => '▦','label' => 'Kelola Bahan Baku'],
+                ['route' => 'dc.bahan-baku.index', 'icon' => '▦', 'label' => 'Kelola Bahan Baku'],
             ],
         ],
 
         'admin' => [
             'MONITORING' => [
-                ['route' => 'admin.report', 'icon' => '▥', 'label' => 'Laporan Seluruh Cabang'],
+                ['route' => 'admin.dashboard', 'icon' => '⌂', 'label' => 'Dashboard'],
+                ['route' => 'admin.stok-cabang.index', 'icon' => '▤', 'label' => 'Stok Cabang'],
+                ['route' => 'admin.stok-dc.index', 'icon' => '▤', 'label' => 'Stok DC'],
             ],
             'SYSTEM' => [
-                ['route' => 'admin.user',    'icon' => '▣', 'label' => 'Kelola Pengguna'],
+                ['route' => 'admin.pengguna.index', 'icon' => '▣', 'label' => 'Kelola Pengguna'],
                 ['route' => 'admin.role',    'icon' => '⚙', 'label' => 'Role & Hak Akses'],
-                ['route' => 'admin.product', 'icon' => '▤', 'label' => 'Produk & Kategori'],
-                ['route' => 'admin.price',   'icon' => '↻', 'label' => 'Kelola Harga'],
+                ['route' => 'admin.cabang.index', 'icon' => '⌂', 'label' => 'Cabang'],
+                ['route' => 'admin.dc.index', 'icon' => '▦', 'label' => 'Distribution Center'],
+                ['route' => 'admin.bahan-baku.index', 'icon' => '▦', 'label' => 'Bahan Baku'],
+                ['route' => 'admin.kategori-menu.index', 'icon' => '▤', 'label' => 'Kategori Menu'],
+                ['route' => 'admin.menu-produk.index', 'icon' => '▤', 'label' => 'Menu Produk'],
+                ['route' => 'admin.varian-menu.index', 'icon' => '≡', 'label' => 'Varian Menu'],
+                ['route' => 'admin.resep-menu.index', 'icon' => '≡', 'label' => 'Resep Menu'],
             ],
         ],
 

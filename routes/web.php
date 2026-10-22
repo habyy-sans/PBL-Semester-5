@@ -1,18 +1,29 @@
 <?php
 
+use App\Http\Controllers\Admin\BahanBakuController as AdminBahanBakuController;
+use App\Http\Controllers\Admin\CabangController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DcController;
+use App\Http\Controllers\Admin\KategoriMenuController;
+use App\Http\Controllers\Admin\MenuProdukController;
+use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\ResepMenuController;
+use App\Http\Controllers\Admin\StokCabangController;
+use App\Http\Controllers\Admin\StokDcController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VarianMenuController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\BahanBakuController;
+use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
 use App\Http\Controllers\Ic\ReceivingController;
 use App\Http\Controllers\Ic\StockController;
 use App\Http\Controllers\Ic\WasteController;
-use App\Http\Controllers\Manager\DashboardController;
-use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
+use App\Http\Controllers\Manager\DashboardController;
+use App\Http\Controllers\Manager\RestockController;
 use Illuminate\Support\Facades\Route;
 
 // Data untuk halaman "segera hadir"
@@ -125,7 +136,26 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () use ($soon) {
 
+    Route::get('/', fn () => redirect()->route('admin.dashboard'))->name('index');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
     Route::view('/report', 'admin.laporan.index')->name('report');
+
+    Route::resource('pengguna', PenggunaController::class)->except('show');
+    Route::patch('/pengguna/{pengguna}/status', [PenggunaController::class, 'updateStatus'])->name('pengguna.status');
+    Route::patch('/pengguna/{pengguna}/password', [PenggunaController::class, 'resetPassword'])->name('pengguna.password');
+
+    Route::resource('cabang', CabangController::class)->except('show');
+    Route::resource('dc', DcController::class)->except('show');
+    Route::resource('bahan-baku', AdminBahanBakuController::class)->except('show');
+    Route::resource('kategori-menu', KategoriMenuController::class)->except('show');
+    Route::resource('menu-produk', MenuProdukController::class)->except('show');
+    Route::resource('varian-menu', VarianMenuController::class)->except('show');
+    Route::resource('resep-menu', ResepMenuController::class)->except('show');
+    Route::get('/stok-cabang', [StokCabangController::class, 'index'])->name('stok-cabang.index');
+    Route::patch('/stok-cabang/{stokCabang}/minimum', [StokCabangController::class, 'updateMinimum'])->name('stok-cabang.minimum');
+    Route::get('/stok-dc', [StokDcController::class, 'index'])->name('stok-dc.index');
+    Route::patch('/stok-dc/{stokDc}/minimum', [StokDcController::class, 'updateMinimum'])->name('stok-dc.minimum');
 
     Route::get('/user', [UserController::class, 'index'])->name('user');
     Route::get('/user/data', [UserController::class, 'users'])->name('user.data');
@@ -133,7 +163,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/user/{user}', [UserController::class, 'update'])->name('user.update');
     Route::patch('/user/{user}/status', [UserController::class, 'updateStatus'])->name('user.status');
 
-    Route::view('/role', 'admin.akses.index')->name('role');
+    Route::view('/role', 'admin.roles.index')->name('role');
 
     Route::view('/product', 'placeholder', $soon(
         'Produk & Kategori',
