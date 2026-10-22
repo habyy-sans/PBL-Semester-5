@@ -35,4 +35,9 @@ class BahanBaku extends Model
     {
         return $this->hasMany(StokDc::class, 'bahan_id');
     }
+
+    public function resep(): HasMany
+    {
+        return $this->hasMany(ResepMenu::class, 'bahan_id');
+    }
 }
