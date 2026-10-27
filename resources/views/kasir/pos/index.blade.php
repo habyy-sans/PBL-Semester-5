@@ -40,6 +40,29 @@
     // DATA dari database (via PosController), bentuk sama dengan config dummy lama.
     const ITEMS = @json($items);
     const MENUS = @json($menus);
+    
+const MENU_IMAGES = {
+    'Espresso': 'espresso.jpg',
+    'Americano': 'americano.jpg',
+    'Caffe Latte': 'caffe latte.jpg',
+    'Cappuccino': 'cappucino.jpg',
+    'Caramel Macchiato': 'caramel-macchiato.jpg',
+    'Vanilla Latte': 'vanilla-latte.jpg',
+    'Hazelnut Latte': 'hazelnut-latte.jpg',
+    'Mocha': 'mocca.jpg',
+    'Oat Milk Latte': 'oat-milk-latte.jpg',
+    'Es Kopi Susu': 'eskopi-susu.jpg',
+    'Chocolate': 'chocolate.jpg',
+    'Matcha': 'matcha.jpg',
+    'Croissant Butter': 'croissant.jpg',
+    'French Fries': 'french-fries.jpg',
+    'Roti Bakar Cokelat': 'roti-bakar-coklat.jpg',
+    'Roti Bakar Keju': 'roti-bakar-keju.jpg',
+    'Pisang Goreng Keju': 'pisang-goreng-keju.jpg',
+    'Nasi Goreng Kampung': 'nasi-goreng-kampung.jpg',
+    'Mie Goreng Spesial': 'mie-goreng-special.jpg',
+    'Chicken Katsu Rice': 'chicken-katsu.jpg'
+};
 
     const stock = {};                          // stok berjalan (satuan terkecil)
     Object.keys(ITEMS).forEach(k => stock[k] = ITEMS[k].stock);
@@ -111,7 +134,15 @@
                 : left <= 5 ? `<em class="pos-badge low">Sisa ${left} porsi</em>` : '';
             return `
             <div class="product-card ${habis ? 'disabled' : ''}" data-add="${id}">
-                <div class="product-image">${m.emoji}</div>
+                <div class="product-image">
+                    ${MENU_IMAGES[m.name] ? `
+                        <img
+                            src="/menu/${encodeURIComponent(MENU_IMAGES[m.name])}"
+                            alt="${m.name}"
+                        >
+                    ` : ''}
+                </div>
+
                 <strong>${m.name}</strong>
                 <span>${rp(m.price)}</span>
                 <div class="pos-card-foot">
