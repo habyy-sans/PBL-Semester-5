@@ -32,9 +32,9 @@ return [
         ],
 
         'dc' => [
-            'label' => 'DC Eksternal',
+            'label' => 'Distribution Center',
             'db' => 'DC Eksternal',
-            'home' => 'dc.stock',
+            'home' => 'dc.stok-dc.index',
         ],
 
         'admin' => [
@@ -84,10 +84,12 @@ return [
 
         'dc' => [
             'MAIN MENU' => [
-                ['route' => 'dc.stock',    'icon' => '▤', 'label' => 'Stock DC'],
-                ['route' => 'dc.order',    'icon' => '↻', 'label' => 'Pesanan Masuk'],
-                ['route' => 'dc.shipment', 'icon' => '▱', 'label' => 'Pengiriman & Surat Jalan'],
-                ['route' => 'dc.bahan-baku.index', 'icon' => '▦', 'label' => 'Kelola Bahan Baku'],
+                ['route' => 'dc.stok-dc.index', 'icon' => '▦', 'label' => 'Stok Gudang DC'],
+                ['route' => 'dc.order',         'icon' => '↻', 'label' => 'Pesanan Masuk'],
+                ['route' => 'dc.shipment',      'icon' => '▱', 'label' => 'Pengiriman & Surat Jalan'],
+            ],
+            'MONITORING' => [
+                ['route' => 'dc.stock',         'icon' => '▤', 'label' => 'Monitoring Stok Cabang'],
             ],
         ],
 
