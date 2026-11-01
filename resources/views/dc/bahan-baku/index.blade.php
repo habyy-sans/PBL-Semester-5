@@ -1,8 +1,8 @@
 
 @extends('layouts.app')
 
-@section('title', 'Kelola Bahan Baku')
-@section('description', 'Kelola data bahan baku dan persediaan DC.')
+@section('title', 'Stok Gudang DC')
+@section('description', 'Pantau persediaan bahan baku dan catat penambahan stok gudang DC.')
 
 @php
     $bahanData = $bahanList->map(function ($bahan) {
@@ -982,22 +982,14 @@
     {{-- Header halaman --}}
     <div class="flex flex-col gap-5 pb-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <p class="text-sm font-medium text-amber-800">MASTER DATA DC</p>
+            <p class="text-sm font-medium text-amber-800">OPERASIONAL GUDANG DC</p>
             <h2 class="mt-1 text-2xl font-bold text-stone-800">
-                Kelola Bahan Baku
+                Stok Gudang DC
             </h2>
             <p class="mt-1 text-sm text-stone-500">
-                Kelola informasi bahan, harga pasok, dan ketersediaan stok DC.
+                Pantau persediaan bahan baku fisik dan catat penambahan stok masuk (inbound restock) dari supplier.
             </p>
         </div>
-
-        <button
-            type="button"
-            @click="openCreate()"
-            class="bb-primary-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition"
-            span class="text-lg">+</span>
-            Tambah Bahan Baku
-        </button>
     </div>
 
     {{-- Kartu ringkasan --}}
@@ -1216,19 +1208,11 @@
                                 <div class="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        @click="openEdit(bahan)"
-                                        title="Edit informasi bahan"
-                                        class="bb-action-button bb-action-edit"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        type="button"
                                         @click="openAddStock(bahan)"
-                                        title="Tambah stok DC"
+                                        title="Tambah stok masuk gudang DC"
                                         class="bb-action-button bb-action-stock"
                                     >
-                                        + Stok
+                                        + Tambah Stok
                                     </button>
                                 </div>
                             </td>
@@ -1288,178 +1272,6 @@
                     Berikutnya
                 </button>
             </div>
-        </div>
-    </div>
-
-    {{-- Modal tambah bahan baku --}}
-    <div
-        x-show="modal === 'create'"
-        x-transition.opacity
-        @keydown.escape.window="closeModal()"
-        @click.self="closeModal()"
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-stone-950/50 p-4 backdrop-blur-sm"
-        style="display: none;"
-    >
-        <div
-            x-show="modal === 'create'"
-            x-transition
-            class="bb-modal-panel my-auto"
-        >
-            <div class="bb-modal-heading flex items-start justify-between border-b border-stone-100 px-6 py-5">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">Master Data DC</p>
-                    <h3 class="mt-1 text-xl font-bold text-stone-800">Tambah Bahan Baku</h3>
-                    <p class="mt-1 text-sm text-stone-500">Masukkan informasi bahan dan stok awal.</p>
-                </div>
-                <button type="button" @click="closeModal()" class="rounded-lg px-3 py-1 text-2xl text-stone-400 hover:bg-stone-100" aria-label="Tutup">×</button>
-            </div>
-
-            <form method="POST" action="{{ route('dc.bahan-baku.store') }}" class="space-y-5 p-6">
-                @csrf
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <label class="block sm:col-span-2">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Nama bahan *</span>
-                        <input name="nama_bahan" required maxlength="150" value="{{ old('nama_bahan') }}"
-                               placeholder="Contoh: Arabica Beans"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Kategori *</span>
-                        <input name="kategori" required maxlength="100" value="{{ old('kategori') }}"
-                               placeholder="Contoh: Bahan Baku"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Satuan stok/resep *</span>
-                        <input name="satuan" required maxlength="30" value="{{ old('satuan') }}"
-                               placeholder="Contoh: gram, ml, pcs"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Nama kemasan *</span>
-                        <input name="nama_kemasan" required maxlength="50" value="{{ old('nama_kemasan') }}"
-                               placeholder="Contoh: Kantong"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Isi per kemasan *</span>
-                        <input type="number" name="isi_per_kemasan" required min="0.001" step="0.001" value="{{ old('isi_per_kemasan') }}"
-                               placeholder="1000"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block sm:col-span-2">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Harga pasok ke cabang (Rp) *</span>
-                        <input type="number" name="harga_beli" required min="0" step="0.01" value="{{ old('harga_beli') }}"
-                               placeholder="180000"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-                </div>
-
-                <div class="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
-                    <h4 class="font-semibold text-stone-800">Persediaan awal DC</h4>
-                    <p class="mt-1 text-xs text-stone-500">Jumlah menggunakan satuan dasar bahan, bukan jumlah kemasan.</p>
-
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <label class="block">
-                            <span class="mb-1.5 block text-sm font-semibold text-stone-700">Stok awal *</span>
-                            <input type="number" name="stok_awal" required min="0" step="0.001" value="{{ old('stok_awal', 0) }}"
-                                   class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                        </label>
-
-                        <label class="block">
-                            <span class="mb-1.5 block text-sm font-semibold text-stone-700">Stok minimum *</span>
-                            <input type="number" name="stok_minimum" required min="0" step="0.001" value="{{ old('stok_minimum', 0) }}"
-                                   class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex flex-col-reverse gap-3 border-t border-stone-100 pt-5 sm:flex-row sm:justify-end">
-                    <button type="button" @click="closeModal()" class="rounded-xl border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
-                    <button type="submit" class="bb-primary-button rounded-xl px-5 py-3 text-sm font-semibold">Simpan Bahan Baku</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Modal edit informasi --}}
-    <div
-        x-show="modal === 'edit'"
-        x-transition.opacity
-        @keydown.escape.window="closeModal()"
-        @click.self="closeModal()"
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-stone-950/50 p-4 backdrop-blur-sm"
-        style="display: none;"
-    >
-        <div x-show="modal === 'edit'" x-transition class="bb-modal-panel my-auto">
-            <div class="bb-modal-heading flex items-start justify-between border-b border-stone-100 px-6 py-5">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">Ubah Master Data</p>
-                    <h3 class="mt-1 text-xl font-bold text-stone-800">Edit Informasi Bahan</h3>
-                    <p class="mt-1 text-sm text-stone-500">
-                        ID: <span class="font-mono font-semibold" x-text="selected ? 'BB-' + String(selected.id).padStart(4, '0') : '—'"></span>
-                    </p>
-                </div>
-                <button type="button" @click="closeModal()" class="rounded-lg px-3 py-1 text-2xl text-stone-400 hover:bg-stone-100" aria-label="Tutup">×</button>
-            </div>
-
-            <form method="POST" :action="updateUrl" class="space-y-5 p-6">
-                @csrf
-                @method('PUT')
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <label class="block sm:col-span-2">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Nama bahan *</span>
-                        <input name="nama_bahan" x-model="form.nama_bahan" required maxlength="150"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Kategori *</span>
-                        <input name="kategori" x-model="form.kategori" required maxlength="100"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Satuan *</span>
-                        <input name="satuan" x-model="form.satuan" required maxlength="30"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Nama kemasan *</span>
-                        <input name="nama_kemasan" x-model="form.nama_kemasan" required maxlength="50"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Isi per kemasan *</span>
-                        <input type="number" name="isi_per_kemasan" x-model="form.isi_per_kemasan" required min="0.001" step="0.001"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-
-                    <label class="block sm:col-span-2">
-                        <span class="mb-1.5 block text-sm font-semibold text-stone-700">Harga pasok ke cabang (Rp) *</span>
-                        <input type="number" name="harga_beli" x-model="form.harga_beli" required min="0" step="0.01"
-                               class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-100">
-                    </label>
-                </div>
-
-                <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
-                    <strong>Informasi:</strong> Form ini hanya mengubah data bahan baku. Stok DC dan stok minimum tidak diubah dari sini.
-                </div>
-
-                <div class="flex flex-col-reverse gap-3 border-t border-stone-100 pt-5 sm:flex-row sm:justify-end">
-                    <button type="button" @click="closeModal()" class="rounded-xl border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
-                    <button type="submit" class="bb-primary-button rounded-xl px-5 py-3 text-sm font-semibold">Simpan Perubahan</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -1689,33 +1501,11 @@
                 return 'bg-green-100 text-green-800';
             },
 
-            openCreate() {
-                this.modal = 'create';
-            },
-
-            openEdit(item) {
-                this.selected = item;
-
-                this.form = {
-                    nama_bahan: item.nama,
-                    kategori: item.kategori || '',
-                    satuan: item.satuan,
-                    nama_kemasan: item.kemasan,
-                    isi_per_kemasan: item.isi,
-                    harga_beli: item.harga
-                };
-
-                this.updateUrl = @js(route('dc.bahan-baku.update', '__ID__'))
-                    .replace('__ID__', encodeURIComponent(item.id));
-
-                this.modal = 'edit';
-            },
-
             openAddStock(item) {
                 this.selected = item;
                 this.stockAmount = '';
 
-                this.stockUrl = @js(route('dc.bahan-baku.add-stock', '__ID__'))
+                this.stockUrl = @js(route('dc.stok-dc.add-stock', '__ID__'))
                     .replace('__ID__', encodeURIComponent(item.id));
 
                 this.modal = 'stock';

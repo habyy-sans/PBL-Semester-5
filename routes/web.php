@@ -13,10 +13,10 @@ use App\Http\Controllers\Admin\StokDcController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VarianMenuController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
+use App\Http\Controllers\Dc\StokDcController as DcStokDcController;
 use App\Http\Controllers\Ic\ReceivingController;
 use App\Http\Controllers\Ic\StockController;
 use App\Http\Controllers\Ic\WasteController;
@@ -116,17 +116,12 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
 
-    Route::get('/bahan-baku', [BahanBakuController::class, 'index'])
-        ->name('bahan-baku.index');
+    // Stok Gudang DC (Persediaan bahan baku & penambahan stok fisik masuk)
+    Route::get('/stok-dc', [DcStokDcController::class, 'index'])->name('stok-dc.index');
+    Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])->name('stok-dc.add-stock');
 
-    Route::post('/bahan-baku', [BahanBakuController::class, 'store'])
-        ->name('bahan-baku.store');
-
-    Route::put('/bahan-baku/{bahanBaku}', [BahanBakuController::class, 'update'])
-        ->name('bahan-baku.update');
-
-    Route::post('/bahan-baku/{bahanBaku}/tambah-stok', [BahanBakuController::class, 'addStock'])
-        ->name('bahan-baku.add-stock');
+    // Backward-compatible redirect jika membuka URL lama /dc/bahan-baku
+    Route::get('/bahan-baku', fn () => redirect()->route('dc.stok-dc.index'))->name('bahan-baku.index');
 
 });
 
