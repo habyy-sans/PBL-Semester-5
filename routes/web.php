@@ -95,8 +95,18 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::get('/alert', [DashboardController::class, 'alert'])->name('alert');
 
     Route::view('/restock', 'manager.restock.index')->name('restock');
-    Route::get('/restock/draft', [RestockController::class, 'index'])->name('restock.draft');
-    Route::post('/restock/approve', [RestockController::class, 'approve'])->name('restock.approve');
+
+    Route::post('/restock/generate-automatic', [RestockController::class, 'generateAutomatic'])
+    ->name('restock.generate-automatic');
+
+    Route::get('/restock/draft', [RestockController::class, 'index'])
+    ->name('restock.draft');
+
+    Route::post('/restock/approve', [RestockController::class, 'approve'])
+    ->name('restock.approve');
+
+    Route::post('/restock/draft/update', [RestockController::class, 'updateDraft'])
+    ->name('restock.update-draft');
 
     Route::view('/report', 'manager.reports.index')->name('report');
 

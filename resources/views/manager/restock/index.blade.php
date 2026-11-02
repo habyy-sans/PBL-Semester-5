@@ -106,7 +106,9 @@
 
     // ---------- ENDPOINT BACKEND ----------
     const URLS = {
+        generate: @json(route('manager.restock.generate-automatic')),
         draft:  @json(route('manager.restock.draft')),
+        update: @json(route('manager.restock.update-draft')),
         approve: @json(route('manager.restock.approve')),
     };
 
@@ -168,63 +170,87 @@
     // kebutuhan (satuan dasar) dibulatkan ke atas ke kemasan utuh
     const suggestPacks = i => Math.max(1, Math.ceil(i.kebutuhan / (Number(i.isi_per_kemasan) || 1)));
 
-    const orderCost = o => o.draft
-        ? o.items.reduce((s, l) => s + l.qty * ITEMS[l.bahan_id].harga_beli, 0)
-        : o.items.reduce((s, l) => s + l.qty_base * l.harga_beli, 0);
+    const orderCost = o =>
+    o.items.reduce((s, l) => s + l.qty * l.harga_beli, 0);
 
-    // ---------- MUAT DATA DARI BACKEND ----------
-    async function loadData() {
-        $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Memuat data...</div></td></tr>';
+    
+// ---------- MUAT DATA DARI BACKEND ----------
 
-        const res  = await fetch(URLS.draft, { headers: { 'Accept': 'application/json' } });
-        const json = await res.json().catch(() => null);
+async function loadData() {
+    $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Memuat data...</div></td></tr>';
 
-        if (!res.ok || !json) {
-            $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Gagal memuat data. Muat ulang halaman.</div></td></tr>';
-            return;
-        }
+    const generateRes = await fetch(URLS.generate, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': CSRF,
+            'Accept': 'application/json',
+        },
+    });
 
-        ITEMS = {};
-        json.items.forEach(i => ITEMS[String(i.bahan_id)] = i);
-        draftItems = json.items;
-        orders = json.orders || [];
+    const generateJson = await generateRes.json().catch(() => null);
 
-        draftQty = {};
-        draftItems.forEach(i => draftQty[i.bahan_id] = suggestPacks(i));
-
-        if (mPick === null) mPick = Object.keys(ITEMS)[0] ?? null;
-
-        renderTable();
+    if (!generateRes.ok || !generateJson) {
+        $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Gagal memproses draft otomatis.</div></td></tr>';
+        return;
     }
 
-    // ---------- BANGUN DAFTAR INSTRUKSI ----------
-    const draftOrder = () => draftItems.length ? [{
-        draft: true,
-        no: 'DRAFT',
-        date: today(),
-        source: 'otomatis',
-        status: 'approval',
-        items: draftItems.map(i => ({ bahan_id: i.bahan_id, qty: draftQty[i.bahan_id] || 0 })),
-    }] : [];
+    const res = await fetch(URLS.draft, {
+        headers: { 'Accept': 'application/json' }
+    });
 
-    const allOrders = () => [
-        ...draftOrder(),
-        ...orders.map(o => ({ ...o, draft: false })),
-    ];
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok || !json) {
+        $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Gagal memuat data. Muat ulang halaman.</div></td></tr>';
+        return;
+    }
+
+    ITEMS = {};
+    json.items.forEach(i => ITEMS[String(i.bahan_id)] = i);
+
+    // Tetap simpan daftar stok menipis untuk pilihan Reorder Manual.
+    draftItems = json.items;
+
+    // Daftar instruksi sepenuhnya berasal dari database.
+    orders = json.orders || [];
+
+    if (mPick === null) {
+        mPick = Object.keys(ITEMS)[0] ?? null;
+    }
+
+    renderTable();
+}
+
+
+    // ---------- BANGUN DAFTAR INSTRUKSI ----------
+    // Semua instruksi diambil dari database.
+    // Tidak ada lagi baris draft sementara.
+    const allOrders = () => orders.map(o => ({
+        ...o,
+        draft: false,
+    }));
 
     // ---------- RENDER ----------
     function renderStats(all) {
         const count = st => all.filter(o => o.status === st).length;
 
-        const hasDraft = draftItems.length > 0;
-        const ship     = count('dikirim');
+        const pending = all.filter(o => o.status === 'approval');
+        const pendingItems = pending.reduce((s, o) => s + o.items.length, 0);
 
-        $('stApproval').textContent    = hasDraft ? '1 Draft' : '0 Draft';
-        $('stApprovalSub').textContent = hasDraft ? draftItems.length + ' bahan di bawah minimum' : 'Tidak ada draft';
-        $('stQueue').textContent       = count('disetujui') + ' Instruksi';
-        $('stShip').textContent        = ship + ' Instruksi';
-        $('stShipSub').textContent     = ship ? 'Menunggu konfirmasi IC' : 'Tidak ada pengiriman';
-        $('stDone').textContent        = count('diterima') + ' Instruksi';
+        const ship = count('dikirim');
+
+        $('stApproval').textContent = pending.length + ' Draft';
+        $('stApprovalSub').textContent = pending.length
+            ? pendingItems + ' detail bahan menunggu persetujuan'
+            : 'Tidak ada draft';
+
+        $('stQueue').textContent = count('disetujui') + ' Instruksi';
+        $('stShip').textContent = ship + ' Instruksi';
+        $('stShipSub').textContent = ship
+            ? 'Menunggu konfirmasi IC'
+            : 'Tidak ada pengiriman';
+
+        $('stDone').textContent = count('diterima') + ' Instruksi';
     }
 
     function renderTable() {
@@ -234,27 +260,33 @@
         const list = all.filter(o =>
             (fStatus === 'semua' || o.status === fStatus) &&
             (fSource === 'semua' || o.source === fSource) &&
-            (String(o.no) + ' ' + (o.draft ? 'draft usulan' : '')).toLowerCase().includes(keyword.toLowerCase()));
+            String(o.no).toLowerCase().includes(keyword.toLowerCase())
+        );
 
         $('rsMeta').textContent = list.length + ' instruksi';
 
         if (!list.length) {
-            $('rsBody').innerHTML = '<tr><td colspan="7"><div class="page-empty">Instruksi tidak ditemukan</div></td></tr>';
+            $('rsBody').innerHTML =
+                '<tr><td colspan="7"><div class="page-empty">Instruksi tidak ditemukan</div></td></tr>';
             return;
         }
 
         $('rsBody').innerHTML = list.map(o => `
             <tr>
-                <td><strong>${o.draft ? 'Draft Otomatis' : o.no}</strong></td>
+                <td><strong>${o.no}</strong></td>
                 <td class="col-nowrap">${o.date}</td>
                 <td><span class="status info">${o.source === 'otomatis' ? 'Otomatis' : 'Manual'}</span></td>
                 <td>${o.items.length} jenis</td>
                 <td style="text-align:right"><strong>${rp(orderCost(o))}</strong></td>
                 <td><span class="status ${STATUS[o.status].cls}">${STATUS[o.status].label}</span></td>
-                <td>${o.status === 'approval'
-                    ? `<button type="button" class="primary-button btn-sm" data-review>Tinjau</button>`
-                    : `<button type="button" class="outline-button btn-sm" data-detail="${o.no}">Detail</button>`}</td>
-            </tr>`).join('');
+                <td>
+                    ${o.status === 'approval'
+                        ? `<button type="button" class="primary-button btn-sm" data-review="${o.id}">Tinjau</button>`
+                        : `<button type="button" class="outline-button btn-sm" data-detail="${o.no}">Detail</button>`
+                    }
+                </td>
+            </tr>
+        `).join('');
     }
 
     // ---------- MODAL ----------
@@ -267,87 +299,226 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ---- tinjau draft otomatis ----
-    const dSubtotal = i => (draftQty[i.bahan_id] || 0) * i.harga_beli;
-    const dTotal    = () => draftItems.reduce((s, i) => s + dSubtotal(i), 0);
-    const dCount    = () => draftItems.reduce((s, i) => s + (draftQty[i.bahan_id] || 0), 0);
 
-    function showDraft() {
-        if (!draftItems.length) return;
+    // ---- REVIEW & EDIT DRAFT TERSIMPAN ----
+    let reviewQty = {};
+    let activeDraftId = null;
+
+    function reviewSubtotal(line) {
+        const qty = reviewQty[line.item] || 0;
+        return qty * line.harga_beli;
+    }
+
+    function reviewTotal(order) {
+        return order.items.reduce(
+            (sum, line) => sum + reviewSubtotal(line),
+            0
+        );
+    }
+
+    function reviewPayload(order) {
+        return {
+            draft_id: order.id,
+            asal: order.source,
+            items: order.items
+                .map(line => ({
+                    bahan_id: Number(line.item),
+                    qty_diminta:
+                        (reviewQty[line.item] || 0) *
+                        (Number(line.isi_per_kemasan) || 1),
+                }))
+                .filter(line => line.qty_diminta > 0),
+        };
+    }
+
+    function showDraft(draftId) {
+        const order = orders.find(o =>
+            Number(o.id) === Number(draftId) &&
+            o.status === 'approval'
+        );
+
+        if (!order) {
+            flash('Draft tidak ditemukan atau sudah tidak menunggu persetujuan.', false);
+            return;
+        }
+
+        activeDraftId = order.id;
+
+        // Jumlah awal diambil dari database.
+        reviewQty = {};
+
+        order.items.forEach(line => {
+            reviewQty[line.item] = Number(line.qty);
+        });
 
         openModal(`
             <div class="modal-box wide" style="max-width:680px">
-                <h4>Draft Instruksi Pengiriman (Usulan Otomatis)</h4>
-                <p>Dibuat otomatis oleh sistem (stok minimum − stok aktual). Sesuaikan jumlah bila perlu, lalu setujui agar diteruskan ke antrean DC.</p>
+                <h4>Review Draft ${order.no}</h4>
+                <p>Periksa dan sesuaikan jumlah bahan sebelum menyetujui instruksi pengiriman ke DC.</p>
+
+                <div class="info-note">
+                    Sumber: ${order.source === 'otomatis' ? 'Draft otomatis' : 'Reorder manual'}
+                    · Status: Menunggu persetujuan
+                </div>
 
                 <div class="table-wrapper" style="margin-top:12px">
                     <table>
                         <thead>
                             <tr>
-                                <th>Bahan</th>
-                                <th>Stok</th>
-                                <th>Minimum</th>
-                                <th>Jumlah Kirim</th>
-                                <th style="text-align:right">Estimasi</th>
+                                <th>Bahan & Informasi Kemasan</th>
+                                <th>Jumlah Pesanan</th>
+                                <th style="text-align:right">Estimasi Biaya</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${draftItems.map(i => `
+                            
+                        ${order.items.map(line => `
                             <tr>
-                                <td><strong>${i.nama_bahan}</strong></td>
-                                <td>${fmtStock(i, i.stok_aktual)}</td>
-                                <td>${fmtStock(i, i.stok_minimum)}</td>
-                                <td>
-                                    <div class="form-row">
-                                        <input type="number" min="0" step="1" class="table-input qty" data-qty="${i.bahan_id}" value="${draftQty[i.bahan_id]}">
-                                        <span class="form-unit">${i.nama_kemasan}</span>
+                                <td style="min-width:210px">
+                                    <strong>${line.name}</strong>
+
+                                    <div style="font-size:11px;color:#8b735f;margin-top:5px">
+                                        1 ${line.pack} =
+                                        ${Number(line.isi_per_kemasan).toLocaleString('id-ID')}
+                                        ${line.satuan}
+                                    </div>
+
+                                    <div style="font-size:11px;color:#8b735f;margin-top:3px">
+                                        Harga beli per ${line.pack}:
+                                        <strong>${rp(line.harga_beli)}</strong>
                                     </div>
                                 </td>
-                                <td style="text-align:right" id="sub-${i.bahan_id}">${rp(dSubtotal(i))}</td>
-                            </tr>`).join('')}
+
+                                <td style="min-width:190px">
+                                    <div class="form-row">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            class="table-input"
+                                            data-review-qty="${line.item}"
+                                            value="${reviewQty[line.item]}"
+                                        >
+                                        <span class="form-unit">${line.pack}</span>
+                                    </div>
+
+                                    <div style="font-size:11px;color:#8b735f;margin-top:5px">
+                                        Setara dengan
+                                        ${(
+                                            reviewQty[line.item] *
+                                            Number(line.isi_per_kemasan)
+                                        ).toLocaleString('id-ID')}
+                                        ${line.satuan}
+                                    </div>
+                                </td>
+
+                                <td style="text-align:right;white-space:nowrap">
+                                    <strong id="review-sub-${line.item}">
+                                        ${rp(reviewSubtotal(line))}
+                                    </strong>
+                                </td>
+                            </tr>
+                        `).join('')}
+
                         </tbody>
                     </table>
                 </div>
 
                 <div class="summary-box">
-                    <div class="summary-line"><span><b>Total estimasi biaya</b></span><span><b id="draftTotal">${rp(dTotal())}</b></span></div>
+                    <div class="summary-line">
+                        <span><b>Total estimasi biaya</b></span>
+                        <span><b id="reviewTotal">${rp(reviewTotal(order))}</b></span>
+                    </div>
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="outline-button" data-close>Batal</button>
-                    <button type="button" class="primary-button" id="btnApprove" ${dCount() ? '' : 'disabled'}>Setujui &amp; Teruskan ke DC</button>
+                    <button type="button" class="outline-button" data-close>
+                        Batal
+                    </button>
+
+                    <button type="button" class="outline-button" id="btnSaveDraft">
+                        Simpan Perubahan
+                    </button>
+
+                    <button type="button" class="primary-button" id="btnApprove">
+                        Setujui &amp; Teruskan ke DC
+                    </button>
                 </div>
-            </div>`);
+            </div>
+        `);
     }
 
-    async function approveDraft() {
-        const payload = {
-            asal: 'otomatis',
-            items: draftItems
-                .map(i => ({
-                    bahan_id: i.bahan_id,
-                    qty_diminta: (draftQty[i.bahan_id] || 0) * (Number(i.isi_per_kemasan) || 1),
-                }))
-                .filter(i => i.qty_diminta > 0),
-        };
+    // ---- SIMPAN PERUBAHAN DRAFT ----
+    async function saveDraft() {
+        const order = orders.find(o =>
+            Number(o.id) === Number(activeDraftId)
+        );
 
-        if (!payload.items.length) return;
+        if (!order) return;
 
-        const res  = await fetch(URLS.approve, {
+        const payload = reviewPayload(order);
+
+        if (!payload.items.length) {
+            flash('Minimal satu bahan harus memiliki jumlah pesanan lebih dari nol.', false);
+            return;
+        }
+
+        const res = await fetch(URLS.update, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json',
+            },
             body: JSON.stringify(payload),
         });
+
         const json = await res.json().catch(() => ({}));
 
+        if (!res.ok) {
+            flash(json.message || 'Gagal menyimpan perubahan draft.', false);
+            return;
+        }
+
         closeModal();
+        flash(`Perubahan draft ${json.no} berhasil disimpan.`);
+        await loadData();
+    }
+
+    // ---- APPROVE DRAFT TERSIMPAN ----
+    async function approveDraft() {
+        const order = orders.find(o =>
+            Number(o.id) === Number(activeDraftId)
+        );
+
+        if (!order) return;
+
+        const payload = reviewPayload(order);
+
+        if (!payload.items.length) {
+            flash('Minimal satu bahan harus memiliki jumlah pesanan lebih dari nol.', false);
+            return;
+        }
+
+        const res = await fetch(URLS.approve, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
             flash(json.message || 'Persetujuan draft gagal. Coba lagi.', false);
             return;
         }
 
-        flash(`Draft ${json.no} disetujui (${json.count} jenis bahan) dan diteruskan ke antrean DC.`);
+        closeModal();
+        flash(`Draft ${json.no} disetujui dan diteruskan ke antrean DC.`);
         await loadData();
     }
 
@@ -497,7 +668,9 @@
     document.addEventListener('click', e => {
         const t = e.target;
 
-        if (t.closest('[data-review]'))  return showDraft();
+        if (t.closest('[data-review]')) {
+            return showDraft(t.closest('[data-review]').dataset.review);
+        }
         if (t.closest('[data-detail]'))  return showOrder(t.closest('[data-detail]').dataset.detail);
         if (t.closest('[data-madd]')) {
             if (mPick && ITEMS[mPick]) {
@@ -509,7 +682,8 @@
         if (t.closest('[data-mremove]')) { delete mLines[t.closest('[data-mremove]').dataset.mremove]; return showManual(); }
         if (t.closest('[data-close]') || t.id === 'modalBg') return closeModal();
         if (t.id === 'btnManual')        return showManual();
-        if (t.id === 'btnApprove')       return approveDraft();
+        if (t.id === 'btnSaveDraft') return saveDraft();
+        if (t.id === 'btnApprove') return approveDraft();
         if (t.id === 'btnSendManual')    return sendManual();
     });
 
@@ -525,6 +699,43 @@
             $('sub-' + id).textContent = rp(draftQty[id] * ITEMS[id].harga_beli);
             $('draftTotal').textContent = rp(dTotal());
             $('btnApprove').disabled = !dCount();
+        }
+
+        if (t.dataset.reviewQty) {
+            const id = t.dataset.reviewQty;
+
+            reviewQty[id] = Math.max(
+                0,
+                parseInt(t.value, 10) || 0
+            );
+
+            const order = orders.find(o =>
+                Number(o.id) === Number(activeDraftId)
+            );
+
+            if (order) {
+                const line = order.items.find(x =>
+                    String(x.item) === String(id)
+                );
+
+                if (line) {
+                    $('review-sub-' + id).textContent =
+                        rp(reviewSubtotal(line));
+
+                    $('reviewTotal').textContent =
+                        rp(reviewTotal(order));
+
+                    const baseQty =
+                        reviewQty[id] * Number(line.isi_per_kemasan);
+
+                    const baseInfo = t.parentElement.nextElementSibling;
+
+                    if (baseInfo) {
+                        baseInfo.textContent =
+                            `Setara dengan ${baseQty.toLocaleString('id-ID')} ${line.satuan}`;
+                    }
+                }
+            }
         }
 
         if (t.dataset.mqty) {
