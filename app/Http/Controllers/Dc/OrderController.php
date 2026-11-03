@@ -7,6 +7,8 @@ use App\Models\BahanBaku;
 use App\Models\Cabang;
 use App\Models\DraftInstruksi;
 use App\Models\SuratJalan;
+use App\Models\StokDc;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -15,7 +17,7 @@ class OrderController extends Controller
      * Halaman Pesanan Masuk (DC) — draft yang disetujui manager
      * dari semua cabang + Surat Jalan terkait, format sama dengan demo lama.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $items = BahanBaku::query()->orderBy('bahan_id')->get()
             ->mapWithKeys(fn ($b) => [(string) $b->bahan_id => [
@@ -30,6 +32,24 @@ class OrderController extends Controller
 
         $storeList = Cabang::query()->orderBy('cabang_id')->get()
             ->map(fn ($c) => ['id' => (string) $c->cabang_id, 'name' => $c->nama_cabang])
+            ->all();
+
+        // Ambil stok DC sesuai akun DC yang sedang login.
+        // Nilai dikonversi dari satuan dasar menjadi jumlah kemasan.
+        $dcStock = StokDc::query()
+            ->where('dc_id', $request->user()->dc_id)
+            ->with('bahan')
+            ->get()
+            ->mapWithKeys(function ($stock) {
+                $isi = (float) ($stock->bahan?->isi_per_kemasan ?? 1);
+
+                return [
+                    (string) $stock->bahan_id => $this->toPacks(
+                        (float) $stock->jumlah_stok,
+                        $isi
+                    ),
+                ];
+            })
             ->all();
 
         $sjByDraft = SuratJalan::query()
@@ -76,8 +96,9 @@ class OrderController extends Controller
             'items' => $items,
             'storeList' => $storeList,
             'orders' => $orders,
+            'dcStock' => $dcStock,
         ]);
-    }
+            }
 
     private function toPacks(float $qtyBase, float $isi): int
     {

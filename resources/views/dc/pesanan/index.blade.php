@@ -232,7 +232,7 @@
                                         <td x-text="index + 1"></td>
                                         <td x-text="itemOf(line).name"></td>
                                         <td x-text="qtyText(line)"></td>
-                                        <td x-text="format(dcStock[line.item]) + ' ' + itemOf(line).pack"></td>
+                                        <td x-text="format(dcStock[line.item] ?? 0) + ' ' + itemOf(line).pack"></td>
                                         <td>
                                             <input
                                                 type="checkbox"
@@ -337,7 +337,7 @@
             stores: @json($storeList),
             orders: @json($orders),
             dcStock: @json($dcStock),      // stok DC per barang, dalam kemasan
-            nextNo: @json($nextShipment),
+            
 
             view: 'list',          // 'list' | 'detail'
             current: null,         // salinan pesanan yang sedang dibuka

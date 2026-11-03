@@ -6,7 +6,15 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama_bahan', 'kategori', 'satuan', 'nama_kemasan', 'isi_per_kemasan', 'harga_beli'])]
+#[Fillable([
+    'nama_bahan',
+    'kategori',
+    'satuan',
+    'nama_kemasan',
+    'isi_per_kemasan',
+    'harga_beli',
+    'minimum_order_qty',
+])]
 class BahanBaku extends Model
 {
     protected $table = 'bahan_baku';
@@ -15,14 +23,12 @@ class BahanBaku extends Model
 
     public $timestamps = false;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'isi_per_kemasan' => 'decimal:3',
             'harga_beli' => 'decimal:2',
+            'minimum_order_qty' => 'integer',
         ];
     }
 

@@ -206,9 +206,11 @@ async function loadData() {
     }
 
     ITEMS = {};
-    json.items.forEach(i => ITEMS[String(i.bahan_id)] = i);
+    (json.manual_items || json.items).forEach(i => {
+        ITEMS[String(i.bahan_id)] = i;
+    });
 
-    // Tetap simpan daftar stok menipis untuk pilihan Reorder Manual.
+    // Daftar stok menipis tetap khusus untuk restock otomatis.
     draftItems = json.items;
 
     // Daftar instruksi sepenuhnya berasal dari database.
@@ -387,13 +389,18 @@ async function loadData() {
                                         Harga beli per ${line.pack}:
                                         <strong>${rp(line.harga_beli)}</strong>
                                     </div>
+
+                                    <div style="font-size:11px;color:#8b735f;margin-top:3px">
+                                        Minimum pemesanan:
+                                        <strong>${line.minimum_order_qty || 1} ${line.pack}</strong>
+                                    </div>
                                 </td>
 
                                 <td style="min-width:190px">
                                     <div class="form-row">
                                         <input
                                             type="number"
-                                            min="0"
+                                            min="${line.minimum_order_qty || 1}"
                                             step="1"
                                             class="table-input"
                                             data-review-qty="${line.item}"
@@ -536,7 +543,7 @@ async function loadData() {
                 <td><strong>${name}</strong></td>
                 <td>${l.qty} ${pack}</td>
                 <td>${l.qty_base.toLocaleString('id-ID')} ${it.satuan || ''}</td>
-                <td style="text-align:right">${rp(l.qty_base * l.harga_beli)}</td>
+                <td style="text-align:right">${rp(l.qty * l.harga_beli)}</td>
             </tr>`;
         }).join('');
 
@@ -580,9 +587,13 @@ async function loadData() {
         const keys = Object.keys(mLines);
 
         const options = Object.entries(ITEMS)
-            .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
-            .map(([k, i]) => `<option value="${k}" ${k === mPick ? 'selected' : ''}>${i.nama_bahan} (${i.nama_kemasan})</option>`)
-            .join('');
+        .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
+        .map(([k, i]) => `
+            <option value="${k}" ${k === mPick ? 'selected' : ''}>
+                ${i.nama_bahan} (${i.nama_kemasan}) — MOQ ${i.minimum_order_qty || 1}
+            </option>
+        `)
+        .join('');
 
         openModal(`
             <div class="modal-box wide">
@@ -596,7 +607,9 @@ async function loadData() {
                         <input type="number" min="1" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
                         <button type="button" class="outline-button" data-madd>Tambah</button>
                     </div>
-                    <div class="form-hint">Jumlah dalam kemasan.</div>
+                    <div class="form-hint">
+                        MOQ: ${ITEMS[mPick]?.minimum_order_qty || 1} ${ITEMS[mPick]?.nama_kemasan || ''}
+                    </div>
                 </div>
 
                 <div class="summary-box">
@@ -604,7 +617,14 @@ async function loadData() {
                     ${keys.length ? keys.map(k => `
                     <div class="form-row" style="margin-bottom:8px">
                         <span style="flex:1;font-size:10px">${ITEMS[k].nama_bahan}</span>
-                        <input type="number" min="0" step="1" class="table-input qty" data-mqty="${k}" value="${mLines[k]}">
+                        <input
+                            type="number"
+                            min="${ITEMS[k].minimum_order_qty || 1}"
+                            step="1"
+                            class="table-input qty"
+                            data-mqty="${k}"
+                            value="${mLines[k]}"
+                        >
                         <span class="form-unit">${ITEMS[k].nama_kemasan}</span>
                         <button type="button" class="outline-button btn-sm" data-mremove="${k}">Hapus</button>
                     </div>`).join('') : '<div class="form-hint">Belum ada bahan dipilih.</div>'}
