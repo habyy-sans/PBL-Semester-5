@@ -7,6 +7,7 @@ use App\Models\MenuProduk;
 use App\Models\StockMovement;
 use App\Models\StokCabang;
 use App\Models\WasteLog;
+use App\Models\NotifikasiAlert;
 use App\Services\CatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -180,6 +181,15 @@ class WasteController extends Controller
 
                 $logs[] = $log;
             }
+
+            NotifikasiAlert::query()->create([
+                'cabang_id' => $user->cabang_id,
+                'bahan_id' => null,
+                'tipe' => 'waste',
+                'pesan' => 'Laporan waste [kelompok_id='.$kelompokId.']',
+                'status_baca' => false,
+                'tanggal' => now(),
+            ]);
 
             return response()->json([
                 'kelompok_id' => $kelompokId,

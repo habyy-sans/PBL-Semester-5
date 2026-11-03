@@ -103,6 +103,11 @@
     const ITEMS = @json($items);
     const MUT   = @json($mutations);
 
+    const WASTE_ALERTS = @json($wasteAlerts);
+    const DRAFT_COUNT = @json($draftCount);
+    const EVALUATE_URL = "{{ url('/manager/alert') }}";
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+
     const RESTOCK_URL = "{{ route('manager.restock') }}";
     const DRAFT_NO    = @json($draftNo) ?? '#RS-DRAFT';
     const MONTHS      = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -120,13 +125,14 @@
     let fType   = 'semua';
     let fStatus = 'semua';
 
-    // stok di bawah / sama dengan batas minimum
     const LOW = Object.entries(ITEMS)
-        .filter(([, i]) => i.stock <= i.min)
-        .map(([key, i]) => ({ key, ...i }));
+    .filter(([, i]) => i.stock < i.min)
+    .map(([key, i]) => ({ key, ...i }));
 
-    // kebutuhan = stok minimum - stok aktual, dibulatkan ke atas ke kemasan utuh
-    const suggest = i => Math.max(1, Math.ceil((i.min - i.stock) / i.size));
+    const suggest = i => Math.max(
+        Math.ceil((i.min - i.stock) / (i.size || 1)),
+        i.minimum_order_qty || 1
+    );
 
     const wasteDone = {};                // { idMutasi: true } = sudah dievaluasi
 
@@ -171,6 +177,8 @@
         });
 
         MUT.filter(m => m.type === 'waste').forEach(m => {
+            const alert = WASTE_ALERTS[m.group_id] || null;
+
             list.push({
                 id: 'w-' + m.id,
                 type: 'waste',
@@ -178,7 +186,8 @@
                 title: 'Waste — ' + wasteReason(m),
                 text: `${wasteLines(m)} · kerugian ${rp(wasteValue(m))}`,
                 when: fmtDate(m.date) + ' · ' + m.time,
-                done: !!wasteDone[m.id],
+                done: alert ? alert.status_baca : false,
+                alertId: alert ? alert.alert_id : null,
                 mut: m,
             });
         });
@@ -202,8 +211,10 @@
         $('stWaste').textContent      = waste.length + ' Laporan';
         $('stWasteSub').textContent   = waste.length ? rp(loss) + ' total kerugian' : 'Tidak ada waste baru';
 
-        $('stDraft').textContent    = (LOW.length ? 1 : 0) + ' Draft';
-        $('stDraftSub').textContent = LOW.length ? DRAFT_NO + ' menunggu approval' : 'Tidak ada draft';
+        $('stDraft').textContent = DRAFT_COUNT + ' Draft';
+        $('stDraftSub').textContent = DRAFT_COUNT
+            ? DRAFT_NO + ' menunggu approval'
+            : 'Tidak ada draft';
     }
 
     function renderTable() {
@@ -285,7 +296,8 @@
         const m = MUT.find(x => x.id === Number(id));
         if (!m) return;
 
-        const done = !!wasteDone[m.id];
+        const alert = WASTE_ALERTS[m.group_id] || null;
+        const done = alert ? alert.status_baca : false;
 
         const lines = m.lines.map(l => `
             <div class="summary-line">
@@ -310,7 +322,13 @@
 
                 <div class="modal-actions">
                     <button type="button" class="outline-button" data-close>Tutup</button>
-                    ${done ? '' : `<button type="button" class="primary-button" data-evaluate="${m.id}">Tandai Dievaluasi</button>`}
+                ${done || !alert ? '' : `
+                    <button type="button"
+                        class="primary-button"
+                        data-evaluate="${alert.alert_id}">
+                        Tandai Dievaluasi
+                    </button>
+                `}
                 </div>
             </div>`);
     }
@@ -328,10 +346,43 @@
         if (t.closest('[data-go-restock]')) { window.location.href = RESTOCK_URL; return; }
 
         if (t.closest('[data-evaluate]')) {
-            wasteDone[t.closest('[data-evaluate]').dataset.evaluate] = true;
-            closeModal();
-            renderTable();
-            return flash('Alert waste ditandai sudah dievaluasi.');
+            const alertId = t.closest('[data-evaluate]').dataset.evaluate;
+            const button = t.closest('[data-evaluate]');
+
+            button.disabled = true;
+            button.textContent = 'Menyimpan...';
+
+            fetch(`${EVALUATE_URL}/${alertId}/evaluate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                },
+            })
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Gagal menyimpan evaluasi.');
+                }
+
+                const alert = Object.values(WASTE_ALERTS)
+                    .find(a => String(a.alert_id) === String(alertId));
+
+                if (alert) alert.status_baca = true;
+
+                closeModal();
+                renderTable();
+                flash(data.message);
+            })
+            .catch(error => {
+                button.disabled = false;
+                button.textContent = 'Tandai Dievaluasi';
+                flash(error.message);
+            });
+
+            return;
         }
 
         if (t.closest('[data-close]') || t.id === 'modalBg') return closeModal();

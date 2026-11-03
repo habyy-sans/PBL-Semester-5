@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BahanBaku;
 use App\Models\MenuProduk;
 
+
 /**
  * Payload katalog (items & menus) yang dikirim ke JavaScript halaman
  * Kasir. Bentuknya sama persis dengan config dummy lama supaya fungsi
@@ -32,14 +33,15 @@ class CatalogService
                 $stok = $bahan->stokCabang->first();
 
                 $items[$bahan->bahan_id] = [
-                    'name' => $bahan->nama_bahan,
-                    'category' => $bahan->kategori,
-                    'pack' => $bahan->nama_kemasan,
-                    'size' => (float) $bahan->isi_per_kemasan,
-                    'unit' => $bahan->satuan,
-                    'min' => (float) ($stok->stok_minimum ?? 0),
-                    'price' => (float) $bahan->harga_beli,
-                    'stock' => (float) ($stok->jumlah_stok ?? 0),
+                'name' => $bahan->nama_bahan,
+                'category' => $bahan->kategori,
+                'pack' => $bahan->nama_kemasan,
+                'size' => (float) $bahan->isi_per_kemasan,
+                'unit' => $bahan->satuan,
+                'min' => (float) ($stok->stok_minimum ?? 0),
+                'price' => (float) $bahan->harga_beli,
+                'stock' => (float) ($stok->jumlah_stok ?? 0),
+                'minimum_order_qty' => (int) ($bahan->minimum_order_qty ?? 1),
                 ];
             });
 
