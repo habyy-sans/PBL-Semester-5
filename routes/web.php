@@ -76,7 +76,7 @@ Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(functio
     Route::get('/receiving', [ReceivingController::class, 'index'])->name('receiving');
     Route::post('/receiving/{id}/confirm', [ReceivingController::class, 'confirm'])->name('receiving.confirm');
 
-    Route::view('/waste', 'ic.waste.index')->name('waste');
+    Route::get('/waste', [WasteController::class, 'index'])->name('waste');
     Route::get('/waste/items', [WasteController::class, 'items'])->name('waste.items');
     Route::get('/waste/menus', [WasteController::class, 'menus'])->name('waste.menus');
     Route::post('/waste', [WasteController::class, 'store'])->name('waste.store');

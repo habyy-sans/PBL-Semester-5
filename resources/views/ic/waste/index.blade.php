@@ -10,8 +10,7 @@
     $items = [];
     $menus = [];
 
-    // DEMO: riwayat waste contoh (nanti diganti data dari database).
-    $history = [];
+    // $history dikirim WasteController@index (database).
 @endphp
 
 @section('content')
@@ -476,7 +475,6 @@
 
             items: @json($items),
             menus: @json($menus),
-            itemKeyToId: {},
             history: @json($history),
             by: @json($by),
 
@@ -770,11 +768,7 @@
                         }),
                     ]);
                     if (itemsRes.ok) {
-                        const itemsData = await itemsRes.json();
-                        this.items = itemsData;
-                        Object.entries(itemsData).forEach(([dbId, item]) => {
-                            this.itemKeyToId[item.name] = dbId;
-                        });
+                        this.items = await itemsRes.json();
                     }
                     if (menusRes.ok) {
                         this.menus = await menusRes.json();
@@ -789,9 +783,8 @@
 
                 // Bangun payload untuk backend: 1 baris waste_log per bahan
                 const itemsPayload = lines.map(line => {
-                    const dbId = this.itemKeyToId[line.item.name] || line.item.id;
                     return {
-                        bahan_id: dbId,
+                        bahan_id: line.item.id,
                         qty: line.need,
                         alasan: this.form.reason,
                         keterangan: this.form.note.trim() || null,
@@ -805,7 +798,11 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ items: itemsPayload }),
+                    body: JSON.stringify({
+                        items: itemsPayload,
+                        menu_id: this.form.type === 'menu' ? this.form.menuId : null,
+                        portions: this.form.type === 'menu' ? this.form.portions : null,
+                    }),
                 })
                 .then(async r => {
                     const json = await r.json();
