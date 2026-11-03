@@ -3,16 +3,8 @@
 @section('title', 'Histori Mutasi Stok')
 @section('description', 'Riwayat stok masuk, stok keluar, dan waste.')
 
-@php
-    // DEMO: data dari config/demo.php (nanti diganti data dari database / controller).
-    // amount = perubahan stok dalam satuan terkecil (ml / gr / Pcs), + bertambah, - berkurang.
-    $items = collect(config('demo.items'))
-        ->map(fn ($item, $id) => ['id' => $id] + $item)
-        ->keyBy('id')
-        ->all();
-
-    $mutations = config('demo.mutations');
-@endphp
+{{-- $items & $mutations dikirim MutationController (tabel stock_movements cabang IC).
+     amount = perubahan stok dalam satuan terkecil (ml / gr / Pcs), + bertambah, - berkurang. --}}
 
 @section('content')
 
@@ -84,7 +76,7 @@
         </div>
 
         <p class="info-note">
-            Penjualan digabung per menu per hari. Rincian tiap transaksi ada di Riwayat Transaksi (Kasir).
+            Penjualan digabung per hari. Rincian tiap transaksi ada di Riwayat Transaksi (Kasir).
         </p>
 
     </div>
@@ -150,7 +142,7 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database.
+    // DATA dari database (via MutationController).
     function mutationPage() {
 
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
