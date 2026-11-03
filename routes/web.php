@@ -17,6 +17,7 @@ use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
 use App\Http\Controllers\Dc\StokDcController as DcStokDcController;
+use App\Http\Controllers\Ic\MutationController;
 use App\Http\Controllers\Ic\ReceivingController;
 use App\Http\Controllers\Ic\StockController;
 use App\Http\Controllers\Ic\WasteController;
@@ -75,12 +76,12 @@ Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(functio
     Route::get('/receiving', [ReceivingController::class, 'index'])->name('receiving');
     Route::post('/receiving/{id}/confirm', [ReceivingController::class, 'confirm'])->name('receiving.confirm');
 
-    Route::view('/waste', 'ic.Waste.index')->name('waste');
+    Route::view('/waste', 'ic.waste.index')->name('waste');
     Route::get('/waste/items', [WasteController::class, 'items'])->name('waste.items');
     Route::get('/waste/menus', [WasteController::class, 'menus'])->name('waste.menus');
     Route::post('/waste', [WasteController::class, 'store'])->name('waste.store');
 
-    Route::view('/mutation', 'ic.mutasi.index')->name('mutation');
+    Route::get('/mutation', [MutationController::class, 'index'])->name('mutation');
 
 });
 
