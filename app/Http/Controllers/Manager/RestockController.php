@@ -33,12 +33,18 @@ public function generateAutomatic(Request $request): JsonResponse
             ->lockForUpdate()
             ->firstOrFail();
 
-        // Periksa apakah sudah ada draft otomatis yang menunggu approval.
+        // Cegah draft otomatis baru selama instruksi sebelumnya
+        // masih menunggu approval atau masih dalam proses pemenuhan.
         $existing = DraftInstruksi::query()
             ->where('cabang_id', $user->cabang_id)
             ->where('asal', 'otomatis')
-            ->where('status', 'menunggu_persetujuan')
+            ->whereIn('status', [
+                'menunggu_persetujuan',
+                'disetujui',
+                'diproses',
+            ])
             ->with('detail')
+            ->orderByDesc('draft_id')
             ->first();
 
         if ($existing) {
@@ -89,10 +95,26 @@ public function generateAutomatic(Request $request): JsonResponse
                 (float) $stock->stok_minimum - (float) $stock->jumlah_stok
             );
 
-            $isiKemasan = (float) ($bahan->isi_per_kemasan ?: 1);
+           $isiKemasan = (float) ($bahan->isi_per_kemasan ?: 1);
 
-            // Pembulatan kebutuhan ke kemasan utuh.
-            $jumlahPesanan = ceil($kebutuhan / $isiKemasan) * $isiKemasan;
+            $minimumOrder = max(
+                1,
+                (int) ($bahan->minimum_order_qty ?? 1)
+            );
+
+            // Kebutuhan dalam jumlah kemasan utuh.
+            $kebutuhanKemasan = (int) ceil(
+                $kebutuhan / $isiKemasan
+            );
+
+            // Terapkan MOQ.
+            $jumlahKemasan = max(
+                $kebutuhanKemasan,
+                $minimumOrder
+            );
+
+            // Simpan kembali dalam satuan dasar.
+            $jumlahPesanan = $jumlahKemasan * $isiKemasan;
 
             if ($jumlahPesanan <= 0) {
                 continue;
@@ -153,8 +175,31 @@ public function generateAutomatic(Request $request): JsonResponse
                 'stok_aktual' => (float) $s->jumlah_stok,
                 'stok_minimum' => (float) $s->stok_minimum,
                 'kebutuhan' => (float) ($s->stok_minimum - $s->jumlah_stok),
+                'minimum_order_qty' => (int) ($s->bahan?->minimum_order_qty ?? 1),
+                'minimum_order_base' => (
+                    (float) ($s->bahan?->isi_per_kemasan ?? 1)
+                    * (int) ($s->bahan?->minimum_order_qty ?? 1)
+                ),
             ];
         })->values()->all();
+
+        // Ambil seluruh bahan baku khusus pilihan Reorder Manual.
+        $manualItems = BahanBaku::query()
+            ->orderBy('nama_bahan')
+            ->get()
+            ->map(function ($bahan) {
+                return [
+                    'bahan_id' => $bahan->bahan_id,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'satuan' => $bahan->satuan,
+                    'nama_kemasan' => $bahan->nama_kemasan,
+                    'isi_per_kemasan' => (float) ($bahan->isi_per_kemasan ?? 1),
+                    'harga_beli' => (float) ($bahan->harga_beli ?? 0),
+                    'minimum_order_qty' => (int) ($bahan->minimum_order_qty ?? 1),
+                ];
+            })
+            ->values()
+            ->all();
 
         $orders = DraftInstruksi::query()
             ->where('cabang_id', $user->cabang_id)
@@ -174,6 +219,7 @@ public function generateAutomatic(Request $request): JsonResponse
                         'satuan' => $dd->bahan?->satuan ?? '-',
                         'isi_per_kemasan' => $isi,
                         'harga_beli' => (float) ($dd->bahan?->harga_beli ?? 0),
+                        'minimum_order_qty' => (int) ($dd->bahan?->minimum_order_qty ?? 1),
                     ];
                 })->values()->all();
 
@@ -193,6 +239,7 @@ public function generateAutomatic(Request $request): JsonResponse
             'cabang_id' => $user->cabang_id,
             'count' => count($draft),
             'items' => $draft,
+            'manual_items' => $manualItems,
             'orders' => $orders,
         ]);
     }
@@ -226,6 +273,14 @@ public function updateDraft(Request $request): JsonResponse
             ->all();
 
         foreach ($data['items'] as $item) {
+            $bahan = BahanBaku::query()
+                ->findOrFail($item['bahan_id']);
+
+            $this->validateOrderQuantity(
+                $bahan,
+                (float) $item['qty_diminta']
+            );
+
             DetailDraftInstruksi::query()->updateOrCreate(
                 [
                     'draft_id' => $draft->draft_id,
@@ -253,6 +308,52 @@ public function updateDraft(Request $request): JsonResponse
     });
 }
 
+    
+/**
+ * Menghitung jumlah minimum pemesanan dalam satuan dasar.
+ */
+private function minimumOrderBase(BahanBaku $bahan): float
+{
+    $isiKemasan = (float) ($bahan->isi_per_kemasan ?: 1);
+    $minimumOrder = max(1, (int) ($bahan->minimum_order_qty ?? 1));
+
+    return $isiKemasan * $minimumOrder;
+}
+
+/**
+ * Validasi kuantitas pesanan:
+ * - Tidak boleh di bawah MOQ.
+ * - Harus berupa kelipatan kemasan utuh.
+ * Kuantitas disimpan dalam satuan dasar.
+ */
+private function validateOrderQuantity(
+    BahanBaku $bahan,
+    float $quantity
+): void {
+    $isiKemasan = (float) ($bahan->isi_per_kemasan ?: 1);
+    $minimumBase = $this->minimumOrderBase($bahan);
+
+    if ($quantity + 0.000001 < $minimumBase) {
+        throw ValidationException::withMessages([
+            'items' => [
+                "Pesanan {$bahan->nama_bahan} minimal "
+                . ($bahan->minimum_order_qty ?? 1)
+                . " {$bahan->nama_kemasan}.",
+            ],
+        ]);
+    }
+
+    $jumlahKemasan = $quantity / $isiKemasan;
+
+    if (abs($jumlahKemasan - round($jumlahKemasan)) > 0.000001) {
+        throw ValidationException::withMessages([
+            'items' => [
+                "Jumlah {$bahan->nama_bahan} harus berupa "
+                . "kelipatan kemasan utuh ({$bahan->nama_kemasan}).",
+            ],
+        ]);
+    }
+}
 
     private function mapStatus(string $status): string
     {
@@ -302,6 +403,14 @@ public function approve(Request $request): JsonResponse
                 ->all();
 
             foreach ($data['items'] as $item) {
+                $bahan = BahanBaku::query()
+                    ->findOrFail($item['bahan_id']);
+
+                $this->validateOrderQuantity(
+                    $bahan,
+                    (float) $item['qty_diminta']
+                );
+
                 DetailDraftInstruksi::query()->updateOrCreate(
                     [
                         'draft_id' => $draft->draft_id,
@@ -341,6 +450,14 @@ public function approve(Request $request): JsonResponse
             ]);
 
             foreach ($data['items'] as $item) {
+                $bahan = BahanBaku::query()
+                    ->findOrFail($item['bahan_id']);
+
+                $this->validateOrderQuantity(
+                    $bahan,
+                    (float) $item['qty_diminta']
+                );
+
                 DetailDraftInstruksi::query()->create([
                     'draft_id' => $draft->draft_id,
                     'bahan_id' => $item['bahan_id'],
