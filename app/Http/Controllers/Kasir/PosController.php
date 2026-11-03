@@ -31,10 +31,22 @@ class PosController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $cabangId = $user->cabang_id;
+
+        $todayOrdersCount = TransaksiPenjualan::query()
+            ->where('cabang_id', $cabangId)
+            ->whereDate('tanggal', today())
+            ->count();
+
+        $nextTrxId = (TransaksiPenjualan::query()->max('transaksi_id') ?? 0) + 1;
+        $activeTrxNo = sprintf('#TRX-%04d', $nextTrxId);
 
         return view('kasir.pos.index', [
-            'items' => (object) $this->catalog->items($user->cabang_id),
+            'items' => (object) $this->catalog->items($cabangId),
             'menus' => (object) $this->catalog->menus(),
+            'todayOrdersCount' => $todayOrdersCount,
+            'activeTrxNo' => $activeTrxNo,
+            'branchName' => $user->cabang?->nama_cabang ?? 'KopSync Gerai',
         ]);
     }
 

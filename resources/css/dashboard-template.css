@@ -1,0 +1,510 @@
+/* =========================================================
+   KOPSYNC - DASHBOARD TEMPLATE STYLES (WARM COFFEE PALETTE)
+   Inspired by Green Grounds Coffee Admin Dashboard Template
+   ========================================================= */
+
+.dash-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: 100%;
+    max-width: 1560px;
+    margin: 0 auto;
+}
+
+/* TOP KPI CARDS (5 Horizontal Cards) */
+.dash-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 1200px) {
+    .dash-kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .dash-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-kpi-card {
+    background: #ffffff;
+    border: 1.5px solid var(--pos-border);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 104px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dash-kpi-card:hover {
+    border-color: var(--pos-brown);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(83, 37, 8, 0.08);
+}
+
+.dash-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dash-kpi-label-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pos-text);
+}
+
+.dash-kpi-icon {
+    font-size: 14px;
+    color: var(--pos-brown);
+}
+
+.dash-kpi-link {
+    font-size: 11px;
+    color: var(--pos-muted);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.dash-kpi-link:hover {
+    color: var(--pos-brown);
+    text-decoration: underline;
+}
+
+.dash-kpi-bottom {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dash-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--pos-brown-dark);
+    line-height: 1.1;
+}
+
+.dash-kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 6px;
+    line-height: 1;
+}
+
+.dash-kpi-badge.positive {
+    background: var(--pos-green-bg);
+    color: var(--pos-green-text);
+}
+
+.dash-kpi-badge.warning {
+    background: var(--pos-yellow-bg);
+    color: var(--pos-yellow-text);
+}
+
+.dash-kpi-badge.danger {
+    background: var(--pos-red-bg);
+    color: var(--pos-red-text);
+}
+
+.dash-kpi-subtext {
+    font-size: 11px;
+    color: var(--pos-muted);
+}
+
+/* MIDDLE ROW: Sales Statistic (Wide) + Score/Alerts (Narrow) */
+.dash-middle-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+    .dash-middle-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-card {
+    background: #ffffff;
+    border: 1.5px solid var(--pos-border);
+    border-radius: 22px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dash-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dash-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pos-brown);
+    font-size: 13px;
+}
+
+.dash-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--pos-text);
+    margin: 0;
+}
+
+.dash-chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--pos-muted);
+}
+
+.dash-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dash-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* Period Switcher Pills */
+.dash-period-pills {
+    display: inline-flex;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.dash-period-btn {
+    border: none;
+    background: transparent;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--pos-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dash-period-btn.active {
+    background: #ffffff;
+    color: var(--pos-brown-dark);
+    box-shadow: 0 1px 4px rgba(83, 37, 8, 0.12);
+}
+
+.dash-chart-container {
+    position: relative;
+    width: 100%;
+    height: 260px;
+}
+
+/* SCORE / QUALITY CARD */
+.dash-score-card {
+    justify-content: space-between;
+}
+
+.dash-score-gauge-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--pos-cream-bg);
+    border: 1.5px dashed var(--pos-border);
+    border-radius: 18px;
+    padding: 16px 20px;
+    margin: 4px 0;
+}
+
+.dash-score-number {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--pos-brown-dark);
+    line-height: 1;
+}
+
+.dash-score-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-score-meta strong {
+    font-size: 13px;
+    color: var(--pos-text);
+}
+
+.dash-score-meta span {
+    font-size: 11px;
+    color: var(--pos-muted);
+}
+
+/* Complaint / Alert List */
+.dash-alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-alert-item {
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.dash-alert-item:hover {
+    border-color: var(--pos-brown);
+    background: var(--pos-cream-bg);
+}
+
+.dash-alert-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dash-alert-badge-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.dash-alert-badge-icon.danger {
+    background: var(--pos-red-bg);
+    color: var(--pos-red-text);
+}
+
+.dash-alert-badge-icon.warning {
+    background: var(--pos-yellow-bg);
+    color: var(--pos-yellow-text);
+}
+
+.dash-alert-badge-icon.info {
+    background: var(--pos-green-bg);
+    color: var(--pos-green-text);
+}
+
+.dash-alert-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dash-alert-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pos-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-alert-sub {
+    font-size: 11px;
+    color: var(--pos-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-alert-action-btn {
+    border: 1px solid var(--pos-border);
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--pos-brown-dark);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.dash-alert-action-btn:hover {
+    background: var(--pos-brown-dark);
+    color: #ffffff;
+    border-color: var(--pos-brown-dark);
+}
+
+/* BOTTOM ROW: Items Performance (Radar) + Recent Transaction (Table) */
+.dash-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+    .dash-bottom-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-radar-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+/* RECENT TRANSACTIONS TABLE */
+.dash-trx-filters {
+    display: inline-flex;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.dash-trx-filter-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--pos-muted);
+    cursor: pointer;
+}
+
+.dash-trx-filter-btn.active {
+    background: #ffffff;
+    color: var(--pos-brown-dark);
+    box-shadow: 0 1px 4px rgba(83, 37, 8, 0.12);
+}
+
+.dash-table-wrap {
+    overflow-x: auto;
+}
+
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.dash-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: var(--pos-muted);
+    border-bottom: 1.5px solid var(--pos-border);
+}
+
+.dash-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--pos-border-light);
+    color: var(--pos-text);
+    vertical-align: middle;
+}
+
+.dash-table tr:hover td {
+    background: var(--pos-cream-bg);
+}
+
+.dash-customer-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-customer-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--pos-cream-surface);
+    border: 1px solid var(--pos-border);
+    color: var(--pos-brown-dark);
+    font-weight: 700;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dash-customer-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-customer-name {
+    font-weight: 600;
+    color: var(--pos-text);
+}
+
+.dash-customer-meta {
+    font-size: 10px;
+    color: var(--pos-muted);
+}
+
+.dash-trx-value {
+    font-weight: 700;
+    color: var(--pos-brown-dark);
+}
