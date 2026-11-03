@@ -1,3 +1,5 @@
 @import "tailwindcss";
 @import "./style.css";
 @import "./auth.css";
+@import "./pos-template.css";
+@import "./dashboard-template.css";

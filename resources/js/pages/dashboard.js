@@ -167,12 +167,28 @@ function renderSummary() {
     $('statWaste').textContent = formatSingkat(waste);
     $('statWasteSub').textContent = wasteCount + ' laporan hari ini';
 
+    if ($('statSalesCount')) {
+        $('statSalesCount').textContent = todayDone.length + ' Transaksi';
+    }
+
     // ---- stok menipis ----
     const low   = lowItems();
     const habis = low.filter((i) => i.stock <= 0).length;
 
     $('statLow').textContent = low.length + ' Item';
     $('statLowSub').textContent = habis > 0 ? habis + ' item habis' : 'Belum ada yang habis';
+
+    // Hitung score gerai (100 - penalti stok menipis & waste)
+    if ($('storeScore')) {
+        const penalty = (low.length * 4) + (wasteCount * 3);
+        const score = Math.max(75, 100 - penalty);
+        $('storeScore').textContent = score;
+        if ($('storeScoreDesc')) {
+            $('storeScoreDesc').textContent = low.length > 0
+                ? `${low.length} bahan perlu perhatian`
+                : 'Operasional gerai prima & terjaga';
+        }
+    }
 
     // ---- pesanan DC (surat jalan yang belum diterima IC) ----
     const pending = SHIP.filter((s) => s.status !== 'diterima');
@@ -242,14 +258,29 @@ function renderAlerts() {
 
     $('alertCount').textContent = alerts.length;
 
-    $('alertList').innerHTML = alerts.slice(0, 6).map((a) => `
-        <div class="alert-item">
-            <span class="alert-dot ${a.color}"></span>
-            <div>
-                <strong>${a.title}</strong>
-                <p>${a.text}</p>
+    const actionUrl = (a) => {
+        if (a.title.includes('Restock') || a.title.includes('Stok')) return '/manager/restock';
+        if (a.title.includes('Waste')) return '/manager/report';
+        return '/manager/alert';
+    };
+
+    $('alertList').innerHTML = alerts.slice(0, 3).map((a) => {
+        const badgeClass = a.color === 'red' ? 'danger' : a.color === 'orange' ? 'warning' : 'info';
+        const iconChar = a.color === 'red' ? '!' : a.color === 'orange' ? '▲' : '✓';
+        const url = actionUrl(a);
+
+        return `
+        <div class="dash-alert-item">
+            <div class="dash-alert-left">
+                <div class="dash-alert-badge-icon ${badgeClass}">${iconChar}</div>
+                <div class="dash-alert-info">
+                    <strong class="dash-alert-title" title="${a.title}">${a.title}</strong>
+                    <span class="dash-alert-sub" title="${a.text}">${a.text}</span>
+                </div>
             </div>
-        </div>`).join('');
+            <a href="${url}" class="dash-alert-action-btn">Solve</a>
+        </div>`;
+    }).join('') || '<div style="text-align:center; padding:16px; font-size:12px; color:var(--pos-muted);">Semua kondisi stok dan operasional aman.</div>';
 }
 
 
@@ -408,11 +439,12 @@ const omzetDummy = {
 function buildOmzetData(period) {
     if (period !== 'daily') {
         const dummy = omzetDummy[period];
+        const labels = dummy.labels;
+        const coffee = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.55)));
+        const tea    = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.28)));
+        const snack  = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.17)));
 
-        return {
-            labels: dummy.labels,
-            values: dummy.values.map((v) => (v === null ? null : Math.round(v))),
-        };
+        return { labels, coffee, tea, snack };
     }
 
     const slots = [8, 10, 12, 14, 16, 18, 20, 22];
@@ -426,11 +458,26 @@ function buildOmzetData(period) {
         }
     }
 
+    const calcCat = (hour, catType) => {
+        return Math.round(sum(
+            todayDone.filter((t) => toMinutes(t.time) <= hour * 60),
+            (t) => t.items.reduce((acc, i) => {
+                const m = MENUS[i.menu];
+                if (!m) return acc;
+                const c = (m.category || '').toLowerCase();
+                if (catType === 'coffee' && c.includes('coffee') && !c.includes('non')) return acc + m.price * i.qty;
+                if (catType === 'tea' && (c.includes('tea') || c.includes('non') || c.includes('beverage'))) return acc + m.price * i.qty;
+                if (catType === 'snack' && (c.includes('snack') || c.includes('makan') || c.includes('food'))) return acc + m.price * i.qty;
+                return acc;
+            }, 0)
+        ));
+    };
+
     return {
         labels: used.map((h) => pad(h) + '.00'),
-        values: used.map((h) => Math.round(
-            sum(todayDone.filter((t) => toMinutes(t.time) <= h * 60), trxTotal)
-        )),
+        coffee: used.map((h) => calcCat(h, 'coffee')),
+        tea: used.map((h) => calcCat(h, 'tea')),
+        snack: used.map((h) => calcCat(h, 'snack')),
     };
 }
 
@@ -451,7 +498,9 @@ function createOmzetChart(period = 'daily') {
         data: {
             labels: data.labels,
             datasets: [
-                lineDataset('Omzet', data.values, '#8f4713', 'rgba(143, 71, 19, 0.10)'),
+                lineDataset('Coffee', data.coffee, '#532508', 'rgba(83, 37, 8, 0.08)'),
+                lineDataset('Non-Coffee / Tea', data.tea, '#d99a4e', 'rgba(217, 154, 78, 0.06)'),
+                lineDataset('Snack / Makanan', data.snack, '#758f3c', 'rgba(117, 143, 60, 0.06)'),
             ],
         },
 
@@ -468,13 +517,14 @@ function createOmzetChart(period = 'daily') {
                 legend: { display: false },
 
                 tooltip: {
-                    backgroundColor: '#5d2d0d',
+                    backgroundColor: '#372314',
                     titleFont: font(10),
                     bodyFont: font(9),
                     padding: 10,
+                    cornerRadius: 8,
 
                     callbacks: {
-                        label: (context) => ' Omzet: ' + formatRupiah(context.raw),
+                        label: (context) => ` ${context.dataset.label}: ${formatRupiah(context.raw || 0)}`,
                     },
                 },
             },
@@ -525,6 +575,148 @@ periodButtons.forEach((button) => {
 
 
 /* =========================================================
+   RADAR CHART (ITEMS PERFORMANCE)
+========================================================= */
+
+let radarChart = null;
+
+function createRadarChart() {
+    const canvas = $('radarChart');
+    if (!canvas) return;
+
+    const menuCounts = {};
+    Object.keys(MENUS).forEach((id) => menuCounts[id] = 0);
+
+    TRX.forEach((t) => {
+        if (t.status === 'selesai') {
+            t.items.forEach((i) => {
+                menuCounts[i.menu] = (menuCounts[i.menu] || 0) + i.qty;
+            });
+        }
+    });
+
+    const sortedMenuIds = Object.keys(MENUS).sort((a, b) => menuCounts[b] - menuCounts[a]).slice(0, 6);
+    const labels = sortedMenuIds.map((id) => MENUS[id]?.name || 'Menu #' + id);
+    const values = sortedMenuIds.map((id) => Math.max(menuCounts[id] || 0, 3));
+
+    if (radarChart) radarChart.destroy();
+
+    radarChart = new Chart(canvas, {
+        type: 'radar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Kuantitas Terjual',
+                data: values,
+                borderColor: '#7c3a12',
+                backgroundColor: 'rgba(124, 58, 18, 0.18)',
+                pointBackgroundColor: '#532508',
+                pointBorderColor: '#ffffff',
+                borderWidth: 2,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#372314',
+                    titleFont: font(10),
+                    bodyFont: font(9),
+                    padding: 8,
+                    cornerRadius: 8,
+                },
+            },
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(120, 90, 60, 0.15)' },
+                    grid: { color: 'rgba(120, 90, 60, 0.1)' },
+                    pointLabels: {
+                        font: font(9),
+                        color: '#6e5544',
+                    },
+                    ticks: { display: false },
+                },
+            },
+        },
+    });
+}
+
+
+/* =========================================================
+   RECENT TRANSACTIONS TABLE
+========================================================= */
+
+function renderRecentTransactions(catFilter = 'All') {
+    const tbody = $('recentTrxBody');
+    if (!tbody) return;
+
+    let filtered = TRX.slice(0, 15);
+
+    if (catFilter !== 'All') {
+        filtered = filtered.filter((t) => t.items.some((i) => {
+            const m = MENUS[i.menu];
+            if (!m) return false;
+            const c = (m.category || '').toLowerCase();
+            if (catFilter === 'Coffee') return c.includes('coffee') && !c.includes('non');
+            if (catFilter === 'Tea') return c.includes('tea') || c.includes('non');
+            if (catFilter === 'Snack') return c.includes('snack') || c.includes('makan');
+            return true;
+        }));
+    }
+
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--pos-muted);">Belum ada transaksi di kategori ini.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 5).map((t) => {
+        const total = trxTotal(t);
+        const itemNames = t.items.map((i) => MENUS[i.menu]?.name || 'Item').join(', ');
+        const cashierName = t.cashier || 'Kasir';
+        const initial = cashierName.charAt(0).toUpperCase();
+
+        return `
+        <tr>
+            <td><input type="checkbox" aria-label="Pilih ${t.no}"></td>
+            <td>
+                <div class="dash-customer-cell">
+                    <div class="dash-customer-avatar">${initial}</div>
+                    <div class="dash-customer-info">
+                        <span class="dash-customer-name">${t.no}</span>
+                        <span class="dash-customer-meta">Kasir: ${cashierName}</span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span style="font-weight:600;">${t.time}</span>
+                <span style="display:block; font-size:10px; color:var(--pos-muted);">${t.date}</span>
+            </td>
+            <td>
+                <span style="display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:220px;" title="${itemNames}">${itemNames}</span>
+            </td>
+            <td style="text-align: right;">
+                <span class="dash-trx-value">${formatRupiah(total)}</span>
+            </td>
+            <td style="text-align: right; color:var(--pos-muted); cursor:pointer;">
+                <span>⋮</span>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+const trxFilterTabs = document.querySelectorAll('#trxFilterTabs button');
+trxFilterTabs.forEach((btn) => {
+    btn.addEventListener('click', () => {
+        trxFilterTabs.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderRecentTransactions(btn.dataset.trxCat);
+    });
+});
+
+
+/* =========================================================
    INIT
 ========================================================= */
 
@@ -532,3 +724,5 @@ renderSummary();
 renderAlerts();
 createStockChart('7');
 createOmzetChart('daily');
+createRadarChart();
+renderRecentTransactions('All');
