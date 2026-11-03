@@ -96,6 +96,11 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
 
     Route::get('/alert', [DashboardController::class, 'alert'])->name('alert');
 
+    Route::post('/alert/{alertId}/evaluate', [
+        DashboardController::class,
+        'evaluateWaste'
+    ])->name('alert.evaluate');
+
     Route::view('/restock', 'manager.restock.index')->name('restock');
 
     Route::post('/restock/generate-automatic', [RestockController::class, 'generateAutomatic'])

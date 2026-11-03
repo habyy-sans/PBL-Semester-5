@@ -15,6 +15,7 @@ use App\Models\StockMovement;
 use App\Models\SuratJalan;
 use App\Models\TransaksiPenjualan;
 use App\Models\VarianMenu;
+use App\Models\NotifikasiAlert;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -134,6 +135,16 @@ class ManagerDashboardTest extends TestCase
             $table->string('alasan');
             $table->timestamp('tanggal')->nullable();
             $table->uuid('kelompok_id')->nullable();
+        });
+
+        Schema::create('notifikasi_alert', function ($table) {
+            $table->id('alert_id');
+            $table->bigInteger('cabang_id');
+            $table->bigInteger('bahan_id')->nullable();
+            $table->string('tipe', 50);
+            $table->text('pesan');
+            $table->boolean('status_baca')->default(false);
+            $table->timestamp('tanggal')->nullable();
         });
 
         Schema::create('stock_movements', function ($table) {
