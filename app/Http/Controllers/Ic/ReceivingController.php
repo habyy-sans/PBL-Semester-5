@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Ic;
 
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
+use App\Models\DetailDraftInstruksi;
 use App\Models\DetailSuratJalan;
+use App\Models\DraftInstruksi;
 use App\Models\KonfirmasiPenerimaan;
 use App\Models\StockMovement;
 use App\Models\StokCabang;
@@ -105,6 +107,7 @@ class ReceivingController extends Controller
             $bahanMap = BahanBaku::query()->whereIn('bahan_id', $bahanIds)->get()->keyBy('bahan_id');
 
             $notes = [];
+            $hasDiff = false;
 
             foreach ($data['items'] as $item) {
                 $detail = $detailMap->get($item['bahan_id']);
@@ -117,6 +120,10 @@ class ReceivingController extends Controller
                     422,
                     'Jumlah diterima melebihi jumlah dikirim.'
                 );
+
+                if ((float) $qtyDiterima !== (float) $detail->qty_dikirim) {
+                    $hasDiff = true;
+                }
 
                 $detail->qty_diterima = $qtyDiterima;
                 $detail->save();
@@ -163,11 +170,15 @@ class ReceivingController extends Controller
                 'surat_jalan_id' => $sj->surat_jalan_id,
                 'kepala_shift_id' => $user->user_id,
                 'tanggal_konfirmasi' => now(),
-                'kondisi' => $data['kondisi'] ?? ($notes === [] ? 'baik' : 'selisih: ' . implode('; ', $notes)),
+                'kondisi' => $data['kondisi'] ?? (($hasDiff ? 'selisih' : 'baik') . ($notes === [] ? '' : ': ' . implode('; ', $notes))),
             ]);
 
             $sj->status = 'selesai';
             $sj->save();
+
+            // Draft restock yang semua surat jalannya sudah diterima ditandai selesai,
+            // supaya status di halaman Manager berubah menjadi "diterima".
+            $this->completeDrafts($detailMap->pluck('detail_draft_id')->filter()->all());
 
             return response()->json([
                 'surat_jalan_id' => $sj->surat_jalan_id,
@@ -177,13 +188,73 @@ class ReceivingController extends Controller
         });
     }
 
+    /**
+     * @param  array<int, int>  $detailDraftIds
+     */
+    private function completeDrafts(array $detailDraftIds): void
+    {
+        if ($detailDraftIds === []) {
+            return;
+        }
+
+        $draftIds = DetailDraftInstruksi::query()
+            ->whereIn('detail_draft_id', $detailDraftIds)
+            ->pluck('draft_id')
+            ->unique();
+
+        foreach ($draftIds as $draftId) {
+            $stillOpen = SuratJalan::query()
+                ->where('status', '!=', 'selesai')
+                ->whereHas('detail', fn ($q) => $q->whereIn(
+                    'detail_draft_id',
+                    DetailDraftInstruksi::query()->where('draft_id', $draftId)->select('detail_draft_id')
+                ))
+                ->exists();
+
+            if (! $stillOpen) {
+                DraftInstruksi::query()
+                    ->where('draft_id', $draftId)
+                    ->where('status', 'diproses')
+                    ->update(['status' => 'selesai']);
+            }
+        }
+    }
+
+    /**
+     * Catatan per bahan dibaca kembali dari konfirmasi_penerimaan.kondisi
+     * (format: "selisih: Nama Bahan: catatan; Bahan Lain: catatan").
+     *
+     * @return array<string, string>
+     */
+    private function notesFromKondisi(?string $kondisi): array
+    {
+        if ($kondisi === null || ! preg_match('/^(?:selisih|baik): (.+)$/su', $kondisi, $m)) {
+            return [];
+        }
+
+        $notes = [];
+
+        foreach (explode('; ', $m[1]) as $part) {
+            $pair = explode(': ', $part, 2);
+
+            if (count($pair) === 2) {
+                $notes[trim($pair[0])] = trim($pair[1]);
+            }
+        }
+
+        return $notes;
+    }
+
     private function format(SuratJalan $sj): array
     {
+        $notes = $this->notesFromKondisi($sj->konfirmasi?->kondisi);
+
         $items = $sj->detail->map(fn ($d) => [
             'item' => (string) $d->bahan_id,
             'sent' => (int) $d->qty_dikirim,
             'received' => $d->qty_diterima === null ? null : (int) $d->qty_diterima,
-            'note' => null,
+            // Harus string (bukan null): view memanggil line.note.trim().
+            'note' => $notes[$d->bahan?->nama_bahan ?? ''] ?? '',
         ])->values()->all();
 
         return [
