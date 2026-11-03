@@ -72,6 +72,7 @@ Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->grou
 Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(function () {
 
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
+    Route::get('/stock/data', [StockController::class, 'data'])->name('stock.data');
 
     Route::get('/receiving', [ReceivingController::class, 'index'])->name('receiving');
     Route::post('/receiving/{id}/confirm', [ReceivingController::class, 'confirm'])->name('receiving.confirm');

@@ -145,6 +145,38 @@
             category: '',
             status: '',
 
+            // Perbarui stok otomatis tiap 10 detik (berhenti saat tab tidak aktif).
+            init() {
+
+                const refresh = async () => {
+
+                    if (document.hidden) {
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(@json(route('ic.stock.data')), {
+                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            credentials: 'same-origin',
+                        });
+
+                        if (res.ok && (res.headers.get('content-type') || '').includes('json')) {
+                            this.items = await res.json();
+                        }
+                    } catch (e) {
+                        // Jaringan putus: biarkan data lama, coba lagi pada putaran berikutnya.
+                    }
+                };
+
+                setInterval(refresh, 10000);
+
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        refresh();
+                    }
+                });
+            },
+
             labels: {
                 aman:    { text: 'Aman',    class: 'success' },
                 menipis: { text: 'Menipis', class: 'warning' },
