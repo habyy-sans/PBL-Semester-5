@@ -25,6 +25,7 @@ use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RestockController;
+use App\Http\Controllers\Manager\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // Data untuk halaman "segera hadir"
@@ -115,7 +116,8 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('/restock/draft/update', [RestockController::class, 'updateDraft'])
     ->name('restock.update-draft');
 
-    Route::view('/report', 'manager.reports.index')->name('report');
+    Route::get('/report', [ReportController::class, 'index'])
+    ->name('report');
 
 });
 

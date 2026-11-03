@@ -508,3 +508,386 @@
     font-weight: 700;
     color: var(--pos-brown-dark);
 }
+
+/* =========================================
+   MANAGER REPORT PAGE
+   Reuse Manager Dashboard Design System
+========================================= */
+.report-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* PERIOD FILTER CARD */
+
+.report-period-card {
+    gap: 18px;
+}
+
+.report-section-desc {
+    margin: 4px 0 0;
+    color: var(--pos-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.report-filter-form {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 14px;
+}
+
+.report-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 190px;
+}
+
+.report-date-field label {
+    color: var(--pos-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.report-date-field input {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 11px;
+    background: #ffffff;
+    color: var(--pos-text);
+    border: 1px solid var(--pos-border);
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-date-field input:focus {
+    border-color: var(--pos-brown);
+    box-shadow: 0 0 0 3px rgba(83, 37, 8, 0.08);
+}
+
+.report-date-separator {
+    padding-bottom: 10px;
+    color: var(--pos-muted);
+    font-size: 14px;
+}
+
+.report-apply-btn,
+.report-export-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.report-apply-btn {
+    color: #ffffff;
+    background: var(--pos-brown);
+    border: 1px solid var(--pos-brown);
+}
+
+.report-apply-btn:hover {
+    background: var(--pos-brown-dark);
+    transform: translateY(-1px);
+}
+
+.report-export-btn {
+    color: var(--pos-brown);
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+}
+
+.report-export-btn:hover {
+    background: var(--pos-cream-bg);
+    border-color: var(--pos-brown);
+}
+
+
+/* KPI CARDS */
+
+.report-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.report-kpi-row .dash-kpi-card {
+    min-width: 0;
+}
+
+.report-kpi-row .dash-kpi-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.report-kpi-row .dash-kpi-value {
+    font-size: clamp(17px, 1.5vw, 22px);
+    overflow-wrap: anywhere;
+}
+
+.report-danger-value {
+    color: var(--pos-red-text) !important;
+}
+
+
+/* REPORT TABLE CARDS */
+
+.report-section-card {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.report-section-card .dash-card-header {
+    align-items: center;
+}
+
+.report-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    color: var(--pos-brown);
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.report-table {
+    min-width: 720px;
+}
+
+.report-table th {
+    white-space: nowrap;
+    background: var(--pos-cream-bg);
+}
+
+.report-table td {
+    white-space: nowrap;
+}
+
+.report-table td:first-child,
+.report-table th:first-child {
+    text-align: left;
+}
+
+.report-danger-text {
+    color: var(--pos-red-text) !important;
+    font-weight: 600;
+}
+
+
+/* EMPTY STATE */
+
+.report-empty-cell {
+    padding: 0 !important;
+}
+
+.report-empty-state {
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+    white-space: normal;
+}
+
+.report-empty-state > span {
+    font-size: 25px;
+    margin-bottom: 3px;
+}
+
+.report-empty-state strong {
+    color: var(--pos-text);
+    font-size: 12px;
+}
+
+.report-empty-state p {
+    max-width: 300px;
+    margin: 0;
+    color: var(--pos-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* PAGINATION */
+
+.report-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--pos-border-light);
+}
+
+.report-table-footer > span {
+    color: var(--pos-muted);
+    font-size: 11px;
+}
+
+.report-table-footer nav {
+    display: flex;
+    align-items: center;
+}
+
+.report-table-footer nav > div:first-child {
+    display: none;
+}
+
+.report-table-footer nav > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.report-table-footer nav a,
+.report-table-footer nav span[aria-current],
+.report-table-footer nav span[aria-disabled] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 29px;
+    min-height: 29px;
+    padding: 5px 9px;
+    color: var(--pos-muted);
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: 8px;
+    font-size: 11px;
+    text-decoration: none;
+}
+
+.report-table-footer nav a:hover {
+    color: var(--pos-brown);
+    background: var(--pos-cream-bg);
+    border-color: var(--pos-brown);
+}
+
+.report-table-footer nav span[aria-current] {
+    color: #ffffff;
+    background: var(--pos-brown);
+    border-color: var(--pos-brown);
+}
+
+.report-table-footer nav span[aria-disabled] {
+    opacity: 0.45;
+}
+
+
+/* DISCLAIMER */
+
+.report-disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 16px;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 12px;
+}
+
+.report-disclaimer > span {
+    font-size: 14px;
+}
+
+.report-disclaimer p {
+    margin: 0;
+    color: var(--pos-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1200px) {
+    .report-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .report-period-card {
+        padding: 16px;
+    }
+
+    .report-filter-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .report-date-field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .report-date-separator {
+        display: none;
+    }
+
+    .report-apply-btn,
+    .report-export-btn {
+        width: 100%;
+    }
+
+    .report-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .report-kpi-row .dash-kpi-card {
+        padding: 14px;
+    }
+
+    .report-table-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   REPORT TABLE - COLUMN ALIGNMENT
+========================================= */
+/* Header dan isi kolom angka berada di tengah */
+.report-table th.text-right,
+.report-table td.text-right {
+    text-align: center !important;
+}
+
+/* Kolom pertama tetap rata kiri */
+.report-table th:first-child,
+.report-table td:first-child {
+    text-align: left !important;
+}
