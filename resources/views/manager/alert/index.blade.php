@@ -67,12 +67,12 @@
         </div>
 
         <div class="table-wrapper">
-            <table class="table-fixed">
+            <table class="table-fixed alert-table">
                 <colgroup>
                     <col style="width: 9%">
                     <col style="width: 24%">
                     <col style="width: 31%">
-                    <col style="width: 14%">
+                    <col style="width: 23%">
                     <col style="width: 12%">
                     <col style="width: 10%">
                 </colgroup>
@@ -110,14 +110,22 @@
 
     const RESTOCK_URL = "{{ route('manager.restock') }}";
     const DRAFT_NO    = @json($draftNo) ?? '#RS-DRAFT';
-    const MONTHS      = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const MONTHS = [
+        'Januari', 'Februari', 'Maret', 'April',
+        'Mei', 'Juni', 'Juli', 'Agustus',
+        'September', 'Oktober', 'November', 'Desember'
+    ];
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
 
-    const fmtDate = d => {
-        const [y, m, day] = d.split('-');
-        return `${Number(day)} ${MONTHS[Number(m) - 1]} ${y}`;
+    const fmtDate = (date) => {
+        const [year, month, day] = date.split('-');
+
+        return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
+    };
+    const fmtDateTime = (date, time) => {
+        return `${fmtDate(date)}, ${time} WIB`;
     };
 
     // ---------- STATE ----------
@@ -170,7 +178,7 @@
                 sort: lastMut.date + ' ' + lastMut.time,
                 title: (i.stock <= 0 ? 'Stok Habis — ' : 'Stok Menipis — ') + i.name,
                 text: `Stok ${fmtStock(i.key, i.stock)} · minimum ${fmtStock(i.key, i.min)}`,
-                when: fmtDate(lastMut.date) + ' · ' + lastMut.time,
+                when: fmtDateTime(lastMut.date, lastMut.time),
                 done: false,
                 key: i.key,
             });
@@ -185,7 +193,7 @@
                 sort: m.date + ' ' + m.time,
                 title: 'Waste — ' + wasteReason(m),
                 text: `${wasteLines(m)} · kerugian ${rp(wasteValue(m))}`,
-                when: fmtDate(m.date) + ' · ' + m.time,
+                when: fmtDateTime(m.date, m.time),
                 done: alert ? alert.status_baca : false,
                 alertId: alert ? alert.alert_id : null,
                 mut: m,
@@ -308,7 +316,7 @@
         openModal(`
             <div class="modal-box wide">
                 <h4>Waste · ${wasteReason(m)}</h4>
-                <p>${fmtDate(m.date)} · ${m.time} · dicatat oleh Kepala Shift</p>
+                <p>${fmtDateTime(m.date, m.time)} · dicatat oleh Kepala Shift</p>
 
                 <div class="summary-box">
                     <div class="summary-title">BARANG TERBUANG</div>

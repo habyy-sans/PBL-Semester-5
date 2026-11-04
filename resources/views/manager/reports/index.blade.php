@@ -17,6 +17,10 @@
                     <p class="report-section-desc">
                         Pilih rentang waktu untuk melihat performa cabang.
                     </p>
+                    <p class="report-section-desc">
+                        Laporan diakses pada:
+                        {{ now()->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i:s') }} WIB
+                    </p>
                 </div>
             </div>
 

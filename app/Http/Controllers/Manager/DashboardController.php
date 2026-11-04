@@ -135,8 +135,13 @@ public function evaluateWaste(Request $request, int $alertId): JsonResponse
             ->get()
             ->map(fn ($trx) => [
                 'no' => $trx->no_transaksi ?? sprintf('#TRX-%04d', $trx->transaksi_id),
-                'date' => $trx->tanggal->format('Y-m-d'),
-                'time' => $trx->tanggal->format('H:i'),
+                'date' => $trx->tanggal
+                    ->timezone('Asia/Jakarta')
+                    ->format('Y-m-d'),
+
+                'time' => $trx->tanggal
+                    ->timezone('Asia/Jakarta')
+                    ->format('H:i:s'),
                 'cashier' => $trx->kasir?->nama_lengkap ?? '-',
                 'method' => $trx->pembayaran?->metode ?? 'tunai',
                 'cash' => $trx->pembayaran?->jumlah_diterima !== null
@@ -181,12 +186,17 @@ public function evaluateWaste(Request $request, int $alertId): JsonResponse
 
                 return [
                     'id' => (int) $group->min('movement_id'),
-                    'date' => $first->tanggal->format('Y-m-d'),
-                    'time' => $first->tanggal->format('H:i'),
+                    'date' => $first->tanggal
+                        ->timezone('Asia/Jakarta')
+                        ->format('Y-m-d'),
+
+                    'time' => $first->tanggal
+                        ->timezone('Asia/Jakarta')
+                        ->format('H:i:s'),                    
                     'type' => match ($first->jenis_mutasi) {
-                        'penerimaan_cabang' => 'masuk',
-                        'waste' => 'waste',
-                        default => 'keluar',
+                    'penerimaan_cabang' => 'masuk',
+                    'waste' => 'waste',
+                    default => 'keluar',
                     },
                     'ref' => $first->keterangan ?? '',
                     'group_id' => $first->kelompok_id,

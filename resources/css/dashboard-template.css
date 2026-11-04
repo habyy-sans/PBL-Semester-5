@@ -891,3 +891,31 @@
 .report-table td:first-child {
     text-align: left !important;
 }
+
+
+/* =========================================
+   MANAGER ALERT TABLE ALIGNMENT
+========================================= */
+
+.alert-table th,
+.alert-table td {
+    vertical-align: middle;
+}
+
+.alert-table th:nth-child(1),
+.alert-table td:nth-child(1),
+.alert-table th:nth-child(4),
+.alert-table td:nth-child(4),
+.alert-table th:nth-child(5),
+.alert-table td:nth-child(5),
+.alert-table th:nth-child(6),
+.alert-table td:nth-child(6) {
+    text-align: center !important;
+}
+
+/* Timestamp tidak boleh terpotong */
+.alert-table th:nth-child(4),
+.alert-table td:nth-child(4) {
+    white-space: nowrap;
+    min-width: 220px;
+}
