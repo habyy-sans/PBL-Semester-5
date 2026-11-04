@@ -73,7 +73,7 @@
             <table class="table-fixed">
                 <colgroup>
                     <col style="width: 12%">
-                    <col style="width: 14%">
+                    <col style="width: 25%">
                     <col style="width: 11%">
                     <col style="width: 9%">
                     <col style="width: 16%">

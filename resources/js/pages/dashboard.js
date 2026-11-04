@@ -82,6 +82,18 @@ const fmtDate = (s) => {
     return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 
+const FULL_MONTHS = [
+    'Januari', 'Februari', 'Maret', 'April',
+    'Mei', 'Juni', 'Juli', 'Agustus',
+    'September', 'Oktober', 'November', 'Desember'
+];
+
+const fmtFullDateTime = (date, time) => {
+    const [year, month, day] = date.split('-');
+
+    return `${Number(day)} ${FULL_MONTHS[Number(month) - 1]} ${year}, ${time} WIB`;
+};
+
 const toMinutes = (time) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
@@ -690,8 +702,9 @@ function renderRecentTransactions(catFilter = 'All') {
                 </div>
             </td>
             <td>
-                <span style="font-weight:600;">${t.time}</span>
-                <span style="display:block; font-size:10px; color:var(--pos-muted);">${t.date}</span>
+                <span style="font-weight:600;">
+                    ${fmtFullDateTime(t.date, t.time)}
+                </span>
             </td>
             <td>
                 <span style="display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:220px;" title="${itemNames}">${itemNames}</span>

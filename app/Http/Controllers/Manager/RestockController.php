@@ -226,7 +226,9 @@ public function generateAutomatic(Request $request): JsonResponse
                 return [
                     'id' => $d->draft_id,
                     'no' => sprintf('#RS-%04d', $d->draft_id),
-                    'date' => $d->dibuat_pada?->format('d M Y') ?? '-',
+                    'date' => $d->dibuat_pada
+                        ? $d->dibuat_pada->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i:s') . ' WIB'
+                        : '-',                    
                     'source' => $d->asal,
                     'status' => $this->mapStatus($d->status),
                     'db_status' => $d->status,
