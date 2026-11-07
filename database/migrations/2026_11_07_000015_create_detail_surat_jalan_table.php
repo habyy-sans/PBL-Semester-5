@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('bahan_id')->constrained('bahan_baku', 'bahan_id')->cascadeOnDelete();
             $table->foreignId('detail_draft_id')->nullable()->constrained('detail_draft_instruksi', 'detail_draft_id')->nullOnDelete();
             $table->decimal('qty_dikirim', 12, 3);
-            $table->decimal('qty_diterima', 12, 3)->default(0);
+            $table->decimal('qty_diterima', 12, 3)->nullable();
         });
     }
 

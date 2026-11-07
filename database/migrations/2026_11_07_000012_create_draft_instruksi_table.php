@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('draft_instruksi', function (Blueprint $table) {
             $table->id('draft_id');
             $table->foreignId('cabang_id')->constrained('cabang', 'cabang_id')->cascadeOnDelete();
-            $table->foreignId('dibuat_oleh')->constrained('pengguna', 'user_id')->cascadeOnDelete();
-            $table->string('asal');
+            $table->foreignId('dibuat_oleh')->nullable()->constrained('pengguna', 'user_id')->nullOnDelete();
+            $table->string('asal')->nullable();
             $table->string('status');
             $table->timestamp('dibuat_pada')->useCurrent();
             $table->foreignId('disetujui_oleh')->nullable()->constrained('pengguna', 'user_id')->nullOnDelete();

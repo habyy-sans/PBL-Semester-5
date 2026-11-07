@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id('surat_jalan_id');
             $table->foreignId('cabang_id')->constrained('cabang', 'cabang_id')->cascadeOnDelete();
             $table->foreignId('dc_id')->constrained('dc', 'dc_id')->cascadeOnDelete();
-            $table->foreignId('diterbitkan_oleh')->constrained('pengguna', 'user_id')->cascadeOnDelete();
+            $table->foreignId('diterbitkan_oleh')->nullable()->constrained('pengguna', 'user_id')->nullOnDelete();
             $table->timestamp('tanggal_kirim')->useCurrent();
-            $table->string('status');
+            $table->string('status')->default('disiapkan');
         });
     }
 

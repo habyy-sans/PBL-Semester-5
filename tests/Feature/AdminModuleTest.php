@@ -13,7 +13,6 @@ use App\Models\StokDc;
 use App\Models\VarianMenu;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminModuleTest extends TestCase
@@ -23,78 +22,6 @@ class AdminModuleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        Schema::create('cabang', function ($table): void {
-            $table->id('cabang_id');
-            $table->string('nama_cabang', 100);
-            $table->text('alamat');
-            $table->string('telepon', 20)->nullable();
-        });
-        Schema::create('dc', function ($table): void {
-            $table->id('dc_id');
-            $table->string('nama_dc', 100);
-            $table->text('alamat');
-            $table->string('telepon', 20)->nullable();
-        });
-        Schema::create('pengguna', function ($table): void {
-            $table->id('user_id');
-            $table->string('nama_lengkap', 150);
-            $table->string('username', 50)->unique();
-            $table->string('email', 150)->unique();
-            $table->string('password_hash');
-            $table->string('telepon', 20)->nullable();
-            $table->string('role', 50);
-            $table->foreignId('cabang_id')->nullable();
-            $table->foreignId('dc_id')->nullable();
-            $table->string('status', 20)->default('aktif');
-            $table->string('remember_token', 100)->nullable();
-        });
-        Schema::create('bahan_baku', function ($table): void {
-            $table->id('bahan_id');
-            $table->string('nama_bahan', 150);
-            $table->string('satuan', 30);
-            $table->decimal('harga_beli', 12, 2);
-            $table->string('nama_kemasan', 30);
-            $table->decimal('isi_per_kemasan', 12, 3);
-            $table->string('kategori', 50);
-        });
-        Schema::create('kategori_menu', function ($table): void {
-            $table->id('kategori_menu_id');
-            $table->string('nama_kategori', 100);
-        });
-        Schema::create('menu_produk', function ($table): void {
-            $table->id('menu_id');
-            $table->foreignId('kategori_menu_id');
-            $table->string('nama_menu', 150);
-            $table->decimal('harga_jual', 12, 2);
-            $table->string('emoji', 16)->nullable();
-        });
-        Schema::create('varian_menu', function ($table): void {
-            $table->id('varian_id');
-            $table->foreignId('menu_id');
-            $table->string('nama_varian', 100);
-            $table->decimal('harga_tambahan', 12, 2);
-        });
-        Schema::create('resep_menu', function ($table): void {
-            $table->id('resep_id');
-            $table->foreignId('varian_id');
-            $table->foreignId('bahan_id');
-            $table->decimal('jumlah_bahan', 12, 3);
-        });
-        Schema::create('stok_cabang', function ($table): void {
-            $table->id('stok_cabang_id');
-            $table->foreignId('cabang_id');
-            $table->foreignId('bahan_id');
-            $table->decimal('jumlah_stok', 12, 3);
-            $table->decimal('stok_minimum', 12, 3);
-        });
-        Schema::create('stok_dc', function ($table): void {
-            $table->id('stok_dc_id');
-            $table->foreignId('dc_id');
-            $table->foreignId('bahan_id');
-            $table->decimal('jumlah_stok', 12, 3);
-            $table->decimal('stok_minimum', 12, 3);
-        });
     }
 
     public function test_admin_dashboard_shows_master_totals_and_low_stock(): void

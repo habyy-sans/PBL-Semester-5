@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Cabang;
 use App\Models\Pengguna;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -16,21 +16,10 @@ class AuthTest extends TestCase
     {
         parent::setUp();
 
-        // Skema minimal pengguna untuk sqlite in-memory (tabel domain asli
-        // ada di Supabase dan tidak dimigrasikan lewat Laravel migrations).
-        Schema::create('pengguna', function ($table) {
-            $table->id('user_id');
-            $table->string('nama_lengkap', 150);
-            $table->string('username', 50)->unique();
-            $table->string('email', 150)->unique();
-            $table->string('password_hash', 255);
-            $table->string('telepon', 20)->nullable();
-            $table->string('role', 50);
-            $table->bigInteger('cabang_id')->nullable();
-            $table->bigInteger('dc_id')->nullable();
-            $table->string('status', 20)->default('aktif');
-            $table->string('remember_token', 100)->nullable();
-        });
+        Cabang::query()->firstOrCreate(
+            ['cabang_id' => 1],
+            ['nama_cabang' => 'Cabang 1', 'alamat' => 'Alamat']
+        );
     }
 
     private function makeUser(array $overrides = []): Pengguna

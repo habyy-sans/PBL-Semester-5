@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\BahanBaku;
+use App\Models\Cabang;
+use App\Models\Dc;
 use App\Models\DetailSuratJalan;
 use App\Models\KonfirmasiPenerimaan;
 use App\Models\Pengguna;
@@ -11,7 +13,6 @@ use App\Models\StokCabang;
 use App\Models\SuratJalan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ReceivingTest extends TestCase
@@ -22,78 +23,18 @@ class ReceivingTest extends TestCase
     {
         parent::setUp();
 
-        // Skema minimal untuk sqlite in-memory (tabel domain asli ada di
-        // Supabase dan tidak dimigrasikan lewat Laravel migrations).
-        Schema::create('pengguna', function ($table) {
-            $table->id('user_id');
-            $table->string('nama_lengkap', 150);
-            $table->string('username', 50)->unique();
-            $table->string('email', 150)->unique();
-            $table->string('password_hash', 255);
-            $table->string('telepon', 20)->nullable();
-            $table->string('role', 50);
-            $table->bigInteger('cabang_id')->nullable();
-            $table->bigInteger('dc_id')->nullable();
-            $table->string('status', 20)->default('aktif');
-            $table->string('remember_token', 100)->nullable();
-        });
-
-        Schema::create('bahan_baku', function ($table) {
-            $table->id('bahan_id');
-            $table->string('nama_bahan', 100);
-            $table->string('satuan', 20);
-            $table->decimal('harga_beli', 12, 2)->default(0);
-            $table->string('nama_kemasan', 50)->nullable();
-            $table->decimal('isi_per_kemasan', 12, 3)->default(1);
-            $table->string('kategori', 50)->nullable();
-        });
-
-        Schema::create('stok_cabang', function ($table) {
-            $table->id('stok_cabang_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('bahan_id');
-            $table->decimal('jumlah_stok', 14, 3)->default(0);
-            $table->decimal('stok_minimum', 14, 3)->default(0);
-        });
-
-        Schema::create('surat_jalan', function ($table) {
-            $table->id('surat_jalan_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('dc_id');
-            $table->bigInteger('diterbitkan_oleh')->nullable();
-            $table->timestamp('tanggal_kirim')->nullable();
-            $table->string('status', 20)->default('disiapkan');
-        });
-
-        Schema::create('detail_surat_jalan', function ($table) {
-            $table->id('detail_sj_id');
-            $table->bigInteger('surat_jalan_id');
-            $table->bigInteger('bahan_id');
-            $table->bigInteger('detail_draft_id')->nullable();
-            $table->decimal('qty_dikirim', 14, 3);
-            $table->decimal('qty_diterima', 14, 3)->nullable();
-        });
-
-        Schema::create('konfirmasi_penerimaan', function ($table) {
-            $table->id('konfirmasi_id');
-            $table->bigInteger('surat_jalan_id');
-            $table->bigInteger('kepala_shift_id');
-            $table->timestamp('tanggal_konfirmasi')->nullable();
-            $table->text('kondisi')->nullable();
-        });
-
-        Schema::create('stock_movements', function ($table) {
-            $table->id('movement_id');
-            $table->bigInteger('bahan_id');
-            $table->bigInteger('cabang_id')->nullable();
-            $table->bigInteger('dc_id')->nullable();
-            $table->string('jenis_mutasi', 30);
-            $table->decimal('jumlah', 14, 3);
-            $table->bigInteger('referensi_id')->nullable();
-            $table->timestamp('tanggal')->nullable();
-            $table->string('keterangan')->nullable();
-            $table->uuid('kelompok_id')->nullable();
-        });
+        Cabang::query()->firstOrCreate(
+            ['cabang_id' => 1],
+            ['nama_cabang' => 'Store 1', 'alamat' => 'Alamat']
+        );
+        Cabang::query()->firstOrCreate(
+            ['cabang_id' => 2],
+            ['nama_cabang' => 'Store 2', 'alamat' => 'Alamat']
+        );
+        Dc::query()->firstOrCreate(
+            ['dc_id' => 1],
+            ['nama_dc' => 'Distribution Center', 'alamat' => 'Alamat']
+        );
     }
 
     private function makeUser(array $overrides = []): Pengguna

@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('transaksi_penjualan', function (Blueprint $table) {
-            $table->string('no_transaksi', 50)->nullable();
-        });
+        if (! Schema::hasColumn('transaksi_penjualan', 'no_transaksi')) {
+            Schema::table('transaksi_penjualan', function (Blueprint $table) {
+                $table->string('no_transaksi', 50)->nullable();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('transaksi_penjualan', function (Blueprint $table) {
-            $table->dropColumn('no_transaksi');
-        });
+        if (Schema::hasColumn('transaksi_penjualan', 'no_transaksi')) {
+            Schema::table('transaksi_penjualan', function (Blueprint $table) {
+                $table->dropColumn('no_transaksi');
+            });
+        }
     }
 };
