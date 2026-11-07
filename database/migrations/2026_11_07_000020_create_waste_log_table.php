@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id('waste_id');
             $table->foreignId('cabang_id')->constrained('cabang', 'cabang_id')->cascadeOnDelete();
             $table->foreignId('bahan_id')->constrained('bahan_baku', 'bahan_id')->cascadeOnDelete();
-            $table->foreignId('kepala_shift_id')->constrained('pengguna', 'user_id')->cascadeOnDelete();
+            $table->foreignId('kepala_shift_id')->nullable()->constrained('pengguna', 'user_id')->nullOnDelete();
             $table->decimal('qty', 12, 3);
             $table->text('alasan');
             $table->timestamp('tanggal')->useCurrent();

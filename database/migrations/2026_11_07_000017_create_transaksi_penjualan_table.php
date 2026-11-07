@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id('transaksi_id');
             $table->string('no_transaksi', 50)->nullable();
             $table->foreignId('cabang_id')->constrained('cabang', 'cabang_id')->cascadeOnDelete();
-            $table->foreignId('kasir_id')->constrained('pengguna', 'user_id')->cascadeOnDelete();
+            $table->foreignId('kasir_id')->nullable()->constrained('pengguna', 'user_id')->nullOnDelete();
             $table->timestamp('tanggal')->useCurrent();
-            $table->decimal('total_bayar', 12, 2);
+            $table->decimal('total_bayar', 12, 2)->default(0);
             $table->string('status');
             $table->text('alasan_batal')->nullable();
         });

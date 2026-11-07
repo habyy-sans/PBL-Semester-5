@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('metode');
             $table->string('gateway_order_id')->nullable();
             $table->string('gateway_transaction_id')->nullable();
-            $table->string('status');
+            $table->string('status')->nullable()->default('berhasil');
             $table->timestamp('paid_at')->nullable();
             $table->decimal('jumlah_diterima', 12, 2)->nullable();
             $table->decimal('kembalian', 12, 2)->nullable();

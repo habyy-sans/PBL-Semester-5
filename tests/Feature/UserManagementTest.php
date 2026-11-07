@@ -6,7 +6,6 @@ use App\Models\Cabang;
 use App\Models\Pengguna;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class UserManagementTest extends TestCase
@@ -16,29 +15,6 @@ class UserManagementTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Skema minimal untuk sqlite in-memory (tabel domain asli ada di
-        // Supabase dan tidak dimigrasikan lewat Laravel migrations).
-        Schema::create('pengguna', function ($table) {
-            $table->id('user_id');
-            $table->string('nama_lengkap', 150);
-            $table->string('username', 50)->unique();
-            $table->string('email', 150)->unique();
-            $table->string('password_hash', 255);
-            $table->string('telepon', 20)->nullable();
-            $table->string('role', 50);
-            $table->bigInteger('cabang_id')->nullable();
-            $table->bigInteger('dc_id')->nullable();
-            $table->string('status', 20)->default('aktif');
-            $table->string('remember_token', 100)->nullable();
-        });
-
-        Schema::create('cabang', function ($table) {
-            $table->id('cabang_id');
-            $table->string('nama_cabang', 100);
-            $table->string('alamat')->nullable();
-            $table->string('telepon', 20)->nullable();
-        });
     }
 
     private function makeAdmin(): Pengguna
@@ -58,8 +34,8 @@ class UserManagementTest extends TestCase
     {
         return Pengguna::query()->create(array_merge([
             'nama_lengkap' => 'Dewi Manager',
-            'username' => 'dewi.manager' . $cabangId,
-            'email' => 'dewi.manager' . $cabangId . '@kopsync.id',
+            'username' => 'dewi.manager'.$cabangId,
+            'email' => 'dewi.manager'.$cabangId.'@kopsync.id',
             'password_hash' => Hash::make('password123'),
             'role' => config('menu.roles.manager.db'),
             'cabang_id' => $cabangId,
