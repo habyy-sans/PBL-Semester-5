@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Dc;
-
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\Cabang;
@@ -15,6 +15,9 @@ use Illuminate\View\View;
 
 class ShipmentController extends Controller
 {
+    public function __construct(
+        private readonly NotificationService $notifications,
+    ) {}
     /**
      * Halaman Pengiriman & Surat Jalan (DC) — data dari database,
      * format sama dengan demo lama agar view tidak berubah.
@@ -103,23 +106,30 @@ class ShipmentController extends Controller
     }
 
     /**
-     * DC mengubah status disiapkan → dikirim.
+     * DC mengubah status disiapkan → dikirim, lalu memberi tahu IC cabang tujuan.
      */
     public function kirim(Request $request, int $id): JsonResponse
     {
-        $sj = SuratJalan::query()->where('surat_jalan_id', $id)->firstOrFail();
-
-        abort_unless($sj->status === 'disiapkan', 422, 'Surat jalan sudah dikirim.');
-
-        $sj->status = 'dikirim';
-        $sj->tanggal_kirim = now();
-        $sj->save();
-
-        return response()->json([
-            'surat_jalan_id' => $sj->surat_jalan_id,
-            'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
-            'status' => 'menunggu',
-        ]);
+        return DB::transaction(function () use ($id) {
+            $sj = SuratJalan::query()
+                ->where('surat_jalan_id', $id)
+                ->lockForUpdate()
+                ->firstOrFail();
+ 
+            abort_unless($sj->status === 'disiapkan', 422, 'Surat jalan sudah dikirim.');
+ 
+            $sj->status = 'dikirim';
+            $sj->tanggal_kirim = now();
+            $sj->save();
+ 
+            $this->notifications->shipmentDispatched($sj);
+ 
+            return response()->json([
+                'surat_jalan_id' => $sj->surat_jalan_id,
+                'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
+                'status' => 'menunggu',
+            ]);
+        });
     }
 
     private function format(SuratJalan $sj): array

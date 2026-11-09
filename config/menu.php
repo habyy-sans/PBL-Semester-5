@@ -74,8 +74,8 @@ return [
         'manager' => [
             'MAIN MENU' => [
                 ['route' => 'manager.dashboard', 'icon' => '⌂', 'label' => 'Dashboard'],
-                ['route' => 'manager.alert',     'icon' => '△', 'label' => 'Alert', 'badge' => 5, 'danger' => true],
-                ['route' => 'manager.restock',   'icon' => '↻', 'label' => 'Restock', 'badge' => 3],
+                ['route' => 'manager.alert',     'icon' => '△', 'label' => 'Alert'],
+                ['route' => 'manager.restock',   'icon' => '↻', 'label' => 'Restock'],
             ],
             'MONITORING' => [
                 ['route' => 'manager.report', 'icon' => '▥', 'label' => 'Laporan Cabang'],

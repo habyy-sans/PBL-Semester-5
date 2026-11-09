@@ -27,6 +27,7 @@ use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\Manager\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotificationController;
 
 // Data untuk halaman "segera hadir"
 $soon = fn (string $title, string $description) => [
@@ -189,4 +190,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         'Atur harga produk.'
     ))->name('price');
 
+});
+/* =========================================================
+   NOTIFIKASI (hanya DC, Manager, IC)
+========================================================= */
+ 
+Route::middleware(['auth', 'role:dc,manager,ic'])->prefix('notifications')->name('notifications.')->group(function () {
+ 
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->whereNumber('id')->name('read');
+ 
 });

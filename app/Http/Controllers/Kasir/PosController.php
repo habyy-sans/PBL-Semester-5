@@ -10,6 +10,7 @@ use App\Models\StockMovement;
 use App\Models\StokCabang;
 use App\Models\TransaksiPenjualan;
 use App\Services\CatalogService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class PosController extends Controller
 {
     public function __construct(
         private readonly CatalogService $catalog,
+        private readonly NotificationService $notifications,
     ) {}
 
     /**
@@ -188,6 +190,8 @@ class PosController extends Controller
             foreach ($usage as $bahanId => $amount) {
                 $stok = $stokMap->get($bahanId);
 
+                $wasLow = (float) $stok->jumlah_stok < (float) $stok->stok_minimum;
+
                 $stok->jumlah_stok = (float) $stok->jumlah_stok - $amount;
                 $stok->save();
 
@@ -200,6 +204,9 @@ class PosController extends Controller
                     'tanggal' => $transaksi->tanggal,
                     'keterangan' => 'Penjualan · '.$transaksi->no_transaksi,
                 ]);
+
+                // Stok baru saja turun di bawah minimum: beri tahu Manager dan IC cabang.
+                $this->notifications->lowStock($stok, $wasLow, 'trx:'.$transaksi->transaksi_id);
 
                 $cuts[] = [
                     'name' => $usageMeta[$bahanId]->nama_bahan,
