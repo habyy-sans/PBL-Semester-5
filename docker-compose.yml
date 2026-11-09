@@ -8,8 +8,12 @@ x-php: &php
   user: "${WWWUSER:-1000}:${WWWGROUP:-1000}"
   environment:
     HOME: /tmp
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_URL: http://localhost:8080
   volumes:
     - .:/var/www/app
+    - /var/www/app/bootstrap/cache
   restart: unless-stopped
 
 services:
