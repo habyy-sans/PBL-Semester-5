@@ -1,0 +1,303 @@
+/* =========================================================
+   NOTIFIKASI (lonceng + dropdown di header)
+   Memakai variabel warna dari style.css (:root)
+========================================================= */
+
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-button .notification-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+
+    /* menimpa aturan ".notification-button span" lama (titik 6px) */
+    width: auto;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+
+    border: 2px solid var(--white);
+    border-radius: 999px;
+    background: var(--red);
+
+    color: #fff;
+    font-size: 8px;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 14px;
+    text-align: center;
+}
+
+.notification-button:focus-visible,
+.notification-item:focus-visible,
+.notification-readall:focus-visible {
+    outline: 2px solid rgba(143, 71, 19, 0.35);
+    outline-offset: 2px;
+}
+
+
+/* PANEL */
+
+.notification-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+
+    width: 360px;
+    max-width: calc(100vw - 24px);
+    max-height: 520px;
+    max-height: min(70vh, 520px);
+    max-height: min(70dvh, 520px);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(86, 54, 25, 0.18);
+}
+
+.notification-panel-header {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+}
+
+.notification-panel-header strong {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.notification-readall {
+    border: none;
+    background: transparent;
+
+    color: var(--brown);
+    font-family: inherit;
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+.notification-readall:hover:not(:disabled) {
+    color: var(--brown-dark);
+    text-decoration: underline;
+}
+
+.notification-readall:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+
+/* LIST + SCROLLBAR AUTO-HIDE
+   Scrollbar transparan saat diam, muncul saat class .is-scrolling
+   (dipasang JS ketika ada event scroll, dilepas 0,9 detik setelah berhenti). */
+
+.notification-list {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.25s ease;
+}
+
+.notification-list.is-scrolling {
+    scrollbar-color: rgba(143, 71, 19, 0.45) transparent;
+}
+
+/* fallback browser lama berbasis WebKit */
+.notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.notification-list.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(143, 71, 19, 0.45);
+}
+
+
+/* ITEM */
+
+.notification-item {
+    width: 100%;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    padding: 11px 14px;
+
+    border: none;
+    border-bottom: 1px solid var(--cream-dark);
+    background: transparent;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: var(--cream);
+}
+
+.notification-item.is-unread {
+    background: #fff5e7;
+}
+
+.notification-item.is-unread:hover {
+    background: #fbeccf;
+}
+
+.notification-item:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.notification-icon {
+    flex: 0 0 auto;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background: var(--cream-dark);
+
+    color: var(--brown);
+    font-size: 12px;
+}
+
+.notification-icon.is-danger {
+    background: #f9e0df;
+    color: #b44141;
+}
+
+.notification-body {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.notification-title {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.35;
+}
+
+.notification-item.is-unread .notification-title {
+    font-weight: 600;
+}
+
+.notification-desc {
+    font-size: 10px;
+    color: #775b46;
+    line-height: 1.45;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.notification-time {
+    font-size: 9px;
+    color: var(--muted);
+}
+
+.notification-dot {
+    flex: 0 0 auto;
+
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+
+    border-radius: 50%;
+    background: var(--brown);
+}
+
+
+/* STATE */
+
+.notification-state {
+    padding: 28px 14px;
+
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.notification-state button {
+    margin-left: 4px;
+
+    border: none;
+    background: transparent;
+
+    color: var(--brown);
+    font-family: inherit;
+    font-size: 10px;
+
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.notification-error {
+    flex: 0 0 auto;
+
+    padding: 8px 14px;
+
+    border-top: 1px solid #f0c8c6;
+    background: #f9e0df;
+
+    color: #b44141;
+    font-size: 9px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+    .notification-panel {
+        position: fixed;
+
+        top: 84px;
+        left: 10px;
+        right: 10px;
+
+        width: auto;
+        max-width: none;
+        max-height: calc(100vh - 100px);
+        max-height: calc(100dvh - 100px);
+    }
+}

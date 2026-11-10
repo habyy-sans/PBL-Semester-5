@@ -105,6 +105,8 @@
 
     const WASTE_ALERTS = @json($wasteAlerts);
     const DRAFT_COUNT = @json($draftCount);
+    const FOCUS_STOCK_KEY = @json($focusStockKey);
+    const FOCUS_WASTE_GROUP = @json($focusWasteGroup);
     const EVALUATE_URL = "{{ url('/manager/alert') }}";
     const CSRF_TOKEN = "{{ csrf_token() }}";
 
@@ -406,6 +408,16 @@
     });
 
     renderTable();
+
+    if (FOCUS_STOCK_KEY !== null && ITEMS[String(FOCUS_STOCK_KEY)]) {
+        showRestock(String(FOCUS_STOCK_KEY));
+    } else if (FOCUS_WASTE_GROUP !== null) {
+        const mutation = MUT.find(item => String(item.group_id) === String(FOCUS_WASTE_GROUP));
+
+        if (mutation) {
+            showWaste(mutation.id);
+        }
+    }
 
 })();
 </script>

@@ -38,14 +38,9 @@
             <a class="primary-button admin-quick-action" href="{{ route('admin.pengguna.create') }}">+ Pengguna</a>
         @endif
 
-        <button
-            type="button"
-            class="notification-button"
-            @click="alert('Belum ada implementasi notifikasi.')"
-        >
-            🔔
-            <span></span>
-        </button>
+        @if (in_array($role, ['dc', 'manager', 'ic'], true))
+            <x-notification-bell />
+        @endif
 
         <div class="profile">
             <div class="profile-avatar">{{ $initial }}</div>

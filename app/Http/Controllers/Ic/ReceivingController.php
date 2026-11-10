@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Ic;
-
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\DetailDraftInstruksi;
@@ -18,6 +18,9 @@ use Illuminate\View\View;
 
 class ReceivingController extends Controller
 {
+    public function __construct(
+        private readonly NotificationService $notifications,
+    ) {}
     public function index(Request $request): View
     {
         $user = $request->user();
@@ -179,7 +182,8 @@ class ReceivingController extends Controller
             // Draft restock yang semua surat jalannya sudah diterima ditandai selesai,
             // supaya status di halaman Manager berubah menjadi "diterima".
             $this->completeDrafts($detailMap->pluck('detail_draft_id')->filter()->all());
-
+            // Beri tahu DC bahwa surat jalannya sudah diterima cabang.
+            $this->notifications->shipmentReceived($sj, $hasDiff);
             return response()->json([
                 'surat_jalan_id' => $sj->surat_jalan_id,
                 'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),

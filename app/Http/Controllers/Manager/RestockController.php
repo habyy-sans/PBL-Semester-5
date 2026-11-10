@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Manager;
-
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Models\Cabang;
 use App\Models\DetailDraftInstruksi;
@@ -15,6 +15,9 @@ use Illuminate\Validation\ValidationException;
 
 class RestockController extends Controller
 {
+public function __construct(
+    private readonly NotificationService $notifications,
+) {}
     
 public function generateAutomatic(Request $request): JsonResponse
 {
@@ -137,7 +140,9 @@ public function generateAutomatic(Request $request): JsonResponse
                 'message' => 'Tidak ada detail bahan yang dapat dibuat.',
             ]);
         }
-
+        // Beri tahu Manager cabang bahwa ada draft yang perlu direview dan disetujui.
+        $this->notifications->approvalNeeded($draft, $draft->detail()->count());
+ 
         return response()->json([
             'created' => true,
             'draft_id' => $draft->draft_id,
@@ -477,7 +482,9 @@ public function approve(Request $request): JsonResponse
             'status_baca' => false,
             'tanggal' => now(),
         ]);
-
+        // Beri tahu DC bahwa ada pesanan masuk yang harus diproses.
+        $this->notifications->orderApproved($draft, count($data['items']));
+        
         return response()->json([
             'draft_id' => $draft->draft_id,
             'no' => sprintf('#RS-%04d', $draft->draft_id),

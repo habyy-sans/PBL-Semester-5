@@ -31,10 +31,6 @@
                     >
                         <span class="menu-icon">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
- 
-                        @isset($item['badge'])
-                            <span class="menu-badge {{ ($item['danger'] ?? false) ? 'danger' : '' }}">{{ $item['badge'] }}</span>
-                        @endisset
                     </a>
                 @endforeach
  

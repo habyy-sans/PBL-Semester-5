@@ -249,7 +249,7 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database.
+    // Data Surat Jalan berasal dari database.
     function shipmentPage() {
 
         return {
@@ -257,6 +257,15 @@
             items: @json($items),          // barang, kunci = id barang
             stores: @json($storeList),
             shipments: @json($shipments),
+
+            init() {
+                const requestedId = Number(new URLSearchParams(window.location.search).get('surat_jalan_id'));
+                const shipment = this.shipments.find(item => item.id === requestedId);
+
+                if (shipment) {
+                    this.open(shipment);
+                }
+            },
 
             view: 'list',          // 'list' | 'detail'
             current: null,
