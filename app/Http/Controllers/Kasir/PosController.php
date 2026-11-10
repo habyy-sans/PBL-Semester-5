@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\DetailTransaksi;
 use App\Models\MenuProduk;
 use App\Models\Payment;
-use App\Models\StockMovement;
 use App\Models\StokCabang;
 use App\Models\TransaksiPenjualan;
 use App\Services\CatalogService;
+use App\Services\MidtransService;
 use App\Services\NotificationService;
+use App\Services\OrderSettlementService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +24,12 @@ class PosController extends Controller
     public function __construct(
         private readonly CatalogService $catalog,
         private readonly NotificationService $notifications,
+        private readonly MidtransService $midtrans,
+        private readonly OrderSettlementService $settlement,
     ) {}
 
     /**
      * Halaman Kasir (POS).
-     *
-     * Data dikirim dengan bentuk yang sama persis dengan config dummy
-     * lama (items & menus) supaya logika JS di view tidak berubah.
      */
     public function index(Request $request): View
     {
@@ -49,15 +50,14 @@ class PosController extends Controller
             'todayOrdersCount' => $todayOrdersCount,
             'activeTrxNo' => $activeTrxNo,
             'branchName' => $user->cabang?->nama_cabang ?? 'KopSync Gerai',
+            'isMidtransConfigured' => $this->midtrans->isConfigured(),
         ]);
     }
 
     /**
-     * Proses pembayaran: simpan transaksi + potong stok + catat mutasi
-     * dalam SATU database transaction.
-     *
-     * Payload JS: { items: [{ menu: menuId, qty }], method, cash }
-     * Respons:    { no, total, change, cuts: [...] }
+     * Proses pembayaran POS:
+     * - Tunai / Debit: langsung selesai (settle)
+     * - QRIS: dibuatkan tagihan Direct QRIS Midtrans (pending) dan mengembalikan QR Code
      */
     public function store(Request $request): JsonResponse
     {
@@ -78,12 +78,75 @@ class PosController extends Controller
                 'message' => collect($e->errors())->flatten()->first(),
                 'errors' => $e->errors(),
             ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memproses transaksi: ' . $e->getMessage(),
+            ], 500);
         }
+    }
+
+    /**
+     * Cek status pembayaran untuk polling frontend kasir saat menunggu QRIS.
+     */
+    public function status(int $id): JsonResponse
+    {
+        $transaksi = TransaksiPenjualan::query()
+            ->with('pembayaran')
+            ->findOrFail($id);
+
+        // Jika transaksi masih menunggu pembayaran dan Midtrans sudah terhubung,
+        // cek langsung ke Midtrans API sebagai proteksi jika webhook tertunda
+        if ($transaksi->status === 'menunggu_pembayaran' && $transaksi->pembayaran?->gateway_order_id) {
+            $midtransStatus = $this->midtrans->checkStatus($transaksi->pembayaran->gateway_order_id);
+
+            if ($midtransStatus) {
+                $status = $midtransStatus['transaction_status'] ?? '';
+                $fraud = $midtransStatus['fraud_status'] ?? 'accept';
+
+                if ($status === 'settlement' || ($status === 'capture' && $fraud === 'accept')) {
+                    $this->settlement->settle($transaksi, $midtransStatus['transaction_id'] ?? null);
+                    $transaksi->refresh();
+                } elseif (in_array($status, ['cancel', 'deny', 'expire'], true)) {
+                    $transaksi->update(['status' => 'batal']);
+                    $transaksi->pembayaran?->update(['status' => 'batal']);
+                }
+            }
+        }
+
+        return response()->json([
+            'transaksi_id' => $transaksi->transaksi_id,
+            'no' => $transaksi->no_transaksi,
+            'status' => $transaksi->status,
+            'total' => (float) $transaksi->total_bayar,
+        ]);
+    }
+
+    /**
+     * Batalkan transaksi pending (misal pelanggan batal bayar QRIS).
+     */
+    public function cancel(int $id): JsonResponse
+    {
+        $transaksi = TransaksiPenjualan::query()->findOrFail($id);
+
+        if ($transaksi->status === 'menunggu_pembayaran') {
+            $transaksi->update([
+                'status' => 'batal',
+                'alasan_batal' => 'Dibatalkan oleh kasir di kasir POS',
+            ]);
+
+            $transaksi->pembayaran?->update(['status' => 'batal']);
+        }
+
+        return response()->json([
+            'status' => 'batal',
+            'no' => $transaksi->no_transaksi,
+        ]);
     }
 
     private function processPayment(array $data, $user): JsonResponse
     {
         return DB::transaction(function () use ($data, $user) {
+            // Validasi ketersediaan stok bahan baku
             $stokMap = StokCabang::query()
                 ->where('cabang_id', $user->cabang_id)
                 ->whereIn('bahan_id', $this->neededBahanIds($data['items']))
@@ -119,12 +182,12 @@ class PosController extends Controller
                 }
             }
 
-            // Validasi stok (server-side, sumber kebenaran).
+            // Validasi kecukupan stok
             foreach ($usage as $bahanId => $amount) {
                 $stok = $stokMap->get($bahanId);
 
                 if ($stok === null || (float) $stok->jumlah_stok < $amount) {
-                    $nama = $usageMeta[$bahanId]->nama_bahan;
+                    $nama = $usageMeta[$bahanId]->nama_bahan ?? "Bahan #{$bahanId}";
                     $sisa = $stok !== null ? (float) $stok->jumlah_stok : 0.0;
 
                     throw ValidationException::withMessages([
@@ -139,20 +202,23 @@ class PosController extends Controller
                 ]);
             }
 
-            // 1) Transaksi penjualan.
+            // 1. Catat Transaksi Penjualan
+            $isQris = $data['method'] === 'qris';
+            $initialStatus = $isQris ? 'menunggu_pembayaran' : 'berhasil';
+
             $transaksi = TransaksiPenjualan::query()->create([
                 'cabang_id' => $user->cabang_id,
                 'kasir_id' => $user->user_id,
                 'tanggal' => now(),
                 'total_bayar' => $total,
-                'status' => 'berhasil',
+                'status' => $initialStatus,
             ]);
 
             $transaksi->forceFill([
                 'no_transaksi' => sprintf('#TRX-%04d', $transaksi->transaksi_id),
             ])->saveOrFail();
 
-            // 2) Detail item (snapshot harga saat transaksi).
+            // 2. Simpan Detail Item
             foreach ($data['items'] as $line) {
                 $varian = MenuProduk::query()
                     ->whereKey($line['menu'])
@@ -172,7 +238,35 @@ class PosController extends Controller
                 ]);
             }
 
-            // 3) Pembayaran.
+            // 3. Penanganan Pembayaran QRIS vs Tunai/Debit
+            if ($isQris) {
+                $gatewayOrderId = sprintf('TRX-%04d-%d', $transaksi->transaksi_id, time());
+
+                // Minta tagihan Direct QRIS ke Midtrans
+                $qrisResponse = $this->midtrans->createQrisTransaction($gatewayOrderId, (int) $total);
+
+                Payment::query()->create([
+                    'transaksi_id' => $transaksi->transaksi_id,
+                    'metode' => 'qris',
+                    'gateway_order_id' => $gatewayOrderId,
+                    'gateway_transaction_id' => $qrisResponse['transaction_id'] ?? null,
+                    'status' => 'pending',
+                ]);
+
+                return response()->json([
+                    'type' => 'qris',
+                    'status' => 'pending',
+                    'transaksi_id' => $transaksi->transaksi_id,
+                    'no' => $transaksi->no_transaksi,
+                    'order_id' => $gatewayOrderId,
+                    'total' => $total,
+                    'qr_url' => $qrisResponse['qr_url'],
+                    'qr_string' => $qrisResponse['qr_string'],
+                    'is_mock' => $qrisResponse['is_mock'] ?? false,
+                ]);
+            }
+
+            // Tunai / Debit: Langsung diproses dan diselesaikan
             $cash = $data['method'] === 'tunai' ? (int) $data['cash'] : null;
 
             Payment::query()->create([
@@ -184,42 +278,15 @@ class PosController extends Controller
                 'kembalian' => $cash !== null ? $cash - $total : null,
             ]);
 
-            // 4) Potong stok cabang + catat mutasi per bahan.
-            $cuts = [];
-
-            foreach ($usage as $bahanId => $amount) {
-                $stok = $stokMap->get($bahanId);
-
-                $wasLow = (float) $stok->jumlah_stok < (float) $stok->stok_minimum;
-
-                $stok->jumlah_stok = (float) $stok->jumlah_stok - $amount;
-                $stok->save();
-
-                StockMovement::query()->create([
-                    'bahan_id' => $bahanId,
-                    'cabang_id' => $user->cabang_id,
-                    'jenis_mutasi' => 'penjualan',
-                    'jumlah' => $amount,
-                    'referensi_id' => $transaksi->transaksi_id,
-                    'tanggal' => $transaksi->tanggal,
-                    'keterangan' => 'Penjualan · '.$transaksi->no_transaksi,
-                ]);
-
-                // Stok baru saja turun di bawah minimum: beri tahu Manager dan IC cabang.
-                $this->notifications->lowStock($stok, $wasLow, 'trx:'.$transaksi->transaksi_id);
-
-                $cuts[] = [
-                    'name' => $usageMeta[$bahanId]->nama_bahan,
-                    'amount' => $amount,
-                    'unit' => $usageMeta[$bahanId]->satuan,
-                ];
-            }
+            // Potong stok dan notifikasi
+            $settleResult = $this->settlement->settle($transaksi);
 
             return response()->json([
+                'type' => 'direct',
                 'no' => $transaksi->no_transaksi,
                 'total' => $total,
                 'change' => $cash !== null ? $cash - $total : 0,
-                'cuts' => $cuts,
+                'cuts' => $settleResult['cuts'],
             ]);
         });
     }

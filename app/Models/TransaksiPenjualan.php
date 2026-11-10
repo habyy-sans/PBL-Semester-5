@@ -55,4 +55,9 @@ class TransaksiPenjualan extends Model
     {
         return $this->hasOne(Payment::class, 'transaksi_id');
     }
+
+    public function payment(): HasOne
+    {
+        return $this->pembayaran();
+    }
 }

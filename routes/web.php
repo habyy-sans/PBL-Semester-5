@@ -26,8 +26,9 @@ use App\Http\Controllers\Kasir\RiwayatController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\Manager\ReportController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentWebhookController;
+use Illuminate\Support\Facades\Route;
 
 // Data untuk halaman "segera hadir"
 $soon = fn (string $title, string $description) => [
@@ -62,10 +63,19 @@ Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->grou
 
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::post('/pos', [PosController::class, 'store']);
+    Route::get('/pos/status/{id}', [PosController::class, 'status'])->name('pos.status');
+    Route::post('/pos/cancel/{id}', [PosController::class, 'cancel'])->name('pos.cancel');
+    Route::post('/pos/simulate/{id}', [PaymentWebhookController::class, 'simulate'])->name('pos.simulate');
 
     Route::get('/history', [RiwayatController::class, 'index'])->name('history');
 
 });
+
+/* =========================================================
+   PAYMENT GATEWAY WEBHOOK (MIDTRANS)
+========================================================= */
+Route::post('/midtrans/webhook', [PaymentWebhookController::class, 'handle'])->name('midtrans.webhook');
+
 
 /* =========================================================
    KEPALA SHIFT / IC
