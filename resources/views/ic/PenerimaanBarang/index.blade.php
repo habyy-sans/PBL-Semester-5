@@ -348,14 +348,22 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database,
-    // dan confirmReceipt() diganti request ke backend (stok cabang bertambah di server).
+    // Data penerimaan berasal dari database; konfirmasi dan perubahan stok diproses server.
     function receivingPage() {
 
         return {
 
             items: @json($items),          // barang, kunci = id barang
             shipments: @json($shipments),
+
+            init() {
+                const requestedId = Number(new URLSearchParams(window.location.search).get('surat_jalan_id'));
+                const shipment = this.shipments.find(item => item.id === requestedId);
+
+                if (shipment) {
+                    this.open(shipment);
+                }
+            },
 
             view: 'list',          // 'list' | 'detail'
             current: null,         // salinan surat jalan yang sedang dibuka

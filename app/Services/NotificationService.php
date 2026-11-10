@@ -39,6 +39,10 @@ class NotificationService
             ->where('role', config("menu.roles.{$roleKey}.db"))
             ->where('status', 'aktif');
 
+        if ($roleKey === 'dc') {
+            $query->whereNotNull('dc_id');
+        }
+
         if ($cabangId !== null) {
             $query->where('cabang_id', $cabangId);
         }
@@ -81,19 +85,19 @@ class NotificationService
             }
 
             $rows[] = [
-                'user_id'        => $user->user_id,
-                'cabang_id'      => $cabangId,
-                'dc_id'          => $dcId,
-                'type'           => $type,
-                'title'          => $title,
-                'description'    => $description,
+                'user_id' => $user->user_id,
+                'cabang_id' => $cabangId,
+                'dc_id' => $dcId,
+                'type' => $type,
+                'title' => $title,
+                'description' => $description,
                 'reference_type' => $referenceType,
-                'reference_id'   => $referenceId,
-                'dedupe_key'     => $dedupeKey,
-                'is_read'        => false,
-                'read_at'        => null,
-                'created_at'     => $now,
-                'updated_at'     => $now,
+                'reference_id' => $referenceId,
+                'dedupe_key' => $dedupeKey,
+                'is_read' => false,
+                'read_at' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 
@@ -134,8 +138,8 @@ class NotificationService
 
     /**
      * Manager menyetujui draft: DC menerima pesanan masuk.
-     * Draft tidak punya dc_id, jadi semua akun DC aktif menerimanya
-     * (sama seperti halaman Pesanan Masuk yang menampilkan semua draft disetujui).
+     * Draft belum ditugaskan ke DC, jadi setiap pengguna DC yang memiliki
+     * penugasan DC menerima salinan pribadi dari antrean pesanan bersama.
      */
     public function orderApproved(DraftInstruksi $draft, int $itemCount): int
     {

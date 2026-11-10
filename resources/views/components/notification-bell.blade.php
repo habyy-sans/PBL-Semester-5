@@ -1,18 +1,3 @@
-@php
-    $user = auth()->user();
-
-    // Angka awal dari server supaya badge tidak berkedip dari 0.
-    // URL dibuat relatif agar aman jika APP_URL berbeda dengan host yang dipakai.
-    $config = [
-        'unread' => \App\Models\Notification::visibleTo($user)->unread()->count(),
-        'urls' => [
-            'list'    => route('notifications.index', [], false),
-            'count'   => route('notifications.unread-count', [], false),
-            'readAll' => route('notifications.read-all', [], false),
-        ],
-    ];
-@endphp
-
 <div
     class="notification-wrapper"
     x-data="notificationBell({{ Js::from($config) }})"

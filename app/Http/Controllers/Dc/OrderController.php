@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\Cabang;
 use App\Models\DraftInstruksi;
-use App\Models\SuratJalan;
 use App\Models\StokDc;
+use App\Models\SuratJalan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -19,6 +19,8 @@ class OrderController extends Controller
      */
     public function index(Request $request): View
     {
+        abort_if($request->user()->dc_id === null, 403, 'Akun DC belum memiliki penugasan.');
+
         $items = BahanBaku::query()->orderBy('bahan_id')->get()
             ->mapWithKeys(fn ($b) => [(string) $b->bahan_id => [
                 'name' => $b->nama_bahan,
@@ -98,7 +100,7 @@ class OrderController extends Controller
             'orders' => $orders,
             'dcStock' => $dcStock,
         ]);
-            }
+    }
 
     private function toPacks(float $qtyBase, float $isi): int
     {

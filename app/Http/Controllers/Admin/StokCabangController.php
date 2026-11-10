@@ -73,12 +73,16 @@ class StokCabangController extends Controller
         ]);
 
         DB::transaction(function () use ($stokCabang, $data) {
-            $wasLow = (float) $stokCabang->jumlah_stok < (float) $stokCabang->stok_minimum;
+            $stock = StokCabang::query()
+                ->whereKey($stokCabang->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $wasLow = (float) $stock->jumlah_stok < (float) $stock->stok_minimum;
 
-            $stokCabang->update($data);
+            $stock->update($data);
 
             // Minimum dinaikkan hingga stok berada di bawahnya: beri tahu Manager dan IC cabang.
-            $this->notifications->lowStock($stokCabang, $wasLow, 'min:'.now()->format('YmdHisu'));
+            $this->notifications->lowStock($stock, $wasLow, 'min:'.now()->format('YmdHisu'));
         });
 
         return back()->with('success', 'Batas minimum stok cabang berhasil diperbarui.');

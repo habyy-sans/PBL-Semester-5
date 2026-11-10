@@ -151,6 +151,7 @@
     let mAdd    = 1;
     let mReason = REASONS[0];
     let mNote   = '';
+    let deepLinkHandled = false;
 
     // 3430 ml (isi 700) => "4 Kotak 630 ml"
     const fmtStock = (item, amount) => {
@@ -221,6 +222,15 @@ async function loadData() {
     }
 
     renderTable();
+
+    if (!deepLinkHandled) {
+        deepLinkHandled = true;
+        const draftId = new URLSearchParams(window.location.search).get('draft_id');
+
+        if (draftId) {
+            showDraft(draftId);
+        }
+    }
 }
 
 

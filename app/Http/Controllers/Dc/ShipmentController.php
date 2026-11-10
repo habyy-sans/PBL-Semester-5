@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\Dc;
-use App\Services\NotificationService;
+
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\Cabang;
 use App\Models\DetailSuratJalan;
 use App\Models\DraftInstruksi;
 use App\Models\SuratJalan;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +19,15 @@ class ShipmentController extends Controller
     public function __construct(
         private readonly NotificationService $notifications,
     ) {}
+
     /**
      * Halaman Pengiriman & Surat Jalan (DC) — data dari database,
      * format sama dengan demo lama agar view tidak berubah.
      */
     public function index(Request $request): View
     {
+        abort_if($request->user()->dc_id === null, 403, 'Akun DC belum memiliki penugasan.');
+
         $items = BahanBaku::query()->orderBy('bahan_id')->get()
             ->mapWithKeys(fn ($b) => [(string) $b->bahan_id => [
                 'name' => $b->nama_bahan,
@@ -39,6 +43,7 @@ class ShipmentController extends Controller
             ->all();
 
         $shipments = SuratJalan::query()
+            ->where('dc_id', $request->user()->dc_id)
             ->with(['detail.bahan', 'konfirmasi'])
             ->orderByDesc('surat_jalan_id')
             ->get()
@@ -66,6 +71,7 @@ class ShipmentController extends Controller
         ]);
 
         $user = $request->user();
+        abort_if($user->dc_id === null, 403, 'Akun DC belum memiliki penugasan.');
 
         return DB::transaction(function () use ($data, $user) {
             $draft = DraftInstruksi::query()
@@ -110,20 +116,24 @@ class ShipmentController extends Controller
      */
     public function kirim(Request $request, int $id): JsonResponse
     {
-        return DB::transaction(function () use ($id) {
+        $user = $request->user();
+        abort_if($user->dc_id === null, 403, 'Akun DC belum memiliki penugasan.');
+
+        return DB::transaction(function () use ($id, $user) {
             $sj = SuratJalan::query()
                 ->where('surat_jalan_id', $id)
+                ->where('dc_id', $user->dc_id)
                 ->lockForUpdate()
                 ->firstOrFail();
- 
+
             abort_unless($sj->status === 'disiapkan', 422, 'Surat jalan sudah dikirim.');
- 
+
             $sj->status = 'dikirim';
             $sj->tanggal_kirim = now();
             $sj->save();
- 
+
             $this->notifications->shipmentDispatched($sj);
- 
+
             return response()->json([
                 'surat_jalan_id' => $sj->surat_jalan_id,
                 'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),

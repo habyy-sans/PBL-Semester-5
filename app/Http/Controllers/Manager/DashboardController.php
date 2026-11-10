@@ -5,15 +5,17 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\Cabang;
 use App\Models\DraftInstruksi;
+use App\Models\NotifikasiAlert;
 use App\Models\StockMovement;
+use App\Models\StokCabang;
 use App\Models\SuratJalan;
 use App\Models\TransaksiPenjualan;
-use App\Models\NotifikasiAlert;
+use App\Models\WasteLog;
 use App\Services\CatalogService;
 use App\Services\ReportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
 {
@@ -55,61 +57,77 @@ class DashboardController extends Controller
      * dari database, plus no. draft instruksi terbaru.
      */
     public function alert(Request $request): View
-{
-    $cabangId = (int) $request->user()->cabang_id;
+    {
+        $cabangId = (int) $request->user()->cabang_id;
+        $requestedStockId = $request->integer('stok_cabang_id');
+        $focusStockKey = $requestedStockId > 0
+            ? StokCabang::query()
+                ->where('stok_cabang_id', $requestedStockId)
+                ->where('cabang_id', $cabangId)
+                ->value('bahan_id')
+            : null;
+        $requestedWasteId = $request->integer('waste_id');
+        $focusWasteGroup = $requestedWasteId > 0
+            ? WasteLog::query()
+                ->where('waste_id', $requestedWasteId)
+                ->where('cabang_id', $cabangId)
+                ->value('kelompok_id')
+            : null;
 
-    $pendingDraft = DraftInstruksi::query()
-        ->where('cabang_id', $cabangId)
-        ->whereIn('status', ['menunggu_persetujuan', 'menunggu'])
-        ->orderByDesc('draft_id')
-        ->get();
+        $pendingDraft = DraftInstruksi::query()
+            ->where('cabang_id', $cabangId)
+            ->whereIn('status', ['menunggu_persetujuan', 'menunggu'])
+            ->orderByDesc('draft_id')
+            ->get();
 
-    $wasteAlerts = NotifikasiAlert::query()
-        ->where('cabang_id', $cabangId)
-        ->where('tipe', 'waste')
-        ->get()
-        ->mapWithKeys(function ($alert) {
-            preg_match(
-                '/\[kelompok_id=([^\]]+)\]/',
-                $alert->pesan,
-                $matches
-            );
+        $wasteAlerts = NotifikasiAlert::query()
+            ->where('cabang_id', $cabangId)
+            ->where('tipe', 'waste')
+            ->get()
+            ->mapWithKeys(function ($alert) {
+                preg_match(
+                    '/\[kelompok_id=([^\]]+)\]/',
+                    $alert->pesan,
+                    $matches
+                );
 
-            return !empty($matches[1])
-                ? [$matches[1] => [
-                    'alert_id' => $alert->alert_id,
-                    'status_baca' => (bool) $alert->status_baca,
-                ]]
-                : [];
-        });
+                return ! empty($matches[1])
+                    ? [$matches[1] => [
+                        'alert_id' => $alert->alert_id,
+                        'status_baca' => (bool) $alert->status_baca,
+                    ]]
+                    : [];
+            });
 
-    return view('manager.alert.index', [
-        'items' => $this->catalog->items($cabangId),
-        'mutations' => $this->mutations($cabangId),
-        'draftNo' => $pendingDraft->first()
-            ? sprintf('#RS-%04d', $pendingDraft->first()->draft_id)
-            : null,
-        'draftCount' => $pendingDraft->count(),
-        'wasteAlerts' => $wasteAlerts,
-    ]);
-}
+        return view('manager.alert.index', [
+            'items' => $this->catalog->items($cabangId),
+            'mutations' => $this->mutations($cabangId),
+            'draftNo' => $pendingDraft->first()
+                ? sprintf('#RS-%04d', $pendingDraft->first()->draft_id)
+                : null,
+            'draftCount' => $pendingDraft->count(),
+            'wasteAlerts' => $wasteAlerts,
+            'focusStockKey' => $focusStockKey,
+            'focusWasteGroup' => $focusWasteGroup,
+        ]);
+    }
 
-public function evaluateWaste(Request $request, int $alertId): JsonResponse
-{
-    $alert = NotifikasiAlert::query()
-        ->where('alert_id', $alertId)
-        ->where('cabang_id', $request->user()->cabang_id)
-        ->where('tipe', 'waste')
-        ->firstOrFail();
+    public function evaluateWaste(Request $request, int $alertId): JsonResponse
+    {
+        $alert = NotifikasiAlert::query()
+            ->where('alert_id', $alertId)
+            ->where('cabang_id', $request->user()->cabang_id)
+            ->where('tipe', 'waste')
+            ->firstOrFail();
 
-    $alert->update([
-        'status_baca' => true,
-    ]);
+        $alert->update([
+            'status_baca' => true,
+        ]);
 
-    return response()->json([
-        'message' => 'Alert waste berhasil ditandai sudah dievaluasi.',
-    ]);
-}
+        return response()->json([
+            'message' => 'Alert waste berhasil ditandai sudah dievaluasi.',
+        ]);
+    }
 
     private function latestDraftNo(int $cabangId): ?string
     {
@@ -178,9 +196,9 @@ public function evaluateWaste(Request $request, int $alertId): JsonResponse
         // sama seperti data demo lama.
         return $rows
             ->groupBy(fn ($movement) => $movement->jenis_mutasi === 'waste'
-                ? 'waste-' . ($movement->kelompok_id
-                    ?? $movement->tanggal->toDateTimeString() . '-' . $movement->keterangan)
-                : 'row-' . $movement->movement_id)
+                ? 'waste-'.($movement->kelompok_id
+                    ?? $movement->tanggal->toDateTimeString().'-'.$movement->keterangan)
+                : 'row-'.$movement->movement_id)
             ->map(function ($group) {
                 $first = $group->first();
 
@@ -192,11 +210,11 @@ public function evaluateWaste(Request $request, int $alertId): JsonResponse
 
                     'time' => $first->tanggal
                         ->timezone('Asia/Jakarta')
-                        ->format('H:i:s'),                    
+                        ->format('H:i:s'),
                     'type' => match ($first->jenis_mutasi) {
-                    'penerimaan_cabang' => 'masuk',
-                    'waste' => 'waste',
-                    default => 'keluar',
+                        'penerimaan_cabang' => 'masuk',
+                        'waste' => 'waste',
+                        default => 'keluar',
                     },
                     'ref' => $first->keterangan ?? '',
                     'group_id' => $first->kelompok_id,

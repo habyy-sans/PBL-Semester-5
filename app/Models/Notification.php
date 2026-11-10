@@ -27,9 +27,9 @@ class Notification extends Model
      * Role yang tidak ada di sini (admin, kasir) tidak punya fitur notifikasi.
      */
     public const ROLE_TYPES = [
-        'dc'      => ['pesanan_masuk', 'surat_jalan'],
+        'dc' => ['pesanan_masuk', 'surat_jalan'],
         'manager' => ['restock', 'waste', 'approval'],
-        'ic'      => ['surat_jalan', 'stok_menipis'],
+        'ic' => ['surat_jalan', 'stok_menipis'],
     ];
 
     /**
@@ -39,15 +39,15 @@ class Notification extends Model
     public const ROLE_DESTINATIONS = [
         'dc' => [
             'pesanan_masuk' => 'dc.order',
-            'surat_jalan'   => 'dc.shipment',
+            'surat_jalan' => 'dc.shipment',
         ],
         'manager' => [
-            'restock'  => 'manager.alert',
-            'waste'    => 'manager.alert',
+            'restock' => 'manager.alert',
+            'waste' => 'manager.alert',
             'approval' => 'manager.restock',
         ],
         'ic' => [
-            'surat_jalan'  => 'ic.receiving',
+            'surat_jalan' => 'ic.receiving',
             'stok_menipis' => 'ic.stock',
         ],
     ];
@@ -61,8 +61,8 @@ class Notification extends Model
     protected function casts(): array
     {
         return [
-            'is_read'    => 'boolean',
-            'read_at'    => 'datetime',
+            'is_read' => 'boolean',
+            'read_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -103,7 +103,7 @@ class Notification extends Model
 
         if ($role === 'dc') {
             return $user->dc_id === null
-                ? $query->whereNull('dc_id')
+                ? $query->whereRaw('1 = 0')
                 : $query->where(function (Builder $q) use ($user) {
                     $q->whereNull('dc_id')->orWhere('dc_id', $user->dc_id);
                 });
@@ -129,6 +129,30 @@ class Notification extends Model
     {
         $route = self::ROLE_DESTINATIONS[$role ?? ''][$this->type] ?? null;
 
-        return $route ? route($route, [], false) : null;
+        if ($route === null) {
+            return null;
+        }
+
+        $parameters = match ($role) {
+            'dc' => match ($this->type) {
+                'pesanan_masuk' => ['draft_id' => $this->reference_id],
+                'surat_jalan' => ['surat_jalan_id' => $this->reference_id],
+                default => [],
+            },
+            'manager' => match ($this->type) {
+                'restock' => ['stok_cabang_id' => $this->reference_id],
+                'waste' => ['waste_id' => $this->reference_id],
+                'approval' => ['draft_id' => $this->reference_id],
+                default => [],
+            },
+            'ic' => match ($this->type) {
+                'surat_jalan' => ['surat_jalan_id' => $this->reference_id],
+                'stok_menipis' => ['stok_cabang_id' => $this->reference_id],
+                default => [],
+            },
+            default => [],
+        };
+
+        return route($route, $parameters, false);
     }
 }

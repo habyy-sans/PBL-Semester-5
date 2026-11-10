@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('notifications') || ! Schema::hasTable('pengguna')) {
+            return;
+        }
+
         Schema::create('notifications', function (Blueprint $table) {
             $table->id('notification_id');
             $table->foreignId('user_id')->constrained('pengguna', 'user_id')->onDelete('cascade');
@@ -22,7 +26,7 @@ return new class extends Migration
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['user_id', 'is_read']);
             $table->index(['user_id', 'created_at']);
         });

@@ -327,8 +327,7 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database,
-    // dan issue() diganti request ke backend (Surat Jalan dibuat di server).
+    // Data pesanan berasal dari database; penerbitan Surat Jalan diproses server.
     function orderPage() {
 
         return {
@@ -337,7 +336,15 @@
             stores: @json($storeList),
             orders: @json($orders),
             dcStock: @json($dcStock),      // stok DC per barang, dalam kemasan
-            
+
+            init() {
+                const requestedId = Number(new URLSearchParams(window.location.search).get('draft_id'));
+                const order = this.orders.find(item => item.id === requestedId);
+
+                if (order) {
+                    this.open(order);
+                }
+            },
 
             view: 'list',          // 'list' | 'detail'
             current: null,         // salinan pesanan yang sedang dibuka
