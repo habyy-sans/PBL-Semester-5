@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['cabang_id', 'dc_id', 'diterbitkan_oleh', 'tanggal_kirim', 'status'])]
+#[Fillable([
+    'cabang_id',
+    'dc_id',
+    'diterbitkan_oleh',
+    'tanggal_kirim',
+    'status',
+    'catatan',
+])]
+
 class SuratJalan extends Model
 {
     protected $table = 'surat_jalan';
@@ -59,14 +67,20 @@ class SuratJalan extends Model
      */
     public function getComputedStatusAttribute(): string
     {
-        if ($this->relationLoaded('konfirmasi') ? $this->konfirmasi !== null : $this->konfirmasi()->exists()) {
+        if (
+            $this->relationLoaded('konfirmasi')
+                ? $this->konfirmasi !== null
+                : $this->konfirmasi()->exists()
+        ) {
             return 'diterima';
         }
 
-        if ($this->status === 'disiapkan') {
-            return 'disiapkan';
-        }
-
-        return $this->status === 'dikirim' ? 'menunggu' : 'dikirim';
+        return match ($this->status) {
+            'disiapkan' => 'disiapkan',
+            'dikirim' => 'menunggu',
+            'selesai' => 'diterima',
+            'dibatalkan' => 'dibatalkan',
+            default => 'disiapkan',
+        };
     }
 }

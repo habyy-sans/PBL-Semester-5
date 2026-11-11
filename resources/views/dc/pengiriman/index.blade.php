@@ -22,11 +22,9 @@
 
             <div class="stat-card">
                 <div class="stat-icon">▱</div>
-                <div class="stat-content">
-                    <span class="stat-label">Dalam Pengiriman</span>
-                    <strong x-text="count('dikirim')"></strong>
-                    <small>barang masih di jalan</small>
-                </div>
+                <span class="stat-label">Disiapkan DC</span>
+                <strong x-text="count('disiapkan')"></strong>
+                <small>menunggu keberangkatan</small>
             </div>
 
             <div class="stat-card">
@@ -85,6 +83,7 @@
                     <option value="dikirim">Dalam Pengiriman</option>
                     <option value="menunggu">Menunggu Pengecekan</option>
                     <option value="diterima">Diterima</option>
+                    <option value="dibatalkan">Dibatalkan</option>
                 </select>
 
                 <span class="table-meta" x-text="'Menampilkan ' + filtered.length + ' dari ' + shipments.length + ' surat jalan'"></span>
@@ -172,14 +171,24 @@
                             <p x-text="current.no + ' · ' + (labels[current.status] ? labels[current.status].text : current.status)"></p>
                         </div>
 
-                        <div style="display: flex; gap: 8px;">
-                            <button
-                                type="button"
-                                class="primary-button btn-sm no-print"
-                                x-show="current.status === 'disiapkan'"
-                                @click="dispatchShipment(current)"
-                            >Kirim Sekarang</button>
-                            <button type="button" class="primary-button btn-sm no-print" @click="window.print()">Cetak</button>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button
+                                    type="button"
+                                    class="primary-button btn-sm no-print"
+                                    x-show="current.status === 'disiapkan'"
+                                    :disabled="sending"
+                                    @click="dispatchShipment(current)"
+                                    x-text="sending ? 'Memproses...' : 'Kirim Sekarang'"
+                                ></button>
+
+                                <button
+                                    type="button"
+                                    class="primary-button btn-sm no-print"
+                                    @click="window.print()"
+                                >
+                                    Cetak
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -230,10 +239,11 @@
                                         <td x-text="index + 1"></td>
                                         <td x-text="itemOf(line).name"></td>
                                         <td x-text="sentText(line)"></td>
-                                        <td x-show="received" x-text="format(line.received) + ' ' + itemOf(line).pack"></td>
+                                        <td x-show="received" x-text="receivedText(line)"></td>
                                         <td x-show="received">
                                             <span
-                                                :class="{ 'danger-text': line.received !== line.sent }"
+                                                :class="{
+                                                'danger-text': Math.abs(Number(line.received) - Number(line.sent)) > 0.000001}"
                                                 x-text="diffText(line)"
                                             ></span>
                                         </td>
@@ -286,18 +296,19 @@
 
             view: 'list',          // 'list' | 'detail'
             current: null,
+            sending: false,
 
             search: '',
             store: '',
             status: '',
 
             labels: {
-                disiapkan: { text: 'Disiapkan',          class: 'info'    },
-                dikirim:  { text: 'Dalam Pengiriman',    class: 'warning' },
-                menunggu: { text: 'Menunggu Pengecekan', class: 'info'    },
-                diterima: { text: 'Diterima',            class: 'success' },
+                disiapkan: { text: 'Disiapkan', class: 'info' },
+                dikirim: { text: 'Dalam Pengiriman', class: 'warning' },
+                menunggu: { text: 'Menunggu Pengecekan', class: 'info' },
+                diterima: { text: 'Diterima', class: 'success' },
+                dibatalkan: { text: 'Dibatalkan', class: 'danger' },
             },
-
 
             /* ---------- FORMAT ---------- */
 
@@ -323,29 +334,44 @@
 
             // "10 Botol (7.000 ml)" untuk barang berkemasan, "300 Pcs" untuk barang satuan
             sentText(line) {
-
                 const item = this.itemOf(line);
 
                 if (item.size > 1) {
-                    return this.format(line.sent) + ' ' + item.pack
-                        + ' (' + this.format(line.sent * item.size) + ' ' + item.unit + ')';
+                    const packageQty = line.sent / item.size;
+
+                    return this.format(packageQty) + ' ' + item.pack
+                        + ' (' + this.format(line.sent) + ' ' + item.unit + ')';
                 }
 
                 return this.format(line.sent) + ' ' + item.pack;
             },
 
+            receivedText(line) {
+                const item = this.itemOf(line);
+
+                if (item.size > 1) {
+                    const packageQty = line.received / item.size;
+
+                    return this.format(packageQty) + ' ' + item.pack
+                        + ' (' + this.format(line.received) + ' ' + item.unit + ')';
+                }
+
+                return this.format(line.received) + ' ' + item.pack;
+            },
 
             diffText(line) {
+                const item = this.itemOf(line);
+                const value = Number(line.received) - Number(line.sent);
 
-                const value = line.received - line.sent;
-
-                if (value === 0) {
+                if (Math.abs(value) < 0.000001) {
                     return '0';
                 }
 
-                return (value > 0 ? '+' : '') + this.format(value) + ' ' + this.itemOf(line).pack;
+                return (value > 0 ? '+' : '')
+                    + this.format(value)
+                    + ' '
+                    + (item.unit || item.pack);
             },
-
 
             /* ---------- DAFTAR ---------- */
 
@@ -396,24 +422,52 @@
 
 
             async dispatchShipment(sj) {
+                if (!sj || sj.status !== 'disiapkan' || this.sending) return;
 
-                if (!confirm('Kirim surat jalan ' + sj.no + ' ke cabang tujuan?')) return;
-                const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                if (!confirm('Kirim surat jalan ' + sj.no + ' ke cabang tujuan?')) {
+                    return;
+                }
+
+                this.sending = true;
+
                 try {
-                    const res = await fetch(`/dc/shipment/${sj.id}/kirim`, {
+                    const token =
+                        document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+                    const response = await fetch(`/dc/shipment/${sj.id}/kirim`, {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                        },
                     });
-                    const json = await res.json().catch(() => ({}));
-                    if (!res.ok) {
-                        alert(json.message || 'Gagal mengirim surat jalan.');
+
+                    const result = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        alert(result.message || 'Gagal mengirim surat jalan.');
                         return;
                     }
-                    sj.status = json.status || 'menunggu';
-                    const target = this.shipments.find(s => s.id === sj.id);
-                    if (target) target.status = sj.status;
-                } catch (e) {
+
+                    const newStatus = result.status || 'menunggu';
+
+                    sj.status = newStatus;
+
+                    const target = this.shipments.find(item => item.id === sj.id);
+
+                    if (target) {
+                        target.status = newStatus;
+                    }
+
+                    if (this.current && this.current.id === sj.id) {
+                        this.current.status = newStatus;
+                    }
+
+                    alert('Surat Jalan berhasil ditandai sebagai dikirim.');
+                } catch (error) {
                     alert('Gagal mengirim surat jalan. Periksa koneksi.');
+                } finally {
+                    this.sending = false;
                 }
             },
 
@@ -424,7 +478,6 @@
 
                 window.scrollTo({ top: 0 });
             },
-
         };
     }
 </script>
