@@ -232,13 +232,17 @@
                                         <td x-text="index + 1"></td>
                                         <td x-text="itemOf(line).name"></td>
                                         <td x-text="qtyText(line)"></td>
-                                        <td x-text="format(dcStock[line.item] ?? 0) + ' ' + itemOf(line).pack"></td>
+                                        <td :class="{ 'danger-text': (dcStock[line.item] ?? 0) < line.qty }">
+                                            <span x-text="format(dcStock[line.item] ?? 0) + ' ' + itemOf(line).pack"></span>
+                                            <span x-show="(dcStock[line.item] ?? 0) < line.qty" class="status danger" style="margin-left: 6px; font-size: 11px;">Kurang</span>
+                                        </td>
                                         <td>
                                             <input
                                                 type="checkbox"
                                                 class="check-input"
                                                 x-show="editable"
                                                 :aria-label="'Siap: ' + itemOf(line).name"
+                                                :disabled="(dcStock[line.item] ?? 0) < line.qty"
                                                 x-model="line.ready"
                                             >
 
@@ -256,9 +260,11 @@
                     <!-- INFO + TOMBOL (hanya saat memproses) -->
                     <div class="receive-footer" x-show="editable">
 
-                        <p class="info-note" x-text="allReady
-                            ? 'Semua barang sudah siap. Surat Jalan bisa diterbitkan.'
-                            : 'Tombol Terbitkan Surat Jalan aktif setelah semua barang dicentang siap.'"></p>
+                        <p class="info-note" x-text="hasInsufficientStock
+                            ? 'Perhatian: Sebagian stok DC tidak mencukupi untuk memenuhi pesanan ini.'
+                            : (allReady
+                                ? 'Semua barang sudah siap. Surat Jalan bisa diterbitkan.'
+                                : 'Tombol Terbitkan Surat Jalan aktif setelah semua barang dicentang siap.')"></p>
 
                         <div class="receive-actions">
                             <button type="button" class="outline-button btn-sm" @click="back()">Batal</button>
@@ -460,11 +466,17 @@
             },
 
 
+            get hasInsufficientStock() {
+
+                return !!this.current && this.current.lines.some(line => (this.dcStock[line.item] ?? 0) < line.qty);
+            },
+
+
             get allReady() {
 
                 return !!this.current
                     && this.current.lines.length > 0
-                    && this.current.lines.every(line => line.ready);
+                    && this.current.lines.every(line => line.ready && (this.dcStock[line.item] ?? 0) >= line.qty);
             },
 
 
@@ -472,7 +484,13 @@
 
                 const target = !this.allReady;
 
-                this.current.lines.forEach(line => { line.ready = target; });
+                this.current.lines.forEach(line => {
+                    if ((this.dcStock[line.item] ?? 0) >= line.qty) {
+                        line.ready = target;
+                    } else {
+                        line.ready = false;
+                    }
+                });
             },
 
 
@@ -515,6 +533,13 @@
 
                     target.status = 'dikirim';
                     target.shipment = issued;
+
+                    // Kurangi stok DC lokal
+                    order.lines.forEach(line => {
+                        if (this.dcStock[line.item] !== undefined) {
+                            this.dcStock[line.item] = Math.max(0, this.dcStock[line.item] - line.qty);
+                        }
+                    });
 
                     // Langsung tandai dikirim agar IC bisa memeriksa.
                     await fetch(`/dc/shipment/${json.surat_jalan_id}/kirim`, {

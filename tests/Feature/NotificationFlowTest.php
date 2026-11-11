@@ -342,7 +342,7 @@ class NotificationFlowTest extends TestCase
                     'items' => [
                         ['menu' => $menu->menu_id, 'qty' => 1],
                     ],
-                    'method' => 'qris',
+                    'method' => 'debit',
                 ])
                 ->assertOk();
         }

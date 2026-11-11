@@ -148,6 +148,21 @@
             // Perbarui stok otomatis tiap 10 detik (berhenti saat tab tidak aktif).
             init() {
 
+                const params = new URLSearchParams(window.location.search);
+                const requestedStockId = Number(params.get('stok_cabang_id'));
+                const requestedBahanId = params.get('bahan_id');
+                if (requestedStockId) {
+                    const target = this.items.find(i => Number(i.stok_cabang_id) === requestedStockId);
+                    if (target) {
+                        this.search = target.name;
+                    }
+                } else if (requestedBahanId) {
+                    const target = this.items.find(i => String(i.id) === String(requestedBahanId));
+                    if (target) {
+                        this.search = target.name;
+                    }
+                }
+
                 const refresh = async () => {
 
                     if (document.hidden) {

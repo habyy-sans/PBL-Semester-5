@@ -23,7 +23,6 @@ class DcController extends MasterDataController
         ['label' => 'Alamat', 'field' => 'alamat'],
         ['label' => 'Telepon', 'field' => 'telepon'],
         ['label' => 'Pengguna', 'field' => 'pengguna_count'],
-        ['label' => 'Pengguna', 'field' => 'pengguna_count'],
     ];
 
     protected array $searchable = ['nama_dc', 'alamat', 'telepon'];
@@ -32,5 +31,5 @@ class DcController extends MasterDataController
 
     protected array $withCount = ['pengguna'];
 
-    protected array $dependents = ['pengguna', 'stok'];
+    protected array $dependents = ['pengguna', 'stok', 'suratJalan', 'stockMovements'];
 }

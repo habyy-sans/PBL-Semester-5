@@ -46,7 +46,7 @@ class OrderController extends Controller
                 $isi = (float) ($stock->bahan?->isi_per_kemasan ?? 1);
 
                 return [
-                    (string) $stock->bahan_id => $this->toPacks(
+                    (string) $stock->bahan_id => $this->toPacksFloor(
                         (float) $stock->jumlah_stok,
                         $isi
                     ),
@@ -86,7 +86,7 @@ class OrderController extends Controller
                 return [
                     'id' => $d->draft_id,
                     'no' => sprintf('#RS-%04d', $d->draft_id),
-                    'date' => $d->dibuat_pada?->format('d M Y') ?? '-',
+                    'date' => ($d->tanggal_persetujuan ?? $d->dibuat_pada)?->format('d M Y') ?? '-',
                     'store' => (string) $d->cabang_id,
                     'status' => $received || $d->status === 'selesai' ? 'dikirim' : ($sjNo ? 'dikirim' : 'baru'),
                     'shipment' => $sjNo,
@@ -109,5 +109,14 @@ class OrderController extends Controller
         }
 
         return (int) ceil($qtyBase / $isi);
+    }
+
+    private function toPacksFloor(float $qtyBase, float $isi): int
+    {
+        if ($isi <= 0) {
+            return (int) $qtyBase;
+        }
+
+        return (int) floor($qtyBase / $isi);
     }
 }

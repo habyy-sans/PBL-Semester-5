@@ -17,7 +17,7 @@
 
 <section
     class="page active"
-    x-data="wastePage()" x-init="init()"
+    x-data="wastePage()"
     @keydown.escape.window="closeTop()"
 >
 

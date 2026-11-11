@@ -238,6 +238,15 @@
 
     const $ = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     // HITUNGAN STOK & KAPASITAS PORSI
     const maxPortions = id => {
@@ -381,12 +390,12 @@
             return `
             <div class="pos-receipt-item">
                 <div class="pos-receipt-item-thumb">
-                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}">` : '☕'}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${esc(m.name)}">` : '☕'}
                 </div>
                 <div class="pos-receipt-item-details">
-                    <h6 class="pos-receipt-item-name" title="${m.name}">${m.name}</h6>
+                    <h6 class="pos-receipt-item-name" title="${esc(m.name)}">${esc(m.name)}</h6>
                     <div class="pos-receipt-item-sub">${rp(m.price)} × ${cart[id]}</div>
-                    <span class="pos-receipt-item-tag">Less Sugar</span>
+                    <span class="pos-receipt-item-tag">${esc(m.variant || 'Regular')}</span>
                 </div>
                 <div class="pos-receipt-item-right">
                     <span class="pos-receipt-item-price">${rp(itemTotal)}</span>
@@ -562,14 +571,23 @@
         Object.entries(u).forEach(([item, amt]) => stock[item] -= amt);
         const cutsHtml = (json.cuts || []).map(c => `
             <div class="summary-line">
-                <span>${c.name}</span>
-                <span style="color:var(--pos-brown-dark); font-weight:600;">-${c.amount} ${c.unit}</span>
+                <span>${esc(c.name)}</span>
+                <span style="color:var(--pos-brown-dark); font-weight:600;">-${c.amount} ${esc(c.unit)}</span>
             </div>`).join('');
 
         cart = {};
         cash = 0;
         method = 'tunai';
         refresh();
+
+        const statPillB = document.querySelector('.pos-stat-pill b');
+        if (statPillB) {
+            const countMatch = statPillB.textContent.match(/\d+/);
+            if (countMatch) {
+                const newCount = parseInt(countMatch[0], 10) + 1;
+                statPillB.textContent = `${newCount} Pesanan Hari Ini`;
+            }
+        }
 
         // Next TRX no
         const currentNo = json.no || '#TRX-0000';
@@ -580,7 +598,7 @@
             <div class="modal-box wide">
                 <h4 style="color:var(--pos-brown-dark);">✔ Transaksi Sukses & Selesai</h4>
                 <p style="font-size:13px; margin:4px 0 16px 0;">
-                    No: <b>${json.no}</b> · Total: <b>${rp(json.total)}</b>
+                    No: <b>${esc(json.no)}</b> · Total: <b>${rp(json.total)}</b>
                     ${json.change ? ` · Kembalian: <b>${rp(json.change)}</b>` : ''}
                 </p>
                 <div class="summary-box">
@@ -667,7 +685,7 @@
                     handleSuccessfulPayment({
                         no: res.no,
                         total: res.total,
-                        cuts: []
+                        cuts: res.cuts || []
                     }, u);
                 } else if (res.status === 'batal') {
                     clearInterval(qrisPollingInterval);

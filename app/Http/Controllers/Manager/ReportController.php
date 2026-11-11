@@ -119,115 +119,137 @@ class ReportController extends Controller
     }
 
     
-private function exportCsv(
-    Collection $dailyRows,
-    Collection $stockRows,
-    Collection $menuRows,
-    string $from,
-    string $to
-): StreamedResponse {
-    return response()->streamDownload(
-        function () use ($dailyRows, $stockRows, $menuRows, $from, $to): void {
-            $output = fopen('php://output', 'w');
+    private function sanitizeCsvCell(mixed $value): mixed
+    {
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
 
-            // BOM agar UTF-8 terbaca baik di Excel.
-            fwrite($output, "\xEF\xBB\xBF");
+        if (in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'" . $value;
+        }
 
-            // Informasi laporan
-            fputcsv($output, ['LAPORAN CABANG KOPSYNC'], ';');
-            fputcsv($output, ['Periode', $from . ' s.d. ' . $to], ';');
-            fputcsv($output, [], ';');
+        return $value;
+    }
 
-            // ==========================================
-            // 1. LAPORAN LABA RUGI HARIAN
-            // ==========================================
-            fputcsv($output, ['LAPORAN LABA RUGI HARIAN'], ';');
+    /**
+     * @param array<int, mixed> $row
+     * @return array<int, mixed>
+     */
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(fn ($cell) => $this->sanitizeCsvCell($cell), $row);
+    }
 
-            fputcsv($output, [
-                'Tanggal',
-                'Jumlah Transaksi',
-                'Omzet',
-                'HPP',
-                'Waste',
-                'Jumlah Kejadian Waste',
-                'Estimasi Laba',
-                'Margin (%)',
-            ], ';');
+    private function exportCsv(
+        Collection $dailyRows,
+        Collection $stockRows,
+        Collection $menuRows,
+        string $from,
+        string $to
+    ): StreamedResponse {
+        return response()->streamDownload(
+            function () use ($dailyRows, $stockRows, $menuRows, $from, $to): void {
+                $output = fopen('php://output', 'w');
 
-            foreach ($dailyRows as $row) {
-                fputcsv($output, [
-                    $row['date'],
-                    $row['count'],
-                    round($row['omzet'], 2),
-                    round($row['hpp'], 2),
-                    round($row['waste'], 2),
-                    $row['waste_count'],
-                    round($row['laba'], 2),
-                    round($row['margin'], 2),
-                ], ';');
-            }
+                // BOM agar UTF-8 terbaca baik di Excel.
+                fwrite($output, "\xEF\xBB\xBF");
 
-            fputcsv($output, [], ';');
-            fputcsv($output, [], ';');
+                // Informasi laporan
+                fputcsv($output, $this->sanitizeCsvRow(['LAPORAN CABANG KOPSYNC']), ';');
+                fputcsv($output, $this->sanitizeCsvRow(['Periode', $from . ' s.d. ' . $to]), ';');
+                fputcsv($output, [], ';');
 
-            // ==========================================
-            // 2. LAPORAN MUTASI STOK
-            // ==========================================
-            fputcsv($output, ['LAPORAN MUTASI STOK'], ';');
+                // ==========================================
+                // 1. LAPORAN LABA RUGI HARIAN
+                // ==========================================
+                fputcsv($output, $this->sanitizeCsvRow(['LAPORAN LABA RUGI HARIAN']), ';');
 
-            fputcsv($output, [
-                'ID Bahan',
-                'Nama Bahan',
-                'Total Stok Masuk',
-                'Total Stok Keluar',
-                'Total Waste',
-                'Stok Saat Ini',
-            ], ';');
+                fputcsv($output, $this->sanitizeCsvRow([
+                    'Tanggal',
+                    'Jumlah Transaksi',
+                    'Omzet',
+                    'HPP',
+                    'Waste',
+                    'Jumlah Kejadian Waste',
+                    'Estimasi Laba',
+                    'Margin (%)',
+                ]), ';');
 
-            foreach ($stockRows as $row) {
-                fputcsv($output, [
-                    $row['bahan_id'],
-                    $row['name'],
-                    round($row['masuk'], 2),
-                    round($row['keluar'], 2),
-                    round($row['waste'], 2),
-                    round($row['stok_saat_ini'], 2),
-                ], ';');
-            }
+                foreach ($dailyRows as $row) {
+                    fputcsv($output, $this->sanitizeCsvRow([
+                        $row['date'],
+                        $row['count'],
+                        round($row['omzet'], 2),
+                        round($row['hpp'], 2),
+                        round($row['waste'], 2),
+                        $row['waste_count'],
+                        round($row['laba'], 2),
+                        round($row['margin'], 2),
+                    ]), ';');
+                }
 
-            fputcsv($output, [], ';');
-            fputcsv($output, [], ';');
+                fputcsv($output, [], ';');
+                fputcsv($output, [], ';');
 
-            // ==========================================
-            // 3. LAPORAN PENJUALAN MENU
-            // ==========================================
-            fputcsv($output, ['LAPORAN PENJUALAN MENU'], ';');
+                // ==========================================
+                // 2. LAPORAN MUTASI STOK
+                // ==========================================
+                fputcsv($output, $this->sanitizeCsvRow(['LAPORAN MUTASI STOK']), ';');
 
-            fputcsv($output, [
-                'ID Menu',
-                'Nama Menu',
-                'Jumlah Terjual',
-                'Total Omzet',
-                'Total HPP',
-                'Estimasi Laba',
-            ], ';');
+                fputcsv($output, $this->sanitizeCsvRow([
+                    'ID Bahan',
+                    'Nama Bahan',
+                    'Total Stok Masuk',
+                    'Total Stok Keluar',
+                    'Total Waste',
+                    'Stok Saat Ini',
+                ]), ';');
 
-            foreach ($menuRows as $row) {
-                fputcsv($output, [
-                    $row['menu_id'],
-                    $row['name'],
-                    $row['qty'],
-                    round($row['omzet'], 2),
-                    round($row['hpp'], 2),
-                    round($row['laba'], 2),
-                ], ';');
-            }
+                foreach ($stockRows as $row) {
+                    fputcsv($output, $this->sanitizeCsvRow([
+                        $row['bahan_id'],
+                        $row['name'],
+                        round($row['masuk'], 2),
+                        round($row['keluar'], 2),
+                        round($row['waste'], 2),
+                        round($row['stok_saat_ini'], 2),
+                    ]), ';');
+                }
 
-            fclose($output);
-        },
-        "laporan-cabang-{$from}-{$to}.csv",
-        ['Content-Type' => 'text/csv; charset=UTF-8']
-    );
-}
+                fputcsv($output, [], ';');
+                fputcsv($output, [], ';');
+
+                // ==========================================
+                // 3. LAPORAN PENJUALAN MENU
+                // ==========================================
+                fputcsv($output, $this->sanitizeCsvRow(['LAPORAN PENJUALAN MENU']), ';');
+
+                fputcsv($output, $this->sanitizeCsvRow([
+                    'ID Menu',
+                    'Nama Menu',
+                    'Jumlah Terjual',
+                    'Total Omzet',
+                    'Total HPP',
+                    'Estimasi Laba',
+                ]), ';');
+
+                foreach ($menuRows as $row) {
+                    fputcsv($output, $this->sanitizeCsvRow([
+                        $row['menu_id'],
+                        $row['name'],
+                        $row['qty'],
+                        round($row['omzet'], 2),
+                        round($row['hpp'], 2),
+                        round($row['laba'], 2),
+                    ]), ';');
+                }
+
+                fclose($output);
+            },
+            "laporan-cabang-{$from}-{$to}.csv",
+            ['Content-Type' => 'text/csv; charset=UTF-8']
+        );
+    }
 
 }

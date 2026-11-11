@@ -50,16 +50,23 @@ class StokDcController extends Controller
         ]);
 
         DB::transaction(function () use ($data, $dcId, $bahanBaku) {
-            $stok = StokDc::firstOrCreate(
-                [
+            $stok = StokDc::where('dc_id', $dcId)
+                ->where('bahan_id', $bahanBaku->bahan_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $stok) {
+                $stok = StokDc::create([
                     'dc_id' => $dcId,
                     'bahan_id' => $bahanBaku->bahan_id,
-                ],
-                [
                     'jumlah_stok' => 0,
                     'stok_minimum' => 0,
-                ]
-            );
+                ]);
+                $stok = StokDc::where('dc_id', $dcId)
+                    ->where('bahan_id', $bahanBaku->bahan_id)
+                    ->lockForUpdate()
+                    ->first();
+            }
 
             $stok->jumlah_stok = (float) $stok->jumlah_stok + (float) $data['jumlah'];
             $stok->save();

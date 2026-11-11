@@ -76,17 +76,19 @@ class PaymentWebhookController extends Controller
                 'already_settled' => $result['already_settled'],
             ]);
         } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'], true)) {
-            // Pembayaran gagal atau kadaluarsa
-            $transaksi->update([
-                'status' => 'batal',
-                'alasan_batal' => 'Midtrans: status ' . $transactionStatus,
-            ]);
+            // Pembayaran gagal atau kadaluarsa (hanya batalkan jika belum berhasil)
+            if ($transaksi->status !== 'berhasil') {
+                $transaksi->update([
+                    'status' => 'batal',
+                    'alasan_batal' => 'Midtrans: status ' . $transactionStatus,
+                ]);
 
-            if ($payment) {
-                $payment->update(['status' => 'batal']);
+                if ($payment) {
+                    $payment->update(['status' => 'batal']);
+                }
+
+                Log::info('Midtrans Webhook: Transaksi dibatalkan', ['order_id' => $orderId, 'status' => $transactionStatus]);
             }
-
-            Log::info('Midtrans Webhook: Transaksi dibatalkan', ['order_id' => $orderId, 'status' => $transactionStatus]);
         }
 
         return response()->json([
@@ -101,7 +103,18 @@ class PaymentWebhookController extends Controller
      */
     public function simulate(Request $request, int $transaksiId): JsonResponse
     {
-        $transaksi = TransaksiPenjualan::query()->findOrFail($transaksiId);
+        abort_if(
+            config('services.midtrans.is_production', false),
+            403,
+            'Simulasi pembayaran tidak diizinkan pada mode produksi.'
+        );
+
+        $user = $request->user();
+
+        $transaksi = TransaksiPenjualan::query()
+            ->when($user?->cabang_id, fn ($q, $cabangId) => $q->where('cabang_id', $cabangId))
+            ->where('status', 'menunggu_pembayaran')
+            ->findOrFail($transaksiId);
 
         $result = $this->settlement->settle($transaksi, 'sim-qris-' . time());
 

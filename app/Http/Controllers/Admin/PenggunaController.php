@@ -68,19 +68,22 @@ class PenggunaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedUser($request);
-        $this->assertBusinessRules($data);
 
-        Pengguna::query()->create([
-            'nama_lengkap' => trim($data['nama_lengkap']),
-            'username' => mb_strtolower(trim($data['username'])),
-            'email' => mb_strtolower(trim($data['email'])),
-            'password_hash' => $data['password'],
-            'telepon' => $data['telepon'] ?? null,
-            'role' => config("menu.roles.{$data['role_key']}.db"),
-            'cabang_id' => $data['cabang_id'] ?? null,
-            'dc_id' => $data['dc_id'] ?? null,
-            'status' => $data['status'],
-        ]);
+        DB::transaction(function () use ($data) {
+            $this->assertBusinessRules($data);
+
+            Pengguna::query()->create([
+                'nama_lengkap' => trim($data['nama_lengkap']),
+                'username' => mb_strtolower(trim($data['username'])),
+                'email' => mb_strtolower(trim($data['email'])),
+                'password_hash' => $data['password'],
+                'telepon' => $data['telepon'] ?? null,
+                'role' => config("menu.roles.{$data['role_key']}.db"),
+                'cabang_id' => $data['cabang_id'] ?? null,
+                'dc_id' => $data['dc_id'] ?? null,
+                'status' => $data['status'],
+            ]);
+        });
 
         return redirect()->route('admin.pengguna.index')->with('success', 'Pengguna berhasil ditambahkan.');
     }
@@ -93,19 +96,27 @@ class PenggunaController extends Controller
     public function update(Request $request, Pengguna $pengguna): RedirectResponse
     {
         $data = $this->validatedUser($request, $pengguna);
-        $this->assertBusinessRules($data, $pengguna);
 
-        $pengguna->fill([
-            'nama_lengkap' => trim($data['nama_lengkap']),
-            'username' => mb_strtolower(trim($data['username'])),
-            'email' => mb_strtolower(trim($data['email'])),
-            'telepon' => $data['telepon'] ?? null,
-            'role' => config("menu.roles.{$data['role_key']}.db"),
-            'cabang_id' => $data['cabang_id'] ?? null,
-            'dc_id' => $data['dc_id'] ?? null,
-            'status' => $data['status'],
-        ]);
-        $pengguna->save();
+        DB::transaction(function () use ($data, $pengguna) {
+            $this->assertBusinessRules($data, $pengguna);
+
+            $pengguna->fill([
+                'nama_lengkap' => trim($data['nama_lengkap']),
+                'username' => mb_strtolower(trim($data['username'])),
+                'email' => mb_strtolower(trim($data['email'])),
+                'telepon' => $data['telepon'] ?? null,
+                'role' => config("menu.roles.{$data['role_key']}.db"),
+                'cabang_id' => $data['cabang_id'] ?? null,
+                'dc_id' => $data['dc_id'] ?? null,
+                'status' => $data['status'],
+            ]);
+
+            if (! empty($data['password'])) {
+                $pengguna->password_hash = $data['password'];
+            }
+
+            $pengguna->save();
+        });
 
         return redirect()->route('admin.pengguna.index')->with('success', 'Data pengguna berhasil diperbarui.');
     }
@@ -116,14 +127,16 @@ class PenggunaController extends Controller
             'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
         ]);
 
-        $this->assertBusinessRules([
-            'role_key' => $pengguna->role_key,
-            'cabang_id' => $pengguna->cabang_id,
-            'dc_id' => $pengguna->dc_id,
-            'status' => $data['status'],
-        ], $pengguna);
+        DB::transaction(function () use ($data, $pengguna) {
+            $this->assertBusinessRules([
+                'role_key' => $pengguna->role_key,
+                'cabang_id' => $pengguna->cabang_id,
+                'dc_id' => $pengguna->dc_id,
+                'status' => $data['status'],
+            ], $pengguna);
 
-        $pengguna->update(['status' => $data['status']]);
+            $pengguna->update(['status' => $data['status']]);
+        });
 
         return back()->with('success', 'Status pengguna berhasil diperbarui.');
     }
@@ -141,30 +154,32 @@ class PenggunaController extends Controller
 
     public function destroy(Pengguna $pengguna): RedirectResponse
     {
-        $this->assertLastAdminRemains($pengguna, 'nonaktif', null);
+        return DB::transaction(function () use ($pengguna) {
+            $this->assertLastAdminRemains($pengguna, 'nonaktif', null);
 
-        $references = [
-            'transaksi_penjualan' => ['kasir_id'],
-            'draft_instruksi' => ['dibuat_oleh', 'disetujui_oleh'],
-            'surat_jalan' => ['diterbitkan_oleh'],
-            'konfirmasi_penerimaan' => ['kepala_shift_id'],
-            'waste_log' => ['kepala_shift_id'],
-        ];
+            $references = [
+                'transaksi_penjualan' => ['kasir_id'],
+                'draft_instruksi' => ['dibuat_oleh', 'disetujui_oleh'],
+                'surat_jalan' => ['diterbitkan_oleh'],
+                'konfirmasi_penerimaan' => ['kepala_shift_id'],
+                'waste_log' => ['kepala_shift_id'],
+            ];
 
-        foreach ($references as $table => $columns) {
-            foreach ($columns as $column) {
-                if (Schema::hasTable($table) && Schema::hasColumn($table, $column)
-                    && DB::table($table)->where($column, $pengguna->user_id)->exists()) {
-                    return back()->withErrors([
-                        'delete' => 'Pengguna memiliki riwayat transaksi atau operasional. Nonaktifkan akun sebagai gantinya.',
-                    ]);
+            foreach ($references as $table => $columns) {
+                foreach ($columns as $column) {
+                    if (Schema::hasTable($table) && Schema::hasColumn($table, $column)
+                        && DB::table($table)->where($column, $pengguna->user_id)->exists()) {
+                        return back()->withErrors([
+                            'delete' => 'Pengguna memiliki riwayat transaksi atau operasional. Nonaktifkan akun sebagai gantinya.',
+                        ]);
+                    }
                 }
             }
-        }
 
-        $pengguna->delete();
+            $pengguna->delete();
 
-        return redirect()->route('admin.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
+            return redirect()->route('admin.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
+        });
     }
 
     private function formView(?Pengguna $pengguna = null): View
@@ -256,6 +271,7 @@ class PenggunaController extends Controller
                 ->where('status', 'aktif')
                 ->where('cabang_id', $data['cabang_id'])
                 ->when($pengguna !== null, fn (Builder $query) => $query->where('user_id', '!=', $pengguna->user_id))
+                ->lockForUpdate()
                 ->exists();
 
             if ($anotherManagerExists) {
@@ -277,6 +293,7 @@ class PenggunaController extends Controller
         if (! $remainsActiveAdmin && Pengguna::query()
             ->where('role', config('menu.roles.admin.db'))
             ->where('status', 'aktif')
+            ->lockForUpdate()
             ->count() <= 1) {
             throw ValidationException::withMessages([
                 'status' => 'Admin aktif terakhir tidak dapat dinonaktifkan atau diganti rolenya.',

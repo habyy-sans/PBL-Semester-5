@@ -120,6 +120,15 @@
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     const fmtDate = (date) => {
         const [year, month, day] = date.split('-');
@@ -248,13 +257,13 @@
                 <td>${a.type === 'restock'
                     ? '<span class="status warning">Restock</span>'
                     : '<span class="status danger">Waste</span>'}</td>
-                <td><strong>${a.title}</strong></td>
-                <td>${a.text}</td>
-                <td class="col-nowrap">${a.when}</td>
+                <td><strong>${esc(a.title)}</strong></td>
+                <td>${esc(a.text)}</td>
+                <td class="col-nowrap">${esc(a.when)}</td>
                 <td>${a.done
                     ? '<span class="status success">Sudah Dievaluasi</span>'
                     : '<span class="status info">Baru</span>'}</td>
-                <td><button type="button" class="outline-button btn-sm" data-detail="${a.id}">Detail</button></td>
+                <td><button type="button" class="outline-button btn-sm" data-detail="${esc(a.id)}">Detail</button></td>
             </tr>`).join('');
     }
 
@@ -296,7 +305,7 @@
 
                 <div class="modal-actions">
                     <button type="button" class="outline-button" data-close>Tutup</button>
-                    <button type="button" class="primary-button" data-go-restock>Buka di Restock</button>
+                    <button type="button" class="primary-button" data-go-restock data-key="${esc(key)}">Buka di Restock</button>
                 </div>
             </div>`);
     }
@@ -353,7 +362,12 @@
             return id.startsWith('r-') ? showRestock(id.slice(2)) : showWaste(id.slice(2));
         }
 
-        if (t.closest('[data-go-restock]')) { window.location.href = RESTOCK_URL; return; }
+        const btnRestock = t.closest('[data-go-restock]');
+        if (btnRestock) {
+            const key = btnRestock.dataset.key;
+            window.location.href = key ? `${RESTOCK_URL}?bahan_id=${encodeURIComponent(key)}` : RESTOCK_URL;
+            return;
+        }
 
         if (t.closest('[data-evaluate]')) {
             const alertId = t.closest('[data-evaluate]').dataset.evaluate;

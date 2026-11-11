@@ -27,14 +27,21 @@ class OrderSettlementService
      */
     public function settle(TransaksiPenjualan $transaksi, ?string $gatewayTransactionId = null): array
     {
-        if ($transaksi->status === 'berhasil') {
-            return [
-                'cuts' => [],
-                'already_settled' => true,
-            ];
-        }
-
         return DB::transaction(function () use ($transaksi, $gatewayTransactionId) {
+            $transaksi = TransaksiPenjualan::query()
+                ->whereKey($transaksi->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($transaksi->status === 'berhasil') {
+                return [
+                    'cuts' => [],
+                    'already_settled' => true,
+                ];
+            }
+
+            abort_if($transaksi->status === 'batal', 422, 'Transaksi yang sudah dibatalkan tidak dapat diselesaikan.');
+
             // Muat relasi detail transaksi beserta varian, resep, dan bahannya
             $transaksi->loadMissing(['detail.varian.resep.bahan', 'cabang', 'pembayaran']);
 

@@ -39,6 +39,7 @@ class PosController extends Controller
         $todayOrdersCount = TransaksiPenjualan::query()
             ->where('cabang_id', $cabangId)
             ->whereDate('tanggal', today())
+            ->where('status', '!=', 'batal')
             ->count();
 
         $nextTrxId = (TransaksiPenjualan::query()->max('transaksi_id') ?? 0) + 1;
@@ -88,11 +89,14 @@ class PosController extends Controller
     /**
      * Cek status pembayaran untuk polling frontend kasir saat menunggu QRIS.
      */
-    public function status(int $id): JsonResponse
+    public function status(Request $request, int $id): JsonResponse
     {
         $transaksi = TransaksiPenjualan::query()
+            ->where('cabang_id', $request->user()->cabang_id)
             ->with('pembayaran')
             ->findOrFail($id);
+
+        $cuts = [];
 
         // Jika transaksi masih menunggu pembayaran dan Midtrans sudah terhubung,
         // cek langsung ke Midtrans API sebagai proteksi jika webhook tertunda
@@ -104,7 +108,8 @@ class PosController extends Controller
                 $fraud = $midtransStatus['fraud_status'] ?? 'accept';
 
                 if ($status === 'settlement' || ($status === 'capture' && $fraud === 'accept')) {
-                    $this->settlement->settle($transaksi, $midtransStatus['transaction_id'] ?? null);
+                    $settleResult = $this->settlement->settle($transaksi, $midtransStatus['transaction_id'] ?? null);
+                    $cuts = $settleResult['cuts'] ?? [];
                     $transaksi->refresh();
                 } elseif (in_array($status, ['cancel', 'deny', 'expire'], true)) {
                     $transaksi->update(['status' => 'batal']);
@@ -118,15 +123,18 @@ class PosController extends Controller
             'no' => $transaksi->no_transaksi,
             'status' => $transaksi->status,
             'total' => (float) $transaksi->total_bayar,
+            'cuts' => $cuts,
         ]);
     }
 
     /**
      * Batalkan transaksi pending (misal pelanggan batal bayar QRIS).
      */
-    public function cancel(int $id): JsonResponse
+    public function cancel(Request $request, int $id): JsonResponse
     {
-        $transaksi = TransaksiPenjualan::query()->findOrFail($id);
+        $transaksi = TransaksiPenjualan::query()
+            ->where('cabang_id', $request->user()->cabang_id)
+            ->findOrFail($id);
 
         if ($transaksi->status === 'menunggu_pembayaran') {
             $transaksi->update([
@@ -146,10 +154,27 @@ class PosController extends Controller
     private function processPayment(array $data, $user): JsonResponse
     {
         return DB::transaction(function () use ($data, $user) {
+            $menuIds = collect($data['items'])->pluck('menu')->unique()->all();
+            $menus = MenuProduk::query()
+                ->whereIn('menu_id', $menuIds)
+                ->with(['varian.resep.bahan'])
+                ->get()
+                ->keyBy('menu_id');
+
+            $neededBahanIds = [];
+            foreach ($menus as $menu) {
+                $var = $menu->varian->first();
+                if ($var) {
+                    foreach ($var->resep as $r) {
+                        $neededBahanIds[$r->bahan_id] = true;
+                    }
+                }
+            }
+
             // Validasi ketersediaan stok bahan baku
             $stokMap = StokCabang::query()
                 ->where('cabang_id', $user->cabang_id)
-                ->whereIn('bahan_id', $this->neededBahanIds($data['items']))
+                ->whereIn('bahan_id', array_keys($neededBahanIds))
                 ->orderBy('bahan_id')
                 ->lockForUpdate()
                 ->get()
@@ -160,12 +185,8 @@ class PosController extends Controller
             $total = 0;
 
             foreach ($data['items'] as $line) {
-                $varian = MenuProduk::query()
-                    ->whereKey($line['menu'])
-                    ->with(['varian.resep.bahan'])
-                    ->firstOrFail()
-                    ->varian
-                    ->first();
+                $menu = $menus->get($line['menu']);
+                $varian = $menu?->varian->first();
 
                 if ($varian === null) {
                     throw ValidationException::withMessages([
@@ -173,7 +194,7 @@ class PosController extends Controller
                     ]);
                 }
 
-                $total += (float) $varian->menu->harga_jual * $line['qty'];
+                $total += ((float) $menu->harga_jual + (float) ($varian->harga_tambahan ?? 0)) * $line['qty'];
 
                 foreach ($varian->resep as $resep) {
                     $usage[$resep->bahan_id] = ($usage[$resep->bahan_id] ?? 0)
@@ -202,16 +223,15 @@ class PosController extends Controller
                 ]);
             }
 
-            // 1. Catat Transaksi Penjualan
+            // 1. Catat Transaksi Penjualan (status menunggu_pembayaran terlebih dahulu)
             $isQris = $data['method'] === 'qris';
-            $initialStatus = $isQris ? 'menunggu_pembayaran' : 'berhasil';
 
             $transaksi = TransaksiPenjualan::query()->create([
                 'cabang_id' => $user->cabang_id,
                 'kasir_id' => $user->user_id,
                 'tanggal' => now(),
                 'total_bayar' => $total,
-                'status' => $initialStatus,
+                'status' => 'menunggu_pembayaran',
             ]);
 
             $transaksi->forceFill([
@@ -220,14 +240,9 @@ class PosController extends Controller
 
             // 2. Simpan Detail Item
             foreach ($data['items'] as $line) {
-                $varian = MenuProduk::query()
-                    ->whereKey($line['menu'])
-                    ->with('varian')
-                    ->firstOrFail()
-                    ->varian
-                    ->first();
-
-                $harga = (float) $varian->menu->harga_jual;
+                $menu = $menus->get($line['menu']);
+                $varian = $menu->varian->first();
+                $harga = (float) $menu->harga_jual + (float) ($varian->harga_tambahan ?? 0);
 
                 DetailTransaksi::query()->create([
                     'transaksi_id' => $transaksi->transaksi_id,

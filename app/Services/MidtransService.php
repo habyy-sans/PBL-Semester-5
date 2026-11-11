@@ -130,8 +130,8 @@ class MidtransService
      */
     public function verifySignature(string $orderId, string $statusCode, string $grossAmount, string $signatureKey): bool
     {
-        if (! $this->isConfigured()) {
-            return true;
+        if (! $this->isConfigured() || $signatureKey === '') {
+            return false;
         }
 
         $expected = hash('sha512', $orderId . $statusCode . $grossAmount . $this->serverKey);

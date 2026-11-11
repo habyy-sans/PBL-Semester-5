@@ -21,7 +21,7 @@ class RiwayatController extends Controller
 
         $transaksi = TransaksiPenjualan::query()
             ->where('cabang_id', $user->cabang_id)
-            ->with(['kasir', 'pembayaran', 'detail.varian.menu'])
+            ->with(['kasir', 'pembayaran', 'detail.varian.menu', 'detail.varian.resep.bahan'])
             ->orderByDesc('tanggal')
             ->get();
 
@@ -40,6 +40,35 @@ class RiwayatController extends Controller
                 ];
             })->values()->all();
 
+            $usage = [];
+            $hpp = 0.0;
+
+            foreach ($t->detail as $d) {
+                $varian = $d->varian;
+                if (! $varian) {
+                    continue;
+                }
+                foreach ($varian->resep as $resep) {
+                    $key = $resep->bahan_id;
+                    $bahan = $resep->bahan;
+                    if (! $bahan) {
+                        continue;
+                    }
+                    $amount = (float) $resep->jumlah_bahan * (int) $d->qty;
+                    if (! isset($usage[$key])) {
+                        $usage[$key] = [
+                            'name' => $bahan->nama_bahan,
+                            'unit' => $bahan->satuan,
+                            'amount' => 0.0,
+                        ];
+                    }
+                    $usage[$key]['amount'] += $amount;
+                    $isi = (float) ($bahan->isi_per_kemasan ?: 1);
+                    $pricePerUnit = $isi > 0 ? (float) $bahan->harga_beli / $isi : 0;
+                    $hpp += $amount * $pricePerUnit;
+                }
+            }
+
             $payment = $t->pembayaran;
 
             return [
@@ -50,9 +79,10 @@ class RiwayatController extends Controller
                 'method' => $payment?->metode ?? '-',
                 'cash' => $payment?->jumlah_diterima ?? null,
                 'total' => (float) $t->total_bayar,
-                'status' => $t->status === 'berhasil' ? 'selesai' : 'batal',
+                'hpp' => round($hpp),
+                'status' => $t->status === 'berhasil' ? 'selesai' : ($t->status === 'menunggu_pembayaran' ? 'pending' : 'batal'),
                 'items' => $items,
-                'usage' => $this->computeUsage($items),
+                'usage' => $usage,
                 'reason' => $t->alasan_batal ?? null,
             ];
         })->values()->all();
