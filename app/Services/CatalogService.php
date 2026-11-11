@@ -75,9 +75,10 @@ class CatalogService
 
                 $menus[$menu->menu_id] = [
                     'name' => $menu->nama_menu,
-                    'category' => $menu->kategori->nama_kategori,
+                    'variant' => $varian?->nama_varian ?? 'Regular',
+                    'category' => $menu->kategori?->nama_kategori ?? 'Lainnya',
                     'emoji' => $menu->emoji,
-                    'price' => (float) $menu->harga_jual,
+                    'price' => (float) $menu->harga_jual + (float) ($varian?->harga_tambahan ?? 0),
                     'recipe' => (object) $recipe,
                 ];
             });

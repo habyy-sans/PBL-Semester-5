@@ -1189,6 +1189,7 @@
                             <td class="whitespace-nowrap px-4 py-4 font-semibold text-stone-800">
                                 <span x-text="bahan.stok === null ? '—' : formatNumber(bahan.stok)"></span>
                                 <span class="text-xs font-normal text-stone-400" x-text="bahan.stok === null ? '' : bahan.satuan"></span>
+                                <p class="mt-0.5 text-xs text-stone-400" x-show="bahan.stok !== null && bahan.isi > 0" x-text="'≈ ' + formatNumber(Math.floor(bahan.stok / bahan.isi)) + ' ' + bahan.kemasan"></p>
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-4 text-stone-600">

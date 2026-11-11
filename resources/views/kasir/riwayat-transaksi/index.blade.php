@@ -66,6 +66,7 @@
             <select id="trxStatus" class="select">
                 <option value="semua">Semua Status</option>
                 <option value="selesai">Selesai</option>
+                <option value="pending">Menunggu Pembayaran</option>
                 <option value="batal">Batal</option>
             </select>
             <span class="table-meta" id="trxMeta"></span>
@@ -117,6 +118,15 @@
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     const fmtDate = d => {
         const [y, m, day] = d.split('-');
@@ -127,7 +137,7 @@
     const trxTotal = t => t.items.reduce((s, i) => s + i.subtotal, 0);
     const trxQty   = t => t.items.reduce((s, i) => s + i.qty, 0);
 
-    const trxHpp = t => 0;
+    const trxHpp = t => Number(t.hpp || 0);
 
     // bahan terpakai (satuan terkecil) sesuai SOP
     const trxUsage = t => t.usage || {};
@@ -159,9 +169,9 @@
          itemText(t).toLowerCase().includes(keyword.toLowerCase())));
 
     // ---------- RENDER ----------
-    // opsi jam menyesuaikan shift yang dipilih (semua shift = jam 07 s/d 23)
+    // opsi jam menyesuaikan shift yang dipilih (semua shift = jam 00 s/d 23)
     function renderHourOptions() {
-        const [from, to] = fShift === 'semua' ? [7, 23]
+        const [from, to] = fShift === 'semua' ? [0, 23]
             : SHIFTS[fShift].hours;
 
         const hours = [];
@@ -197,15 +207,15 @@
 
         $('trxBody').innerHTML = list.map(t => `
             <tr>
-                <td><strong>${t.no}</strong></td>
+                <td><strong>${esc(t.no)}</strong></td>
                 <td>${fmtDate(t.date)} · ${t.time}</td>
-                <td>${itemText(t)}</td>
-                <td><span class="status info">${METHOD_LABEL[t.method]}</span></td>
+                <td>${esc(itemText(t))}</td>
+                <td><span class="status info">${esc(METHOD_LABEL[t.method] || (t.method ? t.method : '-'))}</span></td>
                 <td style="text-align:right"><strong>${rp(trxTotal(t))}</strong></td>
                 <td>${t.status === 'selesai'
                     ? '<span class="status success">Selesai</span>'
-                    : '<span class="status danger">Batal</span>'}</td>
-                <td><button type="button" class="outline-button btn-sm" data-detail="${t.no}">Detail</button></td>
+                    : (t.status === 'pending' ? '<span class="status warning">Menunggu</span>' : '<span class="status danger">Batal</span>')}</td>
+                <td><button type="button" class="outline-button btn-sm" data-detail="${esc(t.no)}">Detail</button></td>
             </tr>`).join('');
     }
 
@@ -222,12 +232,12 @@
 
         const lines = t.items.map(i => `
             <div class="summary-line">
-                <span>${i.menu} × ${i.qty}</span>
+                <span>${esc(i.menu)} × ${i.qty}</span>
                 <span>${rp(i.subtotal)}</span>
             </div>`).join('');
 
         const pay = `
-            <div class="summary-line"><span>Metode</span><span>${METHOD_LABEL[t.method]}</span></div>
+            <div class="summary-line"><span>Metode</span><span>${esc(METHOD_LABEL[t.method] || (t.method ? t.method : '-'))}</span></div>
             ${t.method === 'tunai' && t.cash ? `
             <div class="summary-line"><span>Uang diterima</span><span>${rp(t.cash)}</span></div>
             <div class="summary-line"><span>Kembalian</span><span>${rp(t.cash - total)}</span></div>` : ''}`;
@@ -235,19 +245,19 @@
         let extra = '';
 
         if (batal) {
-            extra = `<div class="info-note error">Transaksi dibatalkan. ${t.reason || ''} Stok bahan tidak terpotong.</div>`;
+            extra = `<div class="info-note error">Transaksi dibatalkan. ${esc(t.reason || '')} Stok bahan tidak terpotong.</div>`;
         } else {
             const used = Object.entries(trxUsage(t)).map(([item, amt]) => `
                 <div class="summary-line">
-                    <span>${amt.name}</span>
-                    <span>−${amt.amount.toLocaleString('id-ID')} ${amt.unit}</span>
+                    <span>${esc(amt.name)}</span>
+                    <span>−${amt.amount.toLocaleString('id-ID')} ${esc(amt.unit)}</span>
                 </div>`).join('');
             const cost = trxHpp(t);
 
             extra = `
                 <div class="summary-box">
                     <div class="summary-title">BAHAN TERPAKAI (SESUAI SOP)</div>
-                    ${used}
+                    ${used || '<div style="font-size:12px; color:var(--pos-muted);">Tidak ada data pemotongan bahan.</div>'}
                 </div>
                 <div class="summary-box">
                     <div class="summary-line"><span>Estimasi HPP</span><span>${rp(cost)}</span></div>
@@ -257,8 +267,8 @@
 
         openModal(`
             <div class="modal-box wide">
-                <h4>Detail ${t.no}</h4>
-                <p>${fmtDate(t.date)} · ${t.time} · ${shiftOf(t.time) ? SHIFTS[shiftOf(t.time)].label : '-'} · ${t.cashier}</p>
+                <h4>Detail ${esc(t.no)}</h4>
+                <p>${fmtDate(t.date)} · ${t.time} · ${shiftOf(t.time) ? SHIFTS[shiftOf(t.time)].label : '-'} · ${esc(t.cashier)}</p>
                 <div class="summary-box">
                     ${lines}
                     <div class="summary-line"><span><b>Total</b></span><span><b>${rp(total)}</b></span></div>

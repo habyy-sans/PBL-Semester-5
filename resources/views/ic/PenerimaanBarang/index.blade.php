@@ -230,6 +230,7 @@
                                                     <input
                                                         type="number"
                                                         min="0"
+                                                        :max="line.sent"
                                                         step="1"
                                                         class="table-input qty"
                                                         :class="{ 'has-error': submitted && invalidQty(line) }"
@@ -508,10 +509,10 @@
             },
 
 
-            // Kemasan utuh: harus bilangan bulat >= 0
+            // Kemasan utuh: harus bilangan bulat >= 0 dan <= line.sent
             invalidQty(line) {
 
-                return !Number.isInteger(line.received) || line.received < 0;
+                return !Number.isInteger(line.received) || line.received < 0 || line.received > line.sent;
             },
 
 

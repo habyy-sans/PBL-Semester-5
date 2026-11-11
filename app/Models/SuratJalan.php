@@ -53,13 +53,18 @@ class SuratJalan extends Model
     /**
      * Status computed untuk badge view:
      * - diterima  : baris konfirmasi_penerimaan sudah ada
+     * - disiapkan : status DB 'disiapkan' (barang sedang disiapkan di DC)
      * - menunggu  : status DB 'dikirim' (barang sampai, menunggu pengecekan IC)
-     * - dikirim   : status DB 'disiapkan'/'dikirim' tanpa konfirmasi
+     * - dikirim   : status fallback
      */
     public function getComputedStatusAttribute(): string
     {
         if ($this->relationLoaded('konfirmasi') ? $this->konfirmasi !== null : $this->konfirmasi()->exists()) {
             return 'diterima';
+        }
+
+        if ($this->status === 'disiapkan') {
+            return 'disiapkan';
         }
 
         return $this->status === 'dikirim' ? 'menunggu' : 'dikirim';

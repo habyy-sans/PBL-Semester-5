@@ -51,6 +51,7 @@ class StockController extends Controller
 
                 $stockItems[] = [
                     'id' => (string) $bahan->bahan_id,
+                    'stok_cabang_id' => $stok?->stok_cabang_id,
                     'stock' => (float) ($stok->jumlah_stok ?? 0),
                     'name' => $bahan->nama_bahan,
                     // Kolom kategori, nama_kemasan, isi_per_kemasan boleh NULL di database;

@@ -50,7 +50,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->name('login.attempt');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:10,1')->name('login.attempt');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');

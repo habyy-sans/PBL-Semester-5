@@ -46,4 +46,24 @@ class BahanBaku extends Model
     {
         return $this->hasMany(ResepMenu::class, 'bahan_id');
     }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'bahan_id');
+    }
+
+    public function wasteLogs(): HasMany
+    {
+        return $this->hasMany(WasteLog::class, 'bahan_id');
+    }
+
+    public function detailDraftInstruksi(): HasMany
+    {
+        return $this->hasMany(DetailDraftInstruksi::class, 'bahan_id');
+    }
+
+    public function detailSuratJalan(): HasMany
+    {
+        return $this->hasMany(DetailSuratJalan::class, 'bahan_id');
+    }
 }

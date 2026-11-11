@@ -31,5 +31,5 @@ class CabangController extends MasterDataController
 
     protected array $withCount = ['pengguna'];
 
-    protected array $dependents = ['pengguna', 'stok'];
+    protected array $dependents = ['pengguna', 'stok', 'transaksiPenjualan', 'suratJalan', 'draftInstruksi', 'wasteLogs'];
 }

@@ -133,6 +133,15 @@
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     // ---------- STATE (diisi dari backend) ----------
     let ITEMS      = {};     // info bahan, kunci = bahan_id
@@ -285,16 +294,16 @@ async function loadData() {
 
         $('rsBody').innerHTML = list.map(o => `
             <tr>
-                <td><strong>${o.no}</strong></td>
-                <td class="col-nowrap">${o.date}</td>
+                <td><strong>${esc(o.no)}</strong></td>
+                <td class="col-nowrap">${esc(o.date)}</td>
                 <td><span class="status info">${o.source === 'otomatis' ? 'Otomatis' : 'Manual'}</span></td>
                 <td>${o.items.length} jenis</td>
                 <td style="text-align:right"><strong>${rp(orderCost(o))}</strong></td>
                 <td><span class="status ${STATUS[o.status].cls}">${STATUS[o.status].label}</span></td>
                 <td>
                     ${o.status === 'approval'
-                        ? `<button type="button" class="primary-button btn-sm" data-review="${o.id}">Tinjau</button>`
-                        : `<button type="button" class="outline-button btn-sm" data-detail="${o.no}">Detail</button>`
+                        ? `<button type="button" class="primary-button btn-sm" data-review="${esc(o.id)}">Tinjau</button>`
+                        : `<button type="button" class="outline-button btn-sm" data-detail="${esc(o.no)}">Detail</button>`
                     }
                 </td>
             </tr>
@@ -595,12 +604,14 @@ async function loadData() {
 
     function showManual() {
         const keys = Object.keys(mLines);
+        const moq = Number(ITEMS[mPick]?.minimum_order_qty) || 1;
+        if (mAdd < moq) mAdd = moq;
 
         const options = Object.entries(ITEMS)
         .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
         .map(([k, i]) => `
             <option value="${k}" ${k === mPick ? 'selected' : ''}>
-                ${i.nama_bahan} (${i.nama_kemasan}) — MOQ ${i.minimum_order_qty || 1}
+                ${esc(i.nama_bahan)} (${esc(i.nama_kemasan)}) — MOQ ${i.minimum_order_qty || 1}
             </option>
         `)
         .join('');
@@ -614,7 +625,7 @@ async function loadData() {
                     <label class="form-label">Tambah Bahan</label>
                     <div class="form-row">
                         <select id="mPick" class="form-input">${options}</select>
-                        <input type="number" min="1" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
+                        <input type="number" min="${moq}" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
                         <button type="button" class="outline-button" data-madd>Tambah</button>
                     </div>
                     <div class="form-hint">
@@ -682,7 +693,6 @@ async function loadData() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            closeModal();
             flash(json.message || 'Reorder manual gagal dikirim. Coba lagi.', false);
             return;
         }
@@ -721,15 +731,6 @@ async function loadData() {
         const t = e.target;
 
         if (t.id === 'rsSearch') { keyword = t.value; renderTable(); }
-
-        if (t.dataset.qty) {
-            const id = t.dataset.qty;
-            draftQty[id] = Math.max(0, parseInt(t.value, 10) || 0);
-
-            $('sub-' + id).textContent = rp(draftQty[id] * ITEMS[id].harga_beli);
-            $('draftTotal').textContent = rp(dTotal());
-            $('btnApprove').disabled = !dCount();
-        }
 
         if (t.dataset.reviewQty) {
             const id = t.dataset.reviewQty;

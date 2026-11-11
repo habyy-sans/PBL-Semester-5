@@ -35,4 +35,9 @@ class VarianMenu extends Model
     {
         return $this->hasMany(ResepMenu::class, 'varian_id');
     }
+
+    public function detailTransaksi(): HasMany
+    {
+        return $this->hasMany(DetailTransaksi::class, 'varian_id');
+    }
 }

@@ -39,24 +39,26 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $this->validatePayload($request);
+        return DB::transaction(function () use ($request) {
+            $data = $this->validatePayload($request);
 
-        $user = Pengguna::query()->create([
-            'nama_lengkap' => $data['name'],
-            'username' => $this->uniqueUsername($data['email']),
-            'email' => $data['email'],
-            'password_hash' => $data['password'],
-            'telepon' => null,
-            'role' => config("menu.roles.{$data['role']}.db"),
-            'cabang_id' => $data['cabang_id'],
-            'dc_id' => null,
-            'status' => $data['status'],
-        ]);
+            $user = Pengguna::query()->create([
+                'nama_lengkap' => $data['name'],
+                'username' => $this->uniqueUsername($data['email']),
+                'email' => $data['email'],
+                'password_hash' => $data['password'],
+                'telepon' => null,
+                'role' => config("menu.roles.{$data['role']}.db"),
+                'cabang_id' => $data['cabang_id'],
+                'dc_id' => null,
+                'status' => $data['status'],
+            ]);
 
-        return response()->json([
-            'message' => "Pengguna {$user->nama_lengkap} berhasil ditambahkan.",
-            'user' => $this->mapUser($user),
-        ], 201);
+            return response()->json([
+                'message' => "Pengguna {$user->nama_lengkap} berhasil ditambahkan.",
+                'user' => $this->mapUser($user),
+            ], 201);
+        });
     }
 
     /**
@@ -64,27 +66,29 @@ class UserController extends Controller
      */
     public function update(Request $request, Pengguna $user): JsonResponse
     {
-        $data = $this->validatePayload($request, $user);
+        return DB::transaction(function () use ($request, $user) {
+            $data = $this->validatePayload($request, $user);
 
-        $this->guardLastActiveAdmin($user, $data);
+            $this->guardLastActiveAdmin($user, $data);
 
-        $user->nama_lengkap = $data['name'];
-        $user->email = $data['email'];
-        $user->role = config("menu.roles.{$data['role']}.db");
-        $user->cabang_id = $data['cabang_id'];
-        $user->status = $data['status'];
+            $user->nama_lengkap = $data['name'];
+            $user->email = $data['email'];
+            $user->role = config("menu.roles.{$data['role']}.db");
+            $user->cabang_id = $data['cabang_id'];
+            $user->status = $data['status'];
 
-        if (! empty($data['password'])) {
-            $user->password_hash = $data['password'];
-        }
+            if (! empty($data['password'])) {
+                $user->password_hash = $data['password'];
+            }
 
-        $user->save();
+            $user->save();
 
-        return response()->json([
-            'message' => 'Data ' . $user->nama_lengkap . ' berhasil diperbarui'
-                . (! empty($data['password']) ? ' dan password diubah' : '') . '.',
-            'user' => $this->mapUser($user),
-        ]);
+            return response()->json([
+                'message' => 'Data ' . $user->nama_lengkap . ' berhasil diperbarui'
+                    . (! empty($data['password']) ? ' dan password diubah' : '') . '.',
+                'user' => $this->mapUser($user),
+            ]);
+        });
     }
 
     /**
@@ -96,25 +100,27 @@ class UserController extends Controller
             'status' => ['required', 'in:aktif,nonaktif'],
         ]);
 
-        $roleKey = $this->roleKey($user->role);
+        return DB::transaction(function () use ($data, $user) {
+            $roleKey = $this->roleKey($user->role);
 
-        if ($data['status'] === 'nonaktif') {
-            $this->guardLastActiveAdmin($user, ['role' => $roleKey, 'status' => 'nonaktif']);
-        }
+            if ($data['status'] === 'nonaktif') {
+                $this->guardLastActiveAdmin($user, ['role' => $roleKey, 'status' => 'nonaktif']);
+            }
 
-        if ($data['status'] === 'aktif' && $roleKey === 'manager') {
-            $this->guardOneActiveManager($user->cabang_id, $user->user_id);
-        }
+            if ($data['status'] === 'aktif' && $roleKey === 'manager') {
+                $this->guardOneActiveManager($user->cabang_id, $user->user_id);
+            }
 
-        $user->status = $data['status'];
-        $user->save();
+            $user->status = $data['status'];
+            $user->save();
 
-        return response()->json([
-            'message' => $data['status'] === 'aktif'
-                ? $user->nama_lengkap . ' diaktifkan kembali.'
-                : $user->nama_lengkap . ' dinonaktifkan.',
-            'user' => $this->mapUser($user),
-        ]);
+            return response()->json([
+                'message' => $data['status'] === 'aktif'
+                    ? $user->nama_lengkap . ' diaktifkan kembali.'
+                    : $user->nama_lengkap . ' dinonaktifkan.',
+                'user' => $this->mapUser($user),
+            ]);
+        });
     }
 
     /* =========================================================
@@ -230,6 +236,7 @@ class UserController extends Controller
             ->where('status', 'aktif')
             ->where('cabang_id', $cabangId)
             ->when($exceptUserId !== null, fn ($query) => $query->where('user_id', '!=', $exceptUserId))
+            ->lockForUpdate()
             ->with('cabang')
             ->first();
     }
@@ -239,6 +246,7 @@ class UserController extends Controller
         return Pengguna::query()
             ->where('role', config('menu.roles.admin.db'))
             ->where('status', 'aktif')
+            ->lockForUpdate()
             ->count();
     }
 

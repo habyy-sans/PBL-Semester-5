@@ -165,7 +165,11 @@ class DashboardController extends Controller
                 'cash' => $trx->pembayaran?->jumlah_diterima !== null
                     ? (float) $trx->pembayaran->jumlah_diterima
                     : null,
-                'status' => $trx->status === 'berhasil' ? 'selesai' : 'batal',
+                'status' => match ($trx->status) {
+                    'berhasil' => 'selesai',
+                    'menunggu_pembayaran' => 'pending',
+                    default => 'batal',
+                },
                 'reason' => $trx->alasan_batal,
                 'items' => $trx->detail
                     ->filter(fn ($line) => $line->varian !== null)
@@ -231,6 +235,30 @@ class DashboardController extends Controller
     }
 
     /**
+     * Catatan per bahan dibaca kembali dari konfirmasi_penerimaan.kondisi
+     *
+     * @return array<string, string>
+     */
+    private function notesFromKondisi(?string $kondisi): array
+    {
+        if ($kondisi === null || ! preg_match('/^(?:selisih|baik): (.+)$/su', $kondisi, $m)) {
+            return [];
+        }
+
+        $notes = [];
+
+        foreach (explode('; ', $m[1]) as $part) {
+            $pair = explode(': ', $part, 2);
+
+            if (count($pair) === 2) {
+                $notes[trim($pair[0])] = trim($pair[1]);
+            }
+        }
+
+        return $notes;
+    }
+
+    /**
      * Surat jalan (pengiriman DC) untuk JS dashboard.
      *
      * @return array<int, array<string, mixed>>
@@ -239,25 +267,30 @@ class DashboardController extends Controller
     {
         return SuratJalan::query()
             ->where('cabang_id', $cabangId)
-            ->with(['detail', 'konfirmasi'])
+            ->with(['detail.bahan', 'detail.detailDraft', 'konfirmasi'])
             ->orderByDesc('surat_jalan_id')
             ->limit(100)
             ->get()
-            ->map(fn ($sj) => [
-                'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
-                'date' => $sj->tanggal_kirim?->format('d M Y') ?? '-',
-                'origin' => 'Distribution Center',
-                'store' => (string) $sj->cabang_id,
-                'order' => null,
-                'status' => $sj->computed_status,
-                'items' => $sj->detail
-                    ->map(fn ($detail) => [
-                        'item' => (string) $detail->bahan_id,
-                        'sent' => (int) $detail->qty_dikirim,
-                        'received' => $detail->qty_diterima === null ? null : (int) $detail->qty_diterima,
-                        'note' => null,
-                    ])->values()->all(),
-            ])
+            ->map(function ($sj) {
+                $notes = $this->notesFromKondisi($sj->konfirmasi?->kondisi);
+                $draftId = $sj->detail->first()?->detailDraft?->draft_id;
+
+                return [
+                    'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
+                    'date' => $sj->tanggal_kirim?->format('d M Y') ?? '-',
+                    'origin' => 'Distribution Center',
+                    'store' => (string) $sj->cabang_id,
+                    'order' => $draftId ? sprintf('#RS-%04d', $draftId) : '-',
+                    'status' => $sj->computed_status,
+                    'items' => $sj->detail
+                        ->map(fn ($detail) => [
+                            'item' => (string) $detail->bahan_id,
+                            'sent' => (int) $detail->qty_dikirim,
+                            'received' => $detail->qty_diterima === null ? null : (int) $detail->qty_diterima,
+                            'note' => $notes[$detail->bahan?->nama_bahan ?? ''] ?? null,
+                        ])->values()->all(),
+                ];
+            })
             ->values()
             ->all();
     }

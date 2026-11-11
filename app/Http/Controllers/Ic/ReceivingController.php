@@ -165,7 +165,8 @@ class ReceivingController extends Controller
                 }
 
                 if (! empty($item['catatan'])) {
-                    $notes[] = $bahan?->nama_bahan . ': ' . $item['catatan'];
+                    $cleanCatatan = str_replace([';', ':'], [',', '-'], trim($item['catatan']));
+                    $notes[] = $bahan?->nama_bahan . ': ' . $cleanCatatan;
                 }
             }
 

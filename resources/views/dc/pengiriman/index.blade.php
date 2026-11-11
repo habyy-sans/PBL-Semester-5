@@ -81,6 +81,7 @@
 
                 <select class="select" aria-label="Filter status" x-model="status">
                     <option value="">Semua Status</option>
+                    <option value="disiapkan">Disiapkan</option>
                     <option value="dikirim">Dalam Pengiriman</option>
                     <option value="menunggu">Menunggu Pengecekan</option>
                     <option value="diterima">Diterima</option>
@@ -122,7 +123,15 @@
                                     ></span>
                                 </td>
                                 <td>
-                                    <button type="button" class="outline-button" @click="open(sj)">Lihat</button>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button type="button" class="outline-button btn-sm" @click="open(sj)">Lihat</button>
+                                        <button
+                                            type="button"
+                                            class="primary-button btn-sm"
+                                            x-show="sj.status === 'disiapkan'"
+                                            @click="dispatchShipment(sj)"
+                                        >Kirim</button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -160,10 +169,18 @@
                     <div class="card-header">
                         <div>
                             <h3>Surat Jalan Digital</h3>
-                            <p x-text="current.no + ' · ' + labels[current.status].text"></p>
+                            <p x-text="current.no + ' · ' + (labels[current.status] ? labels[current.status].text : current.status)"></p>
                         </div>
 
-                        <button type="button" class="primary-button btn-sm no-print" @click="window.print()">Cetak</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button
+                                type="button"
+                                class="primary-button btn-sm no-print"
+                                x-show="current.status === 'disiapkan'"
+                                @click="dispatchShipment(current)"
+                            >Kirim Sekarang</button>
+                            <button type="button" class="primary-button btn-sm no-print" @click="window.print()">Cetak</button>
+                        </div>
                     </div>
 
                     <!-- INFO SURAT JALAN -->
@@ -275,6 +292,7 @@
             status: '',
 
             labels: {
+                disiapkan: { text: 'Disiapkan',          class: 'info'    },
                 dikirim:  { text: 'Dalam Pengiriman',    class: 'warning' },
                 menunggu: { text: 'Menunggu Pengecekan', class: 'info'    },
                 diterima: { text: 'Diterima',            class: 'success' },
@@ -374,6 +392,29 @@
                 this.view = 'detail';
 
                 window.scrollTo({ top: 0 });
+            },
+
+
+            async dispatchShipment(sj) {
+
+                if (!confirm('Kirim surat jalan ' + sj.no + ' ke cabang tujuan?')) return;
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                try {
+                    const res = await fetch(`/dc/shipment/${sj.id}/kirim`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    });
+                    const json = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        alert(json.message || 'Gagal mengirim surat jalan.');
+                        return;
+                    }
+                    sj.status = json.status || 'menunggu';
+                    const target = this.shipments.find(s => s.id === sj.id);
+                    if (target) target.status = sj.status;
+                } catch (e) {
+                    alert('Gagal mengirim surat jalan. Periksa koneksi.');
+                }
             },
 
 

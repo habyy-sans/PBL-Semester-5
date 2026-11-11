@@ -150,7 +150,7 @@ abstract class MasterDataController extends Controller
             ->with('success', $this->title.' berhasil dihapus.');
     }
 
-    private function formView(?Model $record = null): View
+    protected function formView(?Model $record = null): View
     {
         return view('admin.master-data.form', [
             'title' => $this->title,
@@ -160,7 +160,7 @@ abstract class MasterDataController extends Controller
         ]);
     }
 
-    private function findRecord(int $key): Model
+    protected function findRecord(int $key): Model
     {
         $modelClass = $this->modelClass;
 
@@ -170,35 +170,43 @@ abstract class MasterDataController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validatedData(Request $request, ?Model $record = null): array
+    protected function validatedData(Request $request, ?Model $record = null): array
     {
         $rules = [];
 
         foreach ($this->fields as $field) {
             $name = $field['name'];
-            $rules[$name] = [
+            $type = $field['type'] ?? 'text';
+            $fieldRules = [
                 ($field['required'] ?? false) ? 'required' : 'nullable',
-                match ($field['type'] ?? 'text') {
+                match ($type) {
                     'number' => 'numeric',
                     'select' => 'integer',
                     default => 'string',
                 },
-                'max:'.($field['max'] ?? 255),
             ];
 
+            if ($type !== 'number' && $type !== 'select') {
+                $fieldRules[] = 'max:'.($field['max'] ?? 255);
+            } elseif (isset($field['max'])) {
+                $fieldRules[] = 'max:'.$field['max'];
+            }
+
             if (isset($field['min'])) {
-                $rules[$name][] = 'min:'.$field['min'];
+                $fieldRules[] = 'min:'.$field['min'];
             }
 
             if (isset($field['exists'])) {
-                $rules[$name][] = Rule::exists($field['exists']['table'], $field['exists']['column']);
+                $fieldRules[] = Rule::exists($field['exists']['table'], $field['exists']['column']);
             }
 
             if ($field['unique'] ?? false) {
                 $model = new ($this->modelClass);
-                $rules[$name][] = Rule::unique($model->getTable(), $name)
+                $fieldRules[] = Rule::unique($model->getTable(), $name)
                     ->ignore($record?->getKey(), $model->getKeyName());
             }
+
+            $rules[$name] = $fieldRules;
         }
 
         return Validator::make($request->all(), $rules)->validate();
