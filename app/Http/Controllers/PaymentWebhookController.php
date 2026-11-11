@@ -112,11 +112,21 @@ class PaymentWebhookController extends Controller
         $user = $request->user();
 
         $transaksi = TransaksiPenjualan::query()
+            ->with('pembayaran')
             ->when($user?->cabang_id, fn ($q, $cabangId) => $q->where('cabang_id', $cabangId))
             ->where('status', 'menunggu_pembayaran')
             ->findOrFail($transaksiId);
 
-        $result = $this->settlement->settle($transaksi, 'sim-qris-' . time());
+        $existingGatewayTxId = (string) ($transaksi->pembayaran?->gateway_transaction_id ?? '');
+
+        if ($existingGatewayTxId !== '') {
+            $this->midtrans->simulateSandboxQris($existingGatewayTxId);
+        }
+
+        $result = $this->settlement->settle(
+            $transaksi,
+            $existingGatewayTxId !== '' ? null : 'sim-qris-' . time()
+        );
 
         return response()->json([
             'status' => 'berhasil',
