@@ -57,12 +57,12 @@ class PaymentWebhookController extends Controller
             ?? TransaksiPenjualan::query()->where('no_transaksi', $orderId)->first();
 
         if (! $transaksi) {
-            Log::error('Midtrans Webhook: Transaksi tidak ditemukan', ['order_id' => $orderId]);
+            Log::warning('Midtrans Webhook: Transaksi tidak ditemukan di database lokal (diabaikan)', ['order_id' => $orderId]);
 
             return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found',
-            ], 404);
+                'status' => 'ok',
+                'message' => 'Order not found locally, notification acknowledged',
+            ], 200);
         }
 
         // 3. Tangani perubahan status pembayaran
