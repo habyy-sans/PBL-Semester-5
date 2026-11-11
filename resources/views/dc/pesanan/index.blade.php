@@ -34,11 +34,11 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">▱</div>
+                <div class="stat-icon">↻</div>
                 <div class="stat-content">
-                    <span class="stat-label">Sudah Dikirim</span>
-                    <strong x-text="count('dikirim')"></strong>
-                    <small class="positive">Surat Jalan terbit</small>
+                    <span class="stat-label">Pengiriman Parsial</span>
+                    <strong x-text="count('diproses')"></strong>
+                    <small>masih ada sisa pesanan</small>
                 </div>
             </div>
 
@@ -86,7 +86,8 @@
                 <select class="select" aria-label="Filter status" x-model="status">
                     <option value="">Semua Status</option>
                     <option value="baru">Baru</option>
-                    <option value="dikirim">Dikirim</option>
+                    <option value="diproses">Diproses</option>
+                    <option value="selesai">Selesai</option>
                 </select>
 
                 <span class="table-meta" x-text="'Menampilkan ' + filtered.length + ' dari ' + orders.length + ' pesanan'"></span>
@@ -126,14 +127,14 @@
                                     <button
                                         type="button"
                                         class="primary-button btn-sm"
-                                        x-show="order.status === 'baru'"
+                                        x-show="['baru', 'diproses'].includes(order.status)"
                                         @click="open(order)"
                                     >Proses</button>
 
                                     <button
                                         type="button"
                                         class="outline-button"
-                                        x-show="order.status === 'dikirim'"
+                                        x-show="order.status === 'selesai'"
                                         @click="open(order)"
                                     >Lihat</button>
                                 </td>
@@ -190,93 +191,122 @@
                     </div>
 
                 </div>
-
-
+                
                 <!-- DAFTAR BARANG -->
                 <div class="page-card section-gap">
 
                     <div class="card-header">
                         <div>
-                            <h3 x-text="editable ? 'Siapkan Barang' : 'Rincian Pesanan'"></h3>
+                            <h3 x-text="editable ? 'Rincian Pengiriman' : 'Rincian Pesanan'"></h3>
                             <p x-text="editable
-                                ? 'Centang setiap barang yang sudah disiapkan, lalu terbitkan Surat Jalan.'
-                                : 'Surat Jalan ' + current.shipment + ' sudah diterbitkan untuk pesanan ini.'"></p>
+                                ? 'Masukkan jumlah barang yang akan dikirim. Pengiriman dapat dilakukan bertahap.'
+                                : 'Seluruh kuantitas pesanan telah dikirim.'"></p>
                         </div>
-
-                        <button
-                            type="button"
-                            class="outline-button"
-                            x-show="editable"
-                            @click="toggleAll()"
-                            x-text="allReady ? 'Batalkan Semua' : 'Tandai Semua Siap'"
-                        ></button>
                     </div>
 
                     <div class="table-wrapper">
                         <table>
-
                             <thead>
                                 <tr>
                                     <th>No.</th>
                                     <th>Barang</th>
                                     <th>Dipesan</th>
+                                    <th>Sudah Dikirim</th>
+                                    <th>Sisa</th>
                                     <th>Stok DC</th>
-                                    <th>Siap</th>
+                                    <th x-show="editable">Kirim Sekarang</th>
                                 </tr>
                             </thead>
 
                             <tbody>
-
-                                <template x-for="(line, index) in current.lines" :key="line.item">
+                                <template x-for="(line, index) in current.lines" :key="line.detail_draft_id">
                                     <tr>
                                         <td x-text="index + 1"></td>
                                         <td x-text="itemOf(line).name"></td>
-                                        <td x-text="qtyText(line)"></td>
-                                        <td :class="{ 'danger-text': (dcStock[line.item] ?? 0) < line.qty }">
-                                            <span x-text="format(dcStock[line.item] ?? 0) + ' ' + itemOf(line).pack"></span>
-                                            <span x-show="(dcStock[line.item] ?? 0) < line.qty" class="status danger" style="margin-left: 6px; font-size: 11px;">Kurang</span>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                class="check-input"
-                                                x-show="editable"
-                                                :aria-label="'Siap: ' + itemOf(line).name"
-                                                :disabled="(dcStock[line.item] ?? 0) < line.qty"
-                                                x-model="line.ready"
-                                            >
 
-                                            <span x-show="!editable">✓</span>
+                                        <td x-text="quantityText(line.qty_requested_base, itemOf(line))"></td>
+
+                                        <td x-text="quantityText(line.qty_sent_base, itemOf(line))"></td>
+
+                                        <td x-text="quantityText(line.qty_remaining_base, itemOf(line))"></td>
+
+                                        <td x-text="quantityText(line.stock_base, itemOf(line))"></td>
+
+                                        <td x-show="editable">
+                                            <input
+                                                type="number"
+                                                class="form-input"
+                                                style="max-width: 140px;"
+                                                min="0"
+                                                step="0.001"
+                                                :max="Math.min(line.qty_remaining_base, line.stock_base)"
+                                                x-model.number="line.qty_to_ship_base"
+                                                :disabled="line.qty_remaining_base <= 0"
+                                                :aria-label="'Jumlah dikirim untuk ' + itemOf(line).name"
+                                            >
+                                            <small x-text="itemOf(line).unit"></small>
                                         </td>
                                     </tr>
                                 </template>
-
                             </tbody>
-
                         </table>
                     </div>
 
+                    <div class="section-gap" x-show="editable">
 
-                    <!-- INFO + TOMBOL (hanya saat memproses) -->
+                        <label for="shipment-note" class="form-label">
+                            Catatan Pengiriman
+                        </label>
+
+                        <textarea
+                            id="shipment-note"
+                            class="form-input"
+                            rows="3"
+                            x-model.trim="catatan"
+                            placeholder="Wajib diisi jika pengiriman belum memenuhi seluruh sisa pesanan."
+                        ></textarea>
+
+                        <p class="info-note" style="margin-top: 8px;"
+                        x-text="partialShipment
+                            ? 'Pengiriman belum memenuhi seluruh pesanan. Catatan wajib diisi.'
+                            : 'Pengiriman memenuhi seluruh sisa pesanan. Catatan bersifat opsional.'">
+                        </p>
+
+                        <p class="warning"
+                        x-show="quantityError"
+                        x-text="quantityError"
+                        style="margin-top: 8px;">
+                        </p>
+
+                    </div>
+
                     <div class="receive-footer" x-show="editable">
 
-                        <p class="info-note" x-text="hasInsufficientStock
-                            ? 'Perhatian: Sebagian stok DC tidak mencukupi untuk memenuhi pesanan ini.'
-                            : (allReady
-                                ? 'Semua barang sudah siap. Surat Jalan bisa diterbitkan.'
-                                : 'Tombol Terbitkan Surat Jalan aktif setelah semua barang dicentang siap.')"></p>
+                        <p class="info-note">
+                            Stok DC akan berkurang ketika Surat Jalan berhasil dibuat.
+                            Pengiriman dapat dilakukan secara bertahap sesuai stok yang tersedia.
+                        </p>
 
                         <div class="receive-actions">
-                            <button type="button" class="outline-button btn-sm" @click="back()">Batal</button>
-                            <button type="button" class="primary-button" :disabled="!allReady" @click="confirming = true">Terbitkan Surat Jalan</button>
+                            <button
+                                type="button"
+                                class="outline-button btn-sm"
+                                @click="back()"
+                            >Batal</button>
+
+                            <button
+                                type="button"
+                                class="primary-button"
+                                :disabled="!canIssue"
+                                @click="confirming = true"
+                            >Terbitkan Surat Jalan</button>
                         </div>
 
                     </div>
 
                 </div>
-
+ 
             </div>
-
         </template>
 
     </div>
@@ -292,7 +322,10 @@
 
             <h4 id="issue-title">Terbitkan Surat Jalan</h4>
 
-            <p>Surat Jalan akan dikirim ke store tujuan dan muncul di Penerimaan Barang IC. Lanjutkan?</p>
+            <p>
+                Surat Jalan akan dibuat berdasarkan jumlah barang yang kamu masukkan.
+                Stok DC langsung dikurangi setelah transaksi berhasil.
+            </p>
 
             <div class="summary-box" x-show="current">
 
@@ -308,7 +341,9 @@
 
                 <div class="summary-line">
                     <span>Jumlah Item</span>
-                    <span x-text="current ? current.lines.length + ' Item' : ''"></span>
+                    <span x-text="current
+                    ? current.lines.filter(line => Number(line.qty_to_ship_base) > 0).length + ' Item'
+                    : ''"></span>
                 </div>
 
                 <div class="summary-line">
@@ -320,7 +355,14 @@
 
             <div class="modal-actions">
                 <button type="button" class="outline-button btn-sm" @click="confirming = false">Batal</button>
-                <button type="button" class="primary-button btn-sm" @click="issue()">Ya, Terbitkan</button>
+                <button
+                    type="button"
+                    class="primary-button btn-sm"
+                    :disabled="!canIssue || submitting"
+                    @click="issue()"
+                >
+                    <span x-text="submitting ? 'Memproses...' : 'Ya, Terbitkan'"></span>
+                </button>
             </div>
 
         </div>
@@ -333,18 +375,21 @@
 
 @push('scripts')
 <script>
-    // Data pesanan berasal dari database; penerbitan Surat Jalan diproses server.
+    // Data pesanan dan stok berasal dari database melalui OrderController.
     function orderPage() {
 
         return {
 
-            items: @json($items),          // barang, kunci = id barang
+            items: @json($items),
             stores: @json($storeList),
             orders: @json($orders),
-            dcStock: @json($dcStock),      // stok DC per barang, dalam kemasan
+            dcStock: @json($dcStock),
 
             init() {
-                const requestedId = Number(new URLSearchParams(window.location.search).get('draft_id'));
+                const requestedId = Number(
+                    new URLSearchParams(window.location.search).get('draft_id')
+                );
+
                 const order = this.orders.find(item => item.id === requestedId);
 
                 if (order) {
@@ -362,11 +407,23 @@
             confirming: false,
             flash: '',
 
-            labels: {
-                baru:    { text: 'Baru',    class: 'info'    },
-                dikirim: { text: 'Dikirim', class: 'success' },
-            },
+            catatan: '',
+            submitting: false,
 
+            labels: {
+                baru: {
+                    text: 'Baru',
+                    class: 'info'
+                },
+                diproses: {
+                    text: 'Diproses',
+                    class: 'warning'
+                },
+                selesai: {
+                    text: 'Selesai',
+                    class: 'success'
+                },
+            },
 
             /* ---------- FORMAT ---------- */
 
@@ -383,8 +440,9 @@
 
 
             storeName(id) {
-
-                const found = this.stores.find(item => item.id === id);
+                const found = this.stores.find(
+                    item => String(item.id) === String(id)
+                );
 
                 return found ? found.name : id;
             },
@@ -403,6 +461,9 @@
                 return this.format(line.qty) + ' ' + item.pack;
             },
 
+            quantityText(quantity, item) {
+                return this.format(quantity) + ' ' + (item.unit || 'Unit');
+            },
 
             /* ---------- DAFTAR ---------- */
 
@@ -422,32 +483,33 @@
 
 
             get filtered() {
-
                 const keyword = this.search.trim().toLowerCase();
 
                 return this.orders.filter(order =>
                     (!keyword || order.no.toLowerCase().includes(keyword))
-                    && (!this.store || order.store === this.store)
+                    && (!this.store || String(order.store) === String(this.store))
                     && (!this.status || order.status === this.status)
                 );
             },
 
-
             /* ---------- BUKA / TUTUP DETAIL ---------- */
 
             open(order) {
-
-                // Salinan, supaya centang tidak langsung mengubah daftar
                 this.current = JSON.parse(JSON.stringify(order));
 
-                this.current.lines.forEach(line => { line.ready = false; });
+                this.current.lines.forEach(line => {
+                    line.qty_to_ship_base = Math.min(
+                        Number(line.qty_remaining_base || 0),
+                        Number(line.stock_base || 0)
+                    );
+                });
 
+                this.catatan = '';
                 this.flash = '';
                 this.view = 'detail';
 
                 window.scrollTo({ top: 0 });
             },
-
 
             back() {
 
@@ -461,38 +523,62 @@
             /* ---------- PERSIAPAN BARANG ---------- */
 
             get editable() {
-
-                return this.current && this.current.status === 'baru';
+                return !!this.current &&
+                    ['baru', 'diproses'].includes(this.current.status);
             },
 
+            get partialShipment() {
+                if (!this.current) return false;
 
-            get hasInsufficientStock() {
+                return this.current.lines.some(line => {
+                    const remainingAfter =
+                        Number(line.qty_remaining_base || 0) -
+                        Number(line.qty_to_ship_base || 0);
 
-                return !!this.current && this.current.lines.some(line => (this.dcStock[line.item] ?? 0) < line.qty);
-            },
-
-
-            get allReady() {
-
-                return !!this.current
-                    && this.current.lines.length > 0
-                    && this.current.lines.every(line => line.ready && (this.dcStock[line.item] ?? 0) >= line.qty);
-            },
-
-
-            toggleAll() {
-
-                const target = !this.allReady;
-
-                this.current.lines.forEach(line => {
-                    if ((this.dcStock[line.item] ?? 0) >= line.qty) {
-                        line.ready = target;
-                    } else {
-                        line.ready = false;
-                    }
+                    return remainingAfter > 0.000001;
                 });
             },
 
+            get quantityError() {
+                if (!this.current) return '';
+
+                for (const line of this.current.lines) {
+                    const qty = Number(line.qty_to_ship_base || 0);
+                    const remaining = Number(line.qty_remaining_base || 0);
+                    const stock = Number(line.stock_base || 0);
+
+                    if (!Number.isFinite(qty) || qty < 0) {
+                        return 'Jumlah pengiriman tidak valid.';
+                    }
+
+                    if (qty > remaining + 0.000001) {
+                        return 'Jumlah pengiriman melebihi sisa pesanan.';
+                    }
+
+                    if (qty > stock + 0.000001) {
+                        return 'Jumlah pengiriman melebihi stok DC.';
+                    }
+                }
+
+                return '';
+            },
+
+            get canIssue() {
+                if (
+                    !this.editable ||
+                    this.submitting ||
+                    this.quantityError
+                ) {
+                    return false;
+                }
+
+                const hasQty = this.current.lines.some(line =>
+                    Number(line.qty_to_ship_base || 0) > 0
+                );
+
+                return hasQty &&
+                    (!this.partialShipment || this.catatan.trim().length > 0);
+            },
 
             // Nomor Surat Jalan dibuat oleh server (tidak lagi dihitung di tampilan).
             followingNo(no) {
@@ -502,60 +588,113 @@
 
 
             async issue() {
+                if (!this.canIssue) return;
 
-                if (!this.allReady) {
-                    return;
-                }
+                const token =
+                    document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-                const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
                 const order = this.current;
-                const target = this.orders.find(o => o.no === order.no);
+
+                const target = this.orders.find(
+                    item => item.id === order.id
+                );
+
+                const shipmentItems = order.lines
+                    .filter(line => Number(line.qty_to_ship_base || 0) > 0)
+                    .map(line => ({
+                        detail_draft_id: Number(line.detail_draft_id),
+                        bahan_id: Number(line.item),
+                        qty_dikirim: Number(line.qty_to_ship_base),
+                    }));
+
+                this.submitting = true;
 
                 try {
-                    const res = await fetch('/dc/shipment', {
+                    const response = await fetch('/dc/shipment', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                        },
                         body: JSON.stringify({
                             draft_id: order.id,
-                            items: order.lines.map(line => ({ bahan_id: Number(line.item), qty_dikirim: line.qty })),
+                            items: shipmentItems,
+                            catatan: this.catatan.trim() || null,
                         }),
                     });
 
-                    const json = await res.json().catch(() => ({}));
+                    const result = await response.json().catch(() => ({}));
 
-                    if (!res.ok) {
-                        this.flash = json.message || 'Gagal menerbitkan Surat Jalan.';
+                    if (!response.ok) {
+                        const firstError = result.errors
+                            ? Object.values(result.errors).flat()[0]
+                            : null;
+
+                        this.flash = firstError ||
+                            result.message ||
+                            'Gagal menerbitkan Surat Jalan.';
+
                         this.confirming = false;
                         return;
                     }
 
-                    const issued = json.no;
+                    if (target) {
+                        const sentMap = new Map(
+                            shipmentItems.map(item => [
+                                Number(item.detail_draft_id),
+                                item.qty_dikirim
+                            ])
+                        );
 
-                    target.status = 'dikirim';
-                    target.shipment = issued;
+                        target.lines.forEach(line => {
+                            const newlySent = Number(
+                                sentMap.get(Number(line.detail_draft_id)) || 0
+                            );
 
-                    // Kurangi stok DC lokal
-                    order.lines.forEach(line => {
-                        if (this.dcStock[line.item] !== undefined) {
-                            this.dcStock[line.item] = Math.max(0, this.dcStock[line.item] - line.qty);
-                        }
-                    });
+                            line.qty_sent_base =
+                                Number(line.qty_sent_base || 0) + newlySent;
 
-                    // Langsung tandai dikirim agar IC bisa memeriksa.
-                    await fetch(`/dc/shipment/${json.surat_jalan_id}/kirim`, {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                    });
+                            line.qty_remaining_base = Math.max(
+                                0,
+                                Number(line.qty_remaining_base || 0) - newlySent
+                            );
 
-                    this.flash = 'Surat Jalan ' + issued + ' untuk pesanan ' + target.no
-                        + ' berhasil diterbitkan dan dikirim ke ' + this.storeName(target.store) + '.';
+                            line.qty_to_ship_base = line.qty_remaining_base;
 
-                    setTimeout(() => { this.flash = ''; }, 6000);
+                            line.stock_base = Math.max(
+                                0,
+                                Number(line.stock_base || 0) - newlySent
+                            );
+                        });
 
-                    this.back();
-                } catch (e) {
-                    this.flash = 'Gagal menerbitkan Surat Jalan. Periksa koneksi lalu coba lagi.';
+                        target.status = target.lines.some(line =>
+                            Number(line.qty_remaining_base || 0) > 0.000001
+                        ) ? 'diproses' : 'selesai';
+
+                        target.shipment = result.no || target.shipment;
+                    }
+
                     this.confirming = false;
+                    this.view = 'list';
+
+                    this.flash =
+                        'Surat Jalan ' + (result.no || '') +
+                        ' berhasil dibuat. Stok DC telah dikurangi. ' +
+                        'Silakan tandai Surat Jalan sebagai dikirim pada halaman Pengiriman setelah barang diberangkatkan.';
+
+                    this.catatan = '';
+
+                    window.scrollTo({ top: 0 });
+
+                } catch (error) {
+                    this.flash =
+                        'Gagal menghubungi server. Periksa koneksi lalu coba lagi.';
+
+                    this.confirming = false;
+
+                } finally {
+                    this.submitting = false;
                 }
             },
 

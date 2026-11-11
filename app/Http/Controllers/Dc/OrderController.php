@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dc;
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\Cabang;
+use App\Models\DetailSuratJalan;
 use App\Models\DraftInstruksi;
 use App\Models\StokDc;
 use App\Models\SuratJalan;
@@ -14,14 +15,22 @@ use Illuminate\View\View;
 class OrderController extends Controller
 {
     /**
-     * Halaman Pesanan Masuk (DC) — draft yang disetujui manager
-     * dari semua cabang + Surat Jalan terkait, format sama dengan demo lama.
+     * Menampilkan pesanan DC beserta progres pengiriman
+     * per detail pesanan.
      */
     public function index(Request $request): View
     {
-        abort_if($request->user()->dc_id === null, 403, 'Akun DC belum memiliki penugasan.');
+        $dcId = $request->user()->dc_id;
 
-        $items = BahanBaku::query()->orderBy('bahan_id')->get()
+        abort_if(
+            $dcId === null,
+            403,
+            'Akun DC belum memiliki penugasan.'
+        );
+
+        $items = BahanBaku::query()
+            ->orderBy('bahan_id')
+            ->get()
             ->mapWithKeys(fn ($b) => [(string) $b->bahan_id => [
                 'name' => $b->nama_bahan,
                 'category' => $b->kategori,
@@ -30,69 +39,133 @@ class OrderController extends Controller
                 'unit' => $b->satuan,
                 'min' => 0,
                 'price' => (float) $b->harga_beli,
-            ]])->all();
-
-        $storeList = Cabang::query()->orderBy('cabang_id')->get()
-            ->map(fn ($c) => ['id' => (string) $c->cabang_id, 'name' => $c->nama_cabang])
+            ]])
             ->all();
 
-        // Ambil stok DC sesuai akun DC yang sedang login.
-        // Nilai dikonversi dari satuan dasar menjadi jumlah kemasan.
-        $dcStock = StokDc::query()
-            ->where('dc_id', $request->user()->dc_id)
-            ->with('bahan')
+        $storeList = Cabang::query()
+            ->orderBy('cabang_id')
             ->get()
-            ->mapWithKeys(function ($stock) {
-                $isi = (float) ($stock->bahan?->isi_per_kemasan ?? 1);
-
-                return [
-                    (string) $stock->bahan_id => $this->toPacksFloor(
-                        (float) $stock->jumlah_stok,
-                        $isi
-                    ),
-                ];
-            })
+            ->map(fn ($c) => [
+                'id' => (string) $c->cabang_id,
+                'name' => $c->nama_cabang,
+            ])
             ->all();
 
+        // Stok DC menggunakan satuan dasar.
+        $dcStock = StokDc::query()
+            ->where('dc_id', $dcId)
+            ->pluck('jumlah_stok', 'bahan_id')
+            ->map(fn ($qty) => (float) $qty)
+            ->all();
+
+        // Menghitung total barang yang sudah dikirim
+        // berdasarkan setiap detail pesanan.
+        // Surat Jalan yang dibatalkan tidak ikut dihitung.
+        $sentByDetail = DetailSuratJalan::query()
+            ->selectRaw(
+                'detail_surat_jalan.detail_draft_id,
+                SUM(detail_surat_jalan.qty_dikirim) AS total_dikirim'
+            )
+            ->join(
+                'surat_jalan',
+                'surat_jalan.surat_jalan_id',
+                '=',
+                'detail_surat_jalan.surat_jalan_id'
+            )
+            ->whereNotNull('detail_surat_jalan.detail_draft_id')
+            ->where('surat_jalan.dc_id', $dcId)
+            ->where('surat_jalan.status', '!=', 'dibatalkan')
+            ->groupBy('detail_surat_jalan.detail_draft_id')
+            ->pluck('total_dikirim', 'detail_draft_id')
+            ->map(fn ($qty) => (float) $qty)
+            ->all();
+
+        // Riwayat Surat Jalan hanya dari DC yang sedang login.
         $sjByDraft = SuratJalan::query()
+            ->where('dc_id', $dcId)
             ->with('detail.detailDraft')
             ->orderBy('surat_jalan_id')
             ->get()
             ->groupBy(function ($sj) {
-                $first = $sj->detail->firstWhere('detail_draft_id', '!==', null);
+                $firstDetail = $sj->detail->first(
+                    fn ($detail) => $detail->detail_draft_id !== null
+                );
 
-                return $first?->detailDraft?->draft_id;
+                return $firstDetail?->detailDraft?->draft_id;
             })
-            ->filter(fn ($group, $key) => $key !== '' && $key !== null);
+            ->filter(fn ($group, $draftId) => $draftId !== null);
 
         $orders = DraftInstruksi::query()
-            ->whereIn('status', ['disetujui', 'diproses', 'selesai'])
-            ->with(['detail.bahan', 'detail.suratJalanDetail'])
+            ->whereIn('status', [
+                'disetujui',
+                'diproses',
+                'selesai',
+            ])
+            ->with(['detail.bahan'])
             ->orderByDesc('draft_id')
             ->get()
-            ->map(function ($d) use ($sjByDraft) {
-                $lines = $d->detail->map(fn ($dd) => [
-                    'item' => (string) $dd->bahan_id,
-                    'qty' => $this->toPacks((float) $dd->qty_diminta, (float) ($dd->bahan?->isi_per_kemasan ?? 1)),
-                ])->values()->all();
+            ->map(function ($draft) use (
+                $sjByDraft,
+                $sentByDetail,
+                $dcStock
+            ) {
+                $lines = $draft->detail->map(
+                    function ($detail) use ($sentByDetail, $dcStock) {
+                        $requested = (float) $detail->qty_diminta;
 
-                $sjList = $sjByDraft->get($d->draft_id, collect());
-                $sjNo = $sjList->isNotEmpty()
-                    ? sprintf('#SJ-%03d', $sjList->last()->surat_jalan_id)
-                    : null;
+                        $sent = (float) (
+                            $sentByDetail[$detail->detail_draft_id] ?? 0
+                        );
 
-                $received = $sjList->isNotEmpty() && $sjList->every(fn ($sj) => $sj->status === 'selesai');
+                        $remaining = max(0, $requested - $sent);
+
+                        return [
+                            'detail_draft_id' => (int) $detail->detail_draft_id,
+                            'item' => (string) $detail->bahan_id,
+                            'qty_requested_base' => $requested,
+                            'qty_sent_base' => $sent,
+                            'qty_remaining_base' => $remaining,
+                            'qty_to_ship_base' => min(
+                                $remaining,
+                                (float) ($dcStock[$detail->bahan_id] ?? 0)
+                            ),
+                            'stock_base' => (float) (
+                                $dcStock[$detail->bahan_id] ?? 0
+                            ),
+                        ];
+                    }
+                )->values()->all();
+
+                $sjList = $sjByDraft->get(
+                    $draft->draft_id,
+                    collect()
+                );
+
+                $latestSj = $sjList->last();
+
+                $status = match ($draft->status) {
+                    'disetujui' => 'baru',
+                    'diproses' => 'diproses',
+                    'selesai' => 'selesai',
+                    default => 'baru',
+                };
 
                 return [
-                    'id' => $d->draft_id,
-                    'no' => sprintf('#RS-%04d', $d->draft_id),
-                    'date' => ($d->tanggal_persetujuan ?? $d->dibuat_pada)?->format('d M Y') ?? '-',
-                    'store' => (string) $d->cabang_id,
-                    'status' => $received || $d->status === 'selesai' ? 'dikirim' : ($sjNo ? 'dikirim' : 'baru'),
-                    'shipment' => $sjNo,
+                    'id' => (int) $draft->draft_id,
+                    'no' => sprintf('#RS-%04d', $draft->draft_id),
+                    'date' => (
+                        $draft->tanggal_persetujuan ?? $draft->dibuat_pada
+                    )?->format('d M Y') ?? '-',
+                    'store' => (string) $draft->cabang_id,
+                    'status' => $status,
+                    'shipment' => $latestSj
+                        ? sprintf('#SJ-%03d', $latestSj->surat_jalan_id)
+                        : null,
                     'lines' => $lines,
                 ];
-            })->values()->all();
+            })
+            ->values()
+            ->all();
 
         return view('dc.pesanan.index', [
             'items' => $items,
@@ -100,23 +173,5 @@ class OrderController extends Controller
             'orders' => $orders,
             'dcStock' => $dcStock,
         ]);
-    }
-
-    private function toPacks(float $qtyBase, float $isi): int
-    {
-        if ($isi <= 0) {
-            return (int) $qtyBase;
-        }
-
-        return (int) ceil($qtyBase / $isi);
-    }
-
-    private function toPacksFloor(float $qtyBase, float $isi): int
-    {
-        if ($isi <= 0) {
-            return (int) $qtyBase;
-        }
-
-        return (int) floor($qtyBase / $isi);
     }
 }
