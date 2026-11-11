@@ -57,12 +57,12 @@ class PaymentWebhookController extends Controller
             ?? TransaksiPenjualan::query()->where('no_transaksi', $orderId)->first();
 
         if (! $transaksi) {
-            Log::error('Midtrans Webhook: Transaksi tidak ditemukan', ['order_id' => $orderId]);
+            Log::warning('Midtrans Webhook: Transaksi tidak ditemukan di database lokal (diabaikan)', ['order_id' => $orderId]);
 
             return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found',
-            ], 404);
+                'status' => 'ok',
+                'message' => 'Order not found locally, notification acknowledged',
+            ], 200);
         }
 
         // 3. Tangani perubahan status pembayaran
@@ -112,11 +112,21 @@ class PaymentWebhookController extends Controller
         $user = $request->user();
 
         $transaksi = TransaksiPenjualan::query()
+            ->with('pembayaran')
             ->when($user?->cabang_id, fn ($q, $cabangId) => $q->where('cabang_id', $cabangId))
             ->where('status', 'menunggu_pembayaran')
             ->findOrFail($transaksiId);
 
-        $result = $this->settlement->settle($transaksi, 'sim-qris-' . time());
+        $existingGatewayTxId = (string) ($transaksi->pembayaran?->gateway_transaction_id ?? '');
+
+        if ($existingGatewayTxId !== '') {
+            $this->midtrans->simulateSandboxQris($existingGatewayTxId);
+        }
+
+        $result = $this->settlement->settle(
+            $transaksi,
+            $existingGatewayTxId !== '' ? null : 'sim-qris-' . time()
+        );
 
         return response()->json([
             'status' => 'berhasil',
