@@ -650,13 +650,16 @@
                     </div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; gap:8px;">
+                            <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQrUrl" data-url="${json.qr_url}">
+                                🔗 Salin URL QR Code
+                            </button>
                             <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQr" data-qr="${json.qr_string}">
                                 📋 Salin String QR
                             </button>
-                            <a href="https://simulator.sandbox.midtrans.com/openapi/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
-                                🌐 Simulator Midtrans ↗
-                            </a>
                         </div>
+                        <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="width:100%; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
+                            🌐 Buka Simulator Midtrans ↗
+                        </a>
                         <button type="button" class="primary-button" style="width:100%; padding:8px; font-size:12px; background:#0284c7;" id="btnSimulatePay" data-trx-id="${json.transaksi_id}">
                             ⚡ Bayar Sekarang (Simulasi Instan)
                         </button>
@@ -812,6 +815,18 @@
 
         // Confirm Pay
         if (t.id === 'btnConfirmPay') return processPay();
+
+        // Salin URL QR Code
+        const copyQrUrlBtn = t.closest('#btnCopyQrUrl');
+        if (copyQrUrlBtn) {
+            const qrUrl = copyQrUrlBtn.dataset.url || '';
+            navigator.clipboard.writeText(qrUrl).then(() => {
+                flash('URL QR Code berhasil disalin ke clipboard!');
+            }).catch(() => {
+                prompt('Salin URL QR berikut:', qrUrl);
+            });
+            return;
+        }
 
         // Salin String QR
         const copyQrBtn = t.closest('#btnCopyQr');
