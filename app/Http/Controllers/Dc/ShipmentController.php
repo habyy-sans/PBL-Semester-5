@@ -61,7 +61,9 @@ class ShipmentController extends Controller
         $shipments = SuratJalan::query()
             ->where('dc_id', $dcId)
             ->with([
+                'dc',
                 'cabang',
+                'diterbitkanOleh',
                 'detail.bahan',
                 'detail.detailDraft',
                 'konfirmasi',
@@ -392,6 +394,184 @@ class ShipmentController extends Controller
     }
 
     /**
+     * Membatalkan Surat Jalan yang belum diberangkatkan.
+     *
+     * Stok DC dikembalikan satu kali dan dicatat sebagai
+     * pembatalan_pengiriman_dc.
+     */
+    public function batalkan(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'alasan' => ['required', 'string', 'max:500'],
+        ]);
+
+        $user = $request->user();
+
+        abort_if(
+            $user->dc_id === null,
+            403,
+            'Akun DC belum memiliki penugasan.'
+        );
+
+        $result = DB::transaction(function () use ($id, $user, $data) {
+
+            // Kunci Surat Jalan agar tidak bisa dibatalkan dua kali.
+            $sj = SuratJalan::query()
+                ->where('surat_jalan_id', $id)
+                ->where('dc_id', $user->dc_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($sj->status !== 'disiapkan') {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya Surat Jalan berstatus disiapkan yang dapat dibatalkan.',
+                ]);
+            }
+
+            // Ambil dan kunci seluruh detail Surat Jalan.
+            $details = DetailSuratJalan::query()
+                ->where('surat_jalan_id', $sj->surat_jalan_id)
+                ->orderBy('bahan_id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($details->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'surat_jalan' => 'Surat Jalan tidak memiliki detail barang.',
+                ]);
+            }
+
+            // Pastikan Surat Jalan belum pernah dikonfirmasi IC.
+            if ($sj->konfirmasi()->exists()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Surat Jalan yang sudah dikonfirmasi IC tidak dapat dibatalkan.',
+                ]);
+            }
+
+            // Ambil draft asal dari detail Surat Jalan.
+            $draftIds = $details
+                ->map(fn ($detail) => $detail->detailDraft?->draft_id)
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($draftIds->count() !== 1) {
+                throw ValidationException::withMessages([
+                    'surat_jalan' => 'Draft asal Surat Jalan tidak valid.',
+                ]);
+            }
+
+            $draft = DraftInstruksi::query()
+                ->where('draft_id', $draftIds->first())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Gabungkan jumlah berdasarkan bahan agar stok
+            // tidak tertimpa jika bahan muncul pada beberapa detail.
+            $quantities = $details
+                ->groupBy('bahan_id')
+                ->map(fn ($lines) => $lines->sum(
+                    fn ($line) => (float) $line->qty_dikirim
+                ));
+
+            foreach ($quantities as $bahanId => $quantity) {
+
+                $stock = StokDc::query()
+                    ->where('dc_id', $user->dc_id)
+                    ->where('bahan_id', $bahanId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$stock) {
+                    throw ValidationException::withMessages([
+                        'stock' => "Data stok DC untuk bahan ID {$bahanId} tidak ditemukan.",
+                    ]);
+                }
+
+                // Kembalikan stok DC.
+                $stock->jumlah_stok =
+                    (float) $stock->jumlah_stok + $quantity;
+
+                $stock->save();
+
+                // Catat mutasi kompensasi.
+                StockMovement::query()->create([
+                    'bahan_id' => $bahanId,
+                    'cabang_id' => null,
+                    'dc_id' => $user->dc_id,
+                    'jenis_mutasi' => 'pembatalan_pengiriman_dc',
+                    'jumlah' => $quantity,
+                    'referensi_id' => $sj->surat_jalan_id,
+                    'tanggal' => now(),
+                    'keterangan' => 'Pembatalan Surat Jalan #' .
+                        sprintf('%03d', $sj->surat_jalan_id) .
+                        '. Alasan: ' . $data['alasan'],
+                ]);
+            }
+
+            // Ubah status Surat Jalan.
+            $sj->status = 'dibatalkan';
+            $sj->save();
+
+            // Hitung ulang pemenuhan draft setelah Surat Jalan dibatalkan.
+            $draftDetailIds = $draft->detail()
+                ->pluck('detail_draft_id');
+
+            $sentTotals = DetailSuratJalan::query()
+                ->whereIn('detail_draft_id', $draftDetailIds)
+                ->whereHas('suratJalan', function ($query) use ($user) {
+                    $query->where('dc_id', $user->dc_id)
+                        ->where('status', '!=', 'dibatalkan');
+                })
+                ->select('detail_draft_id')
+                ->selectRaw('SUM(qty_dikirim) AS total_dikirim')
+                ->groupBy('detail_draft_id')
+                ->pluck('total_dikirim', 'detail_draft_id');
+
+            $draftDetails = $draft->detail()->get();
+
+            $anySent = false;
+            $allFulfilled = true;
+
+            foreach ($draftDetails as $draftDetail) {
+                $sent = (float) ($sentTotals[$draftDetail->detail_draft_id] ?? 0);
+                $ordered = (float) $draftDetail->qty_diminta;
+
+                if ($sent > 0) {
+                    $anySent = true;
+                }
+
+                if ($sent < $ordered) {
+                    $allFulfilled = false;
+                }
+            }
+
+            if (!$anySent) {
+                $draft->status = 'disetujui';
+            } elseif ($allFulfilled) {
+                $draft->status = 'selesai';
+            } else {
+                $draft->status = 'diproses';
+            }
+
+            $draft->save();
+
+            return [
+                'surat_jalan_id' => $sj->surat_jalan_id,
+                'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
+                'status' => 'dibatalkan',
+                'draft_status' => $draft->status,
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Surat Jalan berhasil dibatalkan dan stok DC telah dikembalikan.',
+            ...$result,
+        ]);
+    }
+
+
+    /**
      * Mengambil catatan per bahan dari konfirmasi penerimaan.
      *
      * Format kondisi:
@@ -447,19 +627,36 @@ class ShipmentController extends Controller
 
         return [
             'id' => $sj->surat_jalan_id,
-            'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
+            'no' => sprintf('SJ-%03d', $sj->surat_jalan_id),
+
             'date' => $sj->tanggal_kirim
                 ? $sj->tanggal_kirim
                     ->timezone('Asia/Jakarta')
-                    ->format('d M Y, H:i:s') . ' WIB'
+                    ->format('d F Y, H:i') . ' WIB'
                 : '-',
+
             'store' => (string) $sj->cabang_id,
             'order' => $draftId
-                ? sprintf('#RS-%04d', $draftId)
+                ? sprintf('RS-%04d', $draftId)
                 : '-',
+
             'origin' => 'DC',
             'status' => $sj->computed_status,
+
+            'company' => 'KOPI STUDIO 24',
+
+            'dc_name' => $sj->dc?->nama_dc ?? 'Distribution Center',
+            'dc_address' => $sj->dc?->alamat ?? '-',
+            'dc_phone' => $sj->dc?->telepon ?? '-',
+
+            'branch_name' => $sj->cabang?->nama_cabang ?? '-',
+            'branch_address' => $sj->cabang?->alamat ?? '-',
+            'branch_phone' => $sj->cabang?->telepon ?? '-',
+
+            'prepared_by' => $sj->diterbitkanOleh?->nama_lengkap ?? '-',
+
             'catatan' => $sj->catatan,
+
             'items' => $items,
         ];
     }
