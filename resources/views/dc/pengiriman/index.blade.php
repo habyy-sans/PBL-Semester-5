@@ -80,7 +80,6 @@
                 <select class="select" aria-label="Filter status" x-model="status">
                     <option value="">Semua Status</option>
                     <option value="disiapkan">Disiapkan</option>
-                    <option value="dikirim">Dalam Pengiriman</option>
                     <option value="menunggu">Menunggu Pengecekan</option>
                     <option value="diterima">Diterima</option>
                     <option value="dibatalkan">Dibatalkan</option>
@@ -122,14 +121,34 @@
                                     ></span>
                                 </td>
                                 <td>
-                                    <div style="display: flex; gap: 6px;">
-                                        <button type="button" class="outline-button btn-sm" @click="open(sj)">Lihat</button>
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button
+                                            type="button"
+                                            class="outline-button btn-sm"
+                                            @click="open(sj)"
+                                        >
+                                            Lihat
+                                        </button>
+
                                         <button
                                             type="button"
                                             class="primary-button btn-sm"
                                             x-show="sj.status === 'disiapkan'"
+                                            :disabled="sending || cancellingId === sj.id"
                                             @click="dispatchShipment(sj)"
-                                        >Kirim</button>
+                                        >
+                                            Kirim
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="outline-button btn-sm"
+                                            style="color: #dc2626; border-color: #dc2626;"
+                                            x-show="sj.status === 'disiapkan'"
+                                            :disabled="sending || cancellingId === sj.id"
+                                            @click="cancelShipment(sj)"
+                                            x-text="cancellingId === sj.id ? 'Membatalkan...' : 'Batalkan'"
+                                        ></button>
                                     </div>
                                 </td>
                             </tr>
@@ -163,107 +182,201 @@
                     <button type="button" class="outline-button" @click="back()">← Kembali ke Daftar</button>
                 </div>
 
-                <div class="page-card section-gap">
+                <div class="page-card section-gap sj-document">
 
-                    <div class="card-header">
-                        <div>
-                            <h3>Surat Jalan Digital</h3>
-                            <p x-text="current.no + ' · ' + (labels[current.status] ? labels[current.status].text : current.status)"></p>
+                    <!-- HEADER DOKUMEN -->
+                    <div class="sj-header">
+                        <div class="sj-company">
+                            <div class="sj-company-mark">KS</div>
+                            <div>
+                                <h2>KOPSYNC</h2>
+                                <p>SISTEM INFORMASI DISTRIBUSI DAN PERSEDIAAN</p>
+                            </div>
                         </div>
 
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <button
-                                    type="button"
-                                    class="primary-button btn-sm no-print"
-                                    x-show="current.status === 'disiapkan'"
-                                    :disabled="sending"
-                                    @click="dispatchShipment(current)"
-                                    x-text="sending ? 'Memproses...' : 'Kirim Sekarang'"
-                                ></button>
-
-                                <button
-                                    type="button"
-                                    class="primary-button btn-sm no-print"
-                                    @click="window.print()"
-                                >
-                                    Cetak
-                                </button>
-                            </div>
+                        <div class="sj-title">
+                            <h1>SURAT JALAN</h1>
+                            <strong x-text="current.no"></strong>
                         </div>
                     </div>
 
-                    <!-- INFO SURAT JALAN -->
-                    <div class="report-grid">
+                    <div class="sj-divider"></div>
 
-                        <div class="report-box">
-                            <span>Tanggal Kirim</span>
+                    <!-- TOMBOL AKSI -->
+                    <div class="sj-actions no-print">
+                        <button
+                            type="button"
+                            class="outline-button"
+                            @click="back()"
+                        >
+                            ← Kembali ke Daftar
+                        </button>
+
+                        <div class="sj-action-right">
+                            <button
+                                type="button"
+                                class="primary-button btn-sm"
+                                x-show="current.status === 'disiapkan'"
+                                :disabled="sending"
+                                @click="dispatchShipment(current)"
+                                x-text="sending ? 'Memproses...' : 'Kirim Sekarang'"
+                            ></button>
+
+                            <button
+                                type="button"
+                                class="outline-button btn-sm"
+                                style="color: #dc2626; border-color: #dc2626;"
+                                x-show="current.status === 'disiapkan'"
+                                :disabled="sending || cancellingId === current.id"
+                                @click="cancelShipment(current)"
+                                x-text="cancellingId === current.id ? 'Membatalkan...' : 'Batalkan Surat Jalan'"
+                            ></button>
+
+                            <button
+                                type="button"
+                                class="primary-button btn-sm"
+                                @click="window.print()"
+                            >
+                                <icon name="printer" /> Cetak / Simpan PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- IDENTITAS PENGIRIM DAN PENERIMA -->
+                    <div class="sj-parties">
+
+                        <div class="sj-party">
+                            <span class="sj-label">PENGIRIM</span>
+                            <h3 x-text="current.dc_name"></h3>
+                            <p x-text="current.dc_address"></p>
+                            <p>Telepon: <span x-text="current.dc_phone"></span></p>
+                        </div>
+
+                        <div class="sj-party">
+                            <span class="sj-label">PENERIMA</span>
+                            <h3 x-text="current.branch_name"></h3>
+                            <p x-text="current.branch_address"></p>
+                            <p>Telepon: <span x-text="current.branch_phone"></span></p>
+                        </div>
+
+                    </div>
+
+                    <!-- INFORMASI DOKUMEN -->
+                    <div class="sj-meta">
+                        <div>
+                            <span>Nomor Surat Jalan</span>
+                            <strong x-text="current.no"></strong>
+                        </div>
+
+                        <div>
+                            <span>Tanggal Pengiriman</span>
                             <strong x-text="current.date"></strong>
                         </div>
 
-                        <div class="report-box">
-                            <span>Asal</span>
-                            <strong x-text="current.origin"></strong>
-                        </div>
-
-                        <div class="report-box">
-                            <span>Tujuan</span>
-                            <strong x-text="storeName(current.store)"></strong>
-                        </div>
-
-                        <div class="report-box">
-                            <span>No. Pesanan</span>
+                        <div>
+                            <span>Nomor Pesanan / Reorder</span>
                             <strong x-text="current.order"></strong>
                         </div>
 
+                        <div>
+                            <span>Status Pengiriman</span>
+                            <strong
+                                x-text="labels[current.status]
+                                    ? labels[current.status].text
+                                    : current.status"
+                            ></strong>
+                        </div>
                     </div>
 
-                    <!-- DAFTAR BARANG -->
-                    <div class="table-wrapper section-gap">
-                        <table>
+                    <!-- DETAIL BARANG -->
+                    <div class="sj-section">
+                        <h3>Rincian Barang yang Dikirim</h3>
 
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>Barang</th>
-                                    <th>Dikirim (sesuai SJ)</th>
-                                    <th x-show="received">Diterima</th>
-                                    <th x-show="received">Selisih</th>
-                                    <th x-show="received">Catatan</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                <template x-for="(line, index) in current.items" :key="line.item">
+                        <div class="table-wrapper">
+                            <table class="sj-table">
+                                <thead>
                                     <tr>
-                                        <td x-text="index + 1"></td>
-                                        <td x-text="itemOf(line).name"></td>
-                                        <td x-text="sentText(line)"></td>
-                                        <td x-show="received" x-text="receivedText(line)"></td>
-                                        <td x-show="received">
-                                            <span
-                                                :class="{
-                                                'danger-text': Math.abs(Number(line.received) - Number(line.sent)) > 0.000001}"
-                                                x-text="diffText(line)"
-                                            ></span>
-                                        </td>
-                                        <td x-show="received" x-text="line.note || '-'"></td>
+                                        <th>No.</th>
+                                        <th>Nama Bahan Baku</th>
+                                        <th>Jumlah Dikirim</th>
+                                        <th x-show="received">Jumlah Diterima</th>
+                                        <th x-show="received">Selisih</th>
+                                        <th x-show="received">Keterangan</th>
                                     </tr>
-                                </template>
+                                </thead>
 
-                            </tbody>
+                                <tbody>
+                                    <template
+                                        x-for="(line, index) in current.items"
+                                        :key="line.item + '-' + index"
+                                    >
+                                        <tr>
+                                            <td x-text="index + 1"></td>
+                                            <td x-text="itemOf(line).name"></td>
+                                            <td x-text="sentText(line)"></td>
 
-                        </table>
+                                            <td
+                                                x-show="received"
+                                                x-text="receivedText(line)"
+                                            ></td>
+
+                                            <td x-show="received">
+                                                <span
+                                                    :class="{
+                                                        'danger-text':
+                                                            Math.abs(
+                                                                Number(line.received) -
+                                                                Number(line.sent)
+                                                            ) > 0.000001
+                                                    }"
+                                                    x-text="diffText(line)"
+                                                ></span>
+                                            </td>
+
+                                            <td x-show="received" x-text="line.note || '-'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- TANDA TANGAN (untuk cetak) -->
-                    <div class="doc-sign">
-                        <div>Disiapkan oleh DC</div>
-                        <div>Diterima oleh IC Store</div>
+                    <!-- CATATAN -->
+                    <div class="sj-notes">
+                        <strong>Catatan Pengiriman:</strong>
+                        <p x-text="current.catatan || 'Tidak ada catatan.'"></p>
+                    </div>
+
+                    <!-- TANDA TANGAN -->
+                    <div class="sj-signature">
+                        <div>
+                            <p>Disiapkan dan dikirim oleh,</p>
+                            <strong>PIHAK DISTRIBUTION CENTER</strong>
+                            <div class="sj-sign-space"></div>
+                            <strong x-text="current.prepared_by"></strong>
+                            <span>Petugas DC</span>
+                        </div>
+
+                        <div>
+                            <p>Diterima dan diperiksa oleh,</p>
+                            <strong>KEPALA SHIFT / INVENTORY CONTROL</strong>
+                            <div class="sj-sign-space"></div>
+                            <strong>........................................</strong>
+                            <span>Petugas IC Cabang</span>
+                        </div>
+                    </div>
+
+                    <div class="sj-footer">
+                        <p>
+                            Dokumen ini diterbitkan secara digital melalui sistem KopSync.
+                        </p>
+                        <p>
+                            Surat Jalan digunakan sebagai bukti pengiriman barang dari
+                            Distribution Center ke cabang tujuan.
+                        </p>
                     </div>
 
                 </div>
-
             </div>
 
         </template>
@@ -297,6 +410,7 @@
             view: 'list',          // 'list' | 'detail'
             current: null,
             sending: false,
+            cancellingId: null,
 
             search: '',
             store: '',
@@ -471,6 +585,100 @@
                 }
             },
 
+
+            async cancelShipment(sj) {
+                if (
+                    !sj ||
+                    sj.status !== 'disiapkan' ||
+                    this.cancellingId !== null ||
+                    this.sending
+                ) {
+                    return;
+                }
+
+                const confirmed = confirm(
+                    'Apakah kamu yakin ingin membatalkan Surat Jalan ' +
+                    sj.no +
+                    '?\n\nStok DC yang sudah dikurangi akan dikembalikan.'
+                );
+
+                if (!confirmed) return;
+
+                const alasan = prompt(
+                    'Masukkan alasan pembatalan Surat Jalan ' + sj.no + ':'
+                );
+
+                if (alasan === null) return;
+
+                if (!alasan.trim()) {
+                    alert('Alasan pembatalan wajib diisi.');
+                    return;
+                }
+
+                this.cancellingId = sj.id;
+
+                try {
+                    const token =
+                        document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+                    const response = await fetch(
+                        `/dc/shipment/${sj.id}/batalkan`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': token,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                alasan: alasan.trim(),
+                            }),
+                        }
+                    );
+
+                    const result = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        const validationMessage = result.errors
+                            ? Object.values(result.errors).flat().join('\n')
+                            : '';
+
+                        alert(
+                            validationMessage ||
+                            result.message ||
+                            'Gagal membatalkan Surat Jalan.'
+                        );
+
+                        return;
+                    }
+
+                    // Perbarui status pada daftar.
+                    const target = this.shipments.find(
+                        item => item.id === sj.id
+                    );
+
+                    if (target) {
+                        target.status = 'dibatalkan';
+                    }
+
+                    // Perbarui status pada objek yang sedang dibuka.
+                    if (this.current && this.current.id === sj.id) {
+                        this.current.status = 'dibatalkan';
+                    }
+
+                    alert(
+                        result.message ||
+                        'Surat Jalan berhasil dibatalkan dan stok DC telah dikembalikan.'
+                    );
+
+                } catch (error) {
+                    alert(
+                        'Gagal membatalkan Surat Jalan. Periksa koneksi internet.'
+                    );
+                } finally {
+                    this.cancellingId = null;
+                }
+            },
 
             back() {
 

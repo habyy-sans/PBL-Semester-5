@@ -145,7 +145,9 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::get('/shipment', [ShipmentController::class, 'index'])->name('shipment');
     Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
-
+    Route::post('/shipment/{id}/batalkan', [ShipmentController::class, 'batalkan'])
+    ->name('shipment.batalkan');
+    
     // Stok Gudang DC (Persediaan bahan baku & penambahan stok fisik masuk)
     Route::get('/stok-dc', [DcStokDcController::class, 'index'])->name('stok-dc.index');
     Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])->name('stok-dc.add-stock');

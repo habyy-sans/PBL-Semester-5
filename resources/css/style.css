@@ -3399,3 +3399,295 @@ td {
         width: 100%;
     }
 }
+
+
+/* =========================================================
+   SURAT JALAN FORMAL - KOPSYNC
+========================================================= */
+
+.sj-document {
+    background: #fff !important;
+    color: #252525 !important;
+    padding: 36px !important;
+    border: 1px solid #dedede;
+    border-radius: 8px;
+}
+
+.sj-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+.sj-company {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.sj-company-mark {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #5c3928;
+    color: #fff;
+    font-weight: 700;
+    font-size: 17px;
+    border-radius: 8px;
+}
+
+.sj-company h2 {
+    margin: 0;
+    color: #5c3928;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.sj-company p {
+    margin: 5px 0 0;
+    font-size: 9px;
+    letter-spacing: .7px;
+    color: #777;
+}
+
+.sj-title {
+    text-align: right;
+}
+
+.sj-title h1 {
+    margin: 0;
+    color: #5c3928;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.sj-title strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.sj-divider {
+    height: 3px;
+    background: #5c3928;
+    margin: 22px 0;
+}
+
+.sj-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.sj-action-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sj-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.sj-party {
+    padding: 17px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.sj-label {
+    display: block;
+    color: #8b674f;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.sj-party h3 {
+    margin: 0 0 8px;
+    color: #3d3029;
+    font-size: 15px;
+}
+
+.sj-party p {
+    margin: 4px 0;
+    color: #555;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.sj-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border: 1px solid #ddd;
+    margin-bottom: 28px;
+}
+
+.sj-meta div {
+    padding: 13px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.sj-meta span {
+    display: block;
+    color: #777;
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+
+.sj-meta strong {
+    color: #333;
+    font-size: 12px;
+}
+
+.sj-section h3 {
+    color: #5c3928;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.sj-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sj-table th {
+    background: #5c3928 !important;
+    color: #fff !important;
+    padding: 12px 10px;
+    font-size: 10px;
+    text-align: left;
+    border: 1px solid #5c3928;
+}
+
+.sj-table td {
+    background: #fff !important;
+    color: #333 !important;
+    padding: 12px 10px;
+    font-size: 11px;
+    border: 1px solid #ddd;
+}
+
+.sj-notes {
+    margin-top: 22px;
+    padding: 14px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    font-size: 11px;
+}
+
+.sj-notes p {
+    margin: 7px 0 0;
+    color: #555;
+    white-space: pre-wrap;
+}
+
+.sj-signature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-top: 48px;
+    text-align: center;
+}
+
+.sj-signature p {
+    font-size: 11px;
+    margin-bottom: 7px;
+}
+
+.sj-signature strong {
+    display: block;
+    font-size: 10px;
+}
+
+.sj-signature span {
+    display: block;
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+.sj-sign-space {
+    height: 75px;
+}
+
+.sj-footer {
+    border-top: 1px solid #ddd;
+    margin-top: 35px;
+    padding-top: 12px;
+    text-align: center;
+    color: #888;
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+/* PRINT A4 */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+
+    body {
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .sidebar,
+    .top-header,
+    .no-print,
+    .flash-success {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .page-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .sj-document {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .sj-header,
+    .sj-parties,
+    .sj-meta,
+    .sj-signature,
+    .sj-notes {
+        break-inside: avoid;
+    }
+
+    .sj-table {
+        page-break-inside: auto;
+    }
+
+    .sj-table tr {
+        break-inside: avoid;
+    }
+
+    .sj-table thead {
+        display: table-header-group;
+    }
+
+    .sj-footer {
+        break-inside: avoid;
+    }
+}

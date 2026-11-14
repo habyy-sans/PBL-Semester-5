@@ -80,7 +80,7 @@ class SuratJalan extends Model
             'dikirim' => 'menunggu',
             'selesai' => 'diterima',
             'dibatalkan' => 'dibatalkan',
-            default => 'disiapkan',
+            default => $this->status,
         };
     }
 }
