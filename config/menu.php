@@ -90,6 +90,7 @@ return [
             ],
             'MONITORING' => [
                 ['route' => 'dc.stock',         'icon' => '▤', 'label' => 'Monitoring Stok Cabang'],
+                ['route' => 'dc.mutation', 'icon' => '▥', 'label' => 'Riwayat Mutasi Stok'],
             ],
         ],
 
