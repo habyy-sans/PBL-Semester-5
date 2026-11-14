@@ -14,8 +14,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VarianMenuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
+use App\Http\Controllers\Dc\MutationController as DcMutationController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
+use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Dc\StokDcController as DcStokDcController;
 use App\Http\Controllers\Ic\MutationController;
 use App\Http\Controllers\Ic\ReceivingController;
@@ -147,10 +149,35 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
     Route::post('/shipment/{id}/batalkan', [ShipmentController::class, 'batalkan'])
     ->name('shipment.batalkan');
-    
-    // Stok Gudang DC (Persediaan bahan baku & penambahan stok fisik masuk)
-    Route::get('/stok-dc', [DcStokDcController::class, 'index'])->name('stok-dc.index');
-    Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])->name('stok-dc.add-stock');
+
+    // Stok Gudang DC dan Kelola Bahan Baku
+    Route::get('/stok-dc', [DcStokDcController::class, 'index'])
+        ->name('stok-dc.index');
+
+    // CRUD Bahan Baku DC
+    Route::post('/bahan-baku', [DcStokDcController::class, 'store'])
+        ->name('bahan-baku.store');
+
+    Route::put('/bahan-baku/{bahanBaku}', [DcStokDcController::class, 'update'])
+        ->name('bahan-baku.update');
+
+    // Tambah stok fisik DC
+    Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])
+        ->name('stok-dc.add-stock');
+
+    // Backward-compatible URL lama
+    Route::get('/bahan-baku', fn () => redirect()->route('dc.stok-dc.index'))
+        ->name('bahan-baku.index');
+
+    // Riwayat Mutasi Stok DC
+    Route::get('/mutation', [DcMutationController::class, 'index'])
+        ->name('mutation');
+
+    Route::post('/mutation/filter', [DcMutationController::class, 'filter'])
+        ->name('mutation.filter');
+
+    Route::post('/mutation/reset', [DcMutationController::class, 'resetFilter'])
+        ->name('mutation.reset');
 
     // Backward-compatible redirect jika membuka URL lama /dc/bahan-baku
     Route::get('/bahan-baku', fn () => redirect()->route('dc.stok-dc.index'))->name('bahan-baku.index');

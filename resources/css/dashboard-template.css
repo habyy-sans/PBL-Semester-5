@@ -919,3 +919,297 @@
     white-space: nowrap;
     min-width: 220px;
 }
+
+
+/* =========================================================
+   DC - RIWAYAT MUTASI STOK
+   Mengikuti desain Manager Branch Report
+========================================================= */
+
+.dc-mutation-page {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dc-mutation-filter {
+    padding: 22px 24px;
+    border-radius: 18px;
+}
+
+.dc-mutation-filter-heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 22px;
+}
+
+.dc-mutation-heading-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: #fff8ed;
+    font-size: 15px;
+}
+
+.dc-mutation-filter-heading h3,
+.dc-mutation-table-heading h3 {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dc-mutation-filter-heading p,
+.dc-mutation-table-heading p {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.dc-mutation-filter-heading small {
+    display: block;
+    margin-top: 6px;
+    color: #a28772;
+    font-size: 9px;
+}
+
+.dc-mutation-filter-form {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr;
+    align-items: end;
+    gap: 12px;
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: #f8f4ed;
+}
+
+.dc-mutation-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.dc-mutation-field label {
+    color: #927660;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.dc-mutation-field input,
+.dc-mutation-field select {
+    width: 100%;
+    height: 38px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: white;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 10px;
+    outline: none;
+}
+
+.dc-mutation-field input:focus,
+.dc-mutation-field select:focus {
+    border-color: var(--brown);
+}
+
+.dc-mutation-filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 3px;
+}
+
+.dc-mutation-filter-actions .primary-button,
+.dc-mutation-filter-actions .outline-button {
+    min-height: 36px;
+    padding: 8px 15px;
+    font-size: 10px;
+    text-decoration: none;
+}
+
+.dc-mutation-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+}
+
+.dc-mutation-summary-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: var(--white);
+}
+
+.dc-mutation-summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dc-mutation-summary-top span {
+    font-size: 15px;
+}
+
+.dc-mutation-summary-top small {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.dc-mutation-summary-card > strong {
+    display: block;
+    margin-top: 9px;
+    color: var(--brown-dark);
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.dc-mutation-summary-card > p {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.dc-mutation-table-card {
+    padding: 20px;
+    border-radius: 18px;
+}
+
+.dc-mutation-table-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.dc-mutation-total {
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fbf6ed;
+    color: var(--brown);
+    font-size: 9px;
+}
+
+.dc-mutation-table {
+    min-width: 850px;
+}
+
+.dc-mutation-table th {
+    padding: 13px 12px;
+    font-size: 9px;
+}
+
+.dc-mutation-table td {
+    padding: 13px 12px;
+    font-size: 9px;
+}
+
+.dc-mutation-secondary {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 400;
+}
+
+.dc-mutation-reference {
+    color: var(--brown);
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.dc-mutation-description {
+    display: block;
+    max-width: 220px;
+    color: #806b59;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.dc-mutation-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 45px 15px;
+    text-align: center;
+}
+
+.dc-mutation-empty > span {
+    font-size: 24px;
+}
+
+.dc-mutation-empty strong {
+    color: var(--text);
+    font-size: 11px;
+}
+
+.dc-mutation-empty p {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.dc-mutation-pagination {
+    display: flex;
+    justify-content: center;
+    padding-top: 16px;
+    border-top: 1px solid #eee1d0;
+    margin-top: 14px;
+}
+
+@media (max-width: 1100px) {
+    .dc-mutation-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dc-mutation-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .dc-mutation-filter,
+    .dc-mutation-table-card {
+        padding: 14px;
+    }
+
+    .dc-mutation-filter-form {
+        grid-template-columns: 1fr;
+        padding: 13px;
+    }
+
+    .dc-mutation-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .dc-mutation-summary-card {
+        padding: 12px;
+    }
+
+    .dc-mutation-summary-card > strong {
+        font-size: 14px;
+    }
+
+    .dc-mutation-filter-actions {
+        flex-direction: column;
+    }
+
+    .dc-mutation-filter-actions > * {
+        width: 100%;
+        text-align: center;
+    }
+}

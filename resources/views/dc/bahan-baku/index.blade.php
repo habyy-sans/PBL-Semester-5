@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Stok Gudang DC')
@@ -32,10 +31,11 @@
         --bb-brown: #934510;
         --bb-brown-dark: #71350d;
         --bb-border: #ead8c3;
+
         width: 100%;
         max-width: none;
         min-width: 0;
-        padding: 12px 16px 32px;
+        padding: 0 0 32px;
         color: #3f2b20;
     }
 
@@ -44,6 +44,42 @@
         box-sizing: border-box;
     }
 
+    /* Header halaman mengikuti dashboard Manager */
+.bahan-baku-page .dc-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid #eadfd3;
+}
+
+.bahan-baku-page .dc-page-header .dash-card-title {
+    color: #3f2b20;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.bahan-baku-page .dc-page-header .report-section-desc {
+    color: #8a7462;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+    .bahan-baku-page .dc-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .bahan-baku-page .dc-page-header button {
+        width: 100%;
+    }
+}
+
     /* =========================================================
        SUMMARY CARDS — ELEGANT REFINEMENT ONLY
        Tidak menyentuh container daftar maupun modal/form.
@@ -51,8 +87,8 @@
     .bahan-baku-page .bb-summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-        margin: 22px 0 28px;
+        gap: 20px;
+        margin: 0 0 24px;
         align-items: stretch;
     }
 
@@ -60,9 +96,9 @@
         position: relative;
         isolation: isolate;
         min-width: 0;
-        min-height: 164px;
-        padding: 25px 27px;
-        overflow: hidden;
+        min-height: 150px;
+        padding: 22px 24px;
+        border-radius: 16px;
         border: 1px solid rgba(234, 216, 195, .9);
         border-radius: 20px;
         background: linear-gradient(145deg, #ffffff 0%, #fffdf9 100%);
@@ -199,20 +235,20 @@
        ========================================================= */
 
     .bahan-baku-page .bb-list-card {
-        width: 100%;
-        max-width: none;
-        min-width: 0;
-        margin: 28px 0 0;
-        overflow: hidden;
-        border: 1px solid #ead8c3;
-        border-radius: 18px;
-        background: #fffdf9;
-        box-shadow: 0 8px 26px rgba(74, 44, 27, .055);
-    }
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid #ead8c3;
+    border-radius: 16px;
+    background: #fffdf9;
+    box-shadow: 0 4px 16px rgba(74, 44, 27, .045);
+}
 
     /* Header daftar + tombol reset */
     .bahan-baku-page .bb-list-card > div:first-child {
-        padding: 24px 26px 22px !important;
+        padding: 20px 24px !important;
         border-bottom: 1px solid #f0e5d8 !important;
         background: linear-gradient(180deg, #fffdf9 0%, #ffffff 100%);
     }
@@ -322,7 +358,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 14px;
-        padding: 16px 26px !important;
+        padding: 14px 24px !important;
         border-bottom: 1px solid #eee2d5 !important;
         background: #fcf8f2;
     }
@@ -445,7 +481,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 18px 26px !important;
+        padding: 16px 24px !important;
         border-top: 1px solid #eee2d5 !important;
         background: #fffdf9;
     }
@@ -978,18 +1014,32 @@
             </ul>
         </div>
     @endif
-
+    
     {{-- Header halaman --}}
-    <div class="flex flex-col gap-5 pb-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <p class="text-sm font-medium text-amber-800">OPERASIONAL GUDANG DC</p>
-            <h2 class="mt-1 text-2xl font-bold text-stone-800">
-                Stok Gudang DC
-            </h2>
-            <p class="mt-1 text-sm text-stone-500">
-                Pantau persediaan bahan baku fisik dan catat penambahan stok masuk (inbound restock) dari supplier.
-            </p>
+    <div class="dash-card-header dc-page-header">
+        <div class="dash-card-title-group">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">
+                    Operasional Gudang DC
+                </p>
+                <h2 class="dash-card-title mt-1">
+                    Stok Gudang DC
+                </h2>
+                <p class="report-section-desc mt-1">
+                    Pantau persediaan bahan baku, kelola informasi bahan,
+                    dan catat penambahan stok gudang DC.
+                </p>
+            </div>
         </div>
+
+        <button
+            type="button"
+            @click="openCreate()"
+            class="bb-primary-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition"
+        >
+            <span class="text-lg">+</span>
+            Tambah Bahan Baku
+        </button>
     </div>
 
     {{-- Kartu ringkasan --}}
@@ -1209,6 +1259,14 @@
                                 <div class="flex items-center gap-2">
                                     <button
                                         type="button"
+                                        @click="openEdit(bahan)"
+                                        title="Edit informasi bahan baku"
+                                        class="bb-action-button bb-action-edit"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        type="button"
                                         @click="openAddStock(bahan)"
                                         title="Tambah stok masuk gudang DC"
                                         class="bb-action-button bb-action-stock"
@@ -1273,6 +1331,223 @@
                     Berikutnya
                 </button>
             </div>
+        </div>
+    </div>
+
+
+{{-- Modal tambah bahan baku --}}
+<div
+    x-show="modal === 'create'"
+    x-transition.opacity
+    @keydown.escape.window="closeModal()"
+    @click.self="closeModal()"
+    class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-stone-950/50 p-4 backdrop-blur-sm"
+    style="display: none;"
+>
+    <div x-show="modal === 'create'" x-transition class="bb-modal-panel my-auto">
+        <div class="bb-modal-heading">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">
+                    Master Bahan Baku
+                </p>
+                <h3 class="mt-1 text-xl font-bold text-stone-800">
+                    Tambah Bahan Baku
+                </h3>
+                <p class="mt-1 text-sm text-stone-500">
+                    Daftarkan bahan baku baru dan stok awal gudang DC.
+                </p>
+            </div>
+            <button type="button" @click="closeModal()"
+                class="rounded-lg px-3 py-1 text-2xl text-stone-400 hover:bg-stone-100"
+                aria-label="Tutup">×</button>
+        </div>
+
+        <form method="POST" action="{{ route('dc.bahan-baku.store') }}">
+            @csrf
+
+            <div class="grid grid-cols-2 gap-5">
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">Nama Bahan *</span>
+                    <input type="text" name="nama_bahan" required
+                        value="{{ old('nama_bahan') }}"
+                        placeholder="Contoh: Fresh Milk"
+                        class="bb-input">
+                </label>
+
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">Kategori *</span>
+                    <input type="text" name="kategori" required
+                        value="{{ old('kategori') }}"
+                        placeholder="Contoh: Dairy"
+                        class="bb-input">
+                </label>
+
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">Satuan Dasar *</span>
+                    <input type="text" name="satuan" required
+                        placeholder="Contoh: ml, gram, pcs"
+                        class="bb-input">
+                </label>
+
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">Nama Kemasan *</span>
+                    <input type="text" name="nama_kemasan" required
+                        placeholder="Contoh: Liter, Pack, Botol"
+                        class="bb-input">
+                </label>
+
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">
+                        Isi per Kemasan *
+                    </span>
+                    <input type="number" name="isi_per_kemasan" required
+                        min="0.001" step="0.001"
+                        placeholder="Contoh: 1000"
+                        class="bb-input">
+                </label>
+
+                <label>
+                    <span class="text-sm font-semibold text-stone-700">
+                        Harga Beli per Kemasan *
+                    </span>
+                    <input type="number" name="harga_beli" required
+                        min="0" step="0.01"
+                        placeholder="Contoh: 18000"
+                        class="bb-input">
+                </label>
+            </div>
+
+            <div class="rounded-xl border border-amber-100 bg-amber-50/50 p-5">
+                <h4 class="font-semibold text-stone-800">Persediaan Awal DC</h4>
+                <p class="mt-1 text-xs text-stone-500">
+                    Tentukan jumlah stok awal dan batas minimum persediaan.
+                    Keduanya menggunakan satuan dasar bahan baku.
+                </p>
+
+                <div class="mt-4 grid grid-cols-2 gap-5">
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">
+                            Stok Awal *
+                        </span>
+                        <input type="number" name="stok_awal" required
+                            min="0" step="0.001" value="0"
+                            class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">
+                            Stok Minimum *
+                        </span>
+                        <input type="number" name="stok_minimum" required
+                            min="0" step="0.001" value="0"
+                            class="bb-input">
+                    </label>
+                </div>
+            </div>
+
+            <div class="bb-modal-footer">
+                <button type="button" @click="closeModal()"
+                    class="border border-stone-200 text-stone-600">
+                    Batal
+                </button>
+                <button type="submit" class="bb-primary-button">
+                    Simpan Bahan Baku
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    {{-- Modal edit informasi bahan baku --}}
+    <div
+        x-show="modal === 'edit'"
+        x-transition.opacity
+        @keydown.escape.window="closeModal()"
+        @click.self="closeModal()"
+        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-stone-950/50 p-4 backdrop-blur-sm"
+        style="display: none;"
+    >
+        <div x-show="modal === 'edit'" x-transition class="bb-modal-panel my-auto">
+            <div class="bb-modal-heading">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">
+                        Master Bahan Baku
+                    </p>
+                    <h3 class="mt-1 text-xl font-bold text-stone-800">
+                        Edit Informasi Bahan Baku
+                    </h3>
+                    <p class="mt-1 text-sm text-stone-500">
+                        Perubahan informasi tidak mengubah jumlah stok fisik.
+                    </p>
+                </div>
+                <button type="button" @click="closeModal()"
+                    class="rounded-lg px-3 py-1 text-2xl text-stone-400 hover:bg-stone-100"
+                    aria-label="Tutup">×</button>
+            </div>
+
+            <form method="POST" :action="updateUrl">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-2 gap-5">
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">Nama Bahan *</span>
+                        <input type="text" name="nama_bahan" required
+                            x-model="form.nama_bahan" class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">Kategori *</span>
+                        <input type="text" name="kategori" required
+                            x-model="form.kategori" class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">Satuan Dasar *</span>
+                        <input type="text" name="satuan" required
+                            x-model="form.satuan" class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">Nama Kemasan *</span>
+                        <input type="text" name="nama_kemasan" required
+                            x-model="form.nama_kemasan" class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">
+                            Isi per Kemasan *
+                        </span>
+                        <input type="number" name="isi_per_kemasan" required
+                            min="0.001" step="0.001"
+                            x-model="form.isi_per_kemasan" class="bb-input">
+                    </label>
+
+                    <label>
+                        <span class="text-sm font-semibold text-stone-700">
+                            Harga Beli per Kemasan *
+                        </span>
+                        <input type="number" name="harga_beli" required
+                            min="0" step="0.01"
+                            x-model="form.harga_beli" class="bb-input">
+                    </label>
+                </div>
+
+                <div class="rounded-xl bg-stone-50 p-4 text-sm text-stone-600">
+                    <strong>Catatan:</strong> Edit informasi bahan baku tidak mengubah
+                    stok DC, stok cabang, ataupun komposisi resep menu yang sudah ada.
+                </div>
+
+                <div class="bb-modal-footer">
+                    <button type="button" @click="closeModal()"
+                        class="border border-stone-200 text-stone-600">
+                        Batal
+                    </button>
+                    <button type="submit" class="bb-primary-button">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1500,6 +1775,38 @@
                     return 'bg-stone-100 text-stone-600';
                 }
                 return 'bg-green-100 text-green-800';
+            },
+
+            openCreate() {
+                this.selected = null;
+                this.form = {
+                    nama_bahan: '',
+                    kategori: '',
+                    satuan: '',
+                    nama_kemasan: '',
+                    isi_per_kemasan: '',
+                    harga_beli: ''
+                };
+
+                this.modal = 'create';
+            },
+
+            openEdit(item) {
+                this.selected = item;
+
+                this.form = {
+                    nama_bahan: item.nama,
+                    kategori: item.kategori || '',
+                    satuan: item.satuan,
+                    nama_kemasan: item.kemasan,
+                    isi_per_kemasan: item.isi,
+                    harga_beli: item.harga
+                };
+
+                this.updateUrl = @js(route('dc.bahan-baku.update', '__ID__'))
+                    .replace('__ID__', encodeURIComponent(item.id));
+
+                this.modal = 'edit';
             },
 
             openAddStock(item) {

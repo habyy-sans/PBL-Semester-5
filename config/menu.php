@@ -87,9 +87,11 @@ return [
                 ['route' => 'dc.stok-dc.index', 'icon' => '▦', 'label' => 'Stok Gudang DC'],
                 ['route' => 'dc.order',         'icon' => '↻', 'label' => 'Pesanan Masuk'],
                 ['route' => 'dc.shipment',      'icon' => '▱', 'label' => 'Pengiriman & Surat Jalan'],
+                ['route' => 'dc.bahan-baku.index','icon' => '▦','label' => 'Kelola Bahan Baku'],
             ],
             'MONITORING' => [
                 ['route' => 'dc.stock',         'icon' => '▤', 'label' => 'Monitoring Stok Cabang'],
+                ['route' => 'dc.mutation', 'icon' => '▥', 'label' => 'Riwayat Mutasi Stok'],
             ],
         ],
 
