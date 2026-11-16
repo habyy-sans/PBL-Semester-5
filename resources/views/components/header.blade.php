@@ -13,7 +13,7 @@
         class="mobile-menu-button"
         @click="sidebarOpen = !sidebarOpen"
     >
-        ☰
+        <x-icon name="menu" size="1.4em" />
     </button>
 
     <div class="breadcrumb">
@@ -33,7 +33,7 @@
                     placeholder="Cari pengguna..."
                     aria-label="Cari pengguna"
                 >
-                <button type="submit" aria-label="Cari">⌕</button>
+                <button type="submit" aria-label="Cari"><x-icon name="search" /></button>
             </form>
             <a class="primary-button admin-quick-action" href="{{ route('admin.pengguna.create') }}">+ Pengguna</a>
         @endif

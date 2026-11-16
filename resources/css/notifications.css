@@ -23,7 +23,7 @@
     background: var(--red);
 
     color: #fff;
-    font-size: 8px;
+    font-size: 11px;
     font-weight: 600;
     font-style: normal;
     line-height: 14px;
@@ -77,7 +77,7 @@
 }
 
 .notification-panel-header strong {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text);
 }
@@ -88,7 +88,7 @@
 
     color: var(--brown);
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -192,7 +192,7 @@
     background: var(--cream-dark);
 
     color: var(--brown);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .notification-icon.is-danger {
@@ -210,7 +210,7 @@
 }
 
 .notification-title {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text);
     line-height: 1.35;
 }
@@ -220,7 +220,7 @@
 }
 
 .notification-desc {
-    font-size: 10px;
+    font-size: 12px;
     color: #775b46;
     line-height: 1.45;
 
@@ -231,7 +231,7 @@
 }
 
 .notification-time {
-    font-size: 9px;
+    font-size: 11px;
     color: var(--muted);
 }
 
@@ -253,7 +253,7 @@
     padding: 28px 14px;
 
     text-align: center;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
 }
 
@@ -265,7 +265,7 @@
 
     color: var(--brown);
     font-family: inherit;
-    font-size: 10px;
+    font-size: 12px;
 
     cursor: pointer;
     text-decoration: underline;
@@ -280,7 +280,7 @@
     background: #f9e0df;
 
     color: #b44141;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 

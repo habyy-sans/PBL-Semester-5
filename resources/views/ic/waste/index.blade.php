@@ -30,35 +30,40 @@
     ====================================================== -->
 
     <div class="page-card">
+        <div class="waste-head">
 
-        <div class="page-toolbar">
+            <div class="waste-head-left">
+
+                <div class="table-toolbar">
+
+                    <input
+                        type="search"
+                        class="search-input"
+                        placeholder="Cari nama barang atau menu..."
+                        aria-label="Cari nama barang atau menu"
+                        x-model="search"
+                    >
+
+                    <select class="select" aria-label="Filter jenis" x-model="filterType">
+                        <option value="">Semua Jenis</option>
+                        <option value="bahan">Bahan / Barang</option>
+                        <option value="menu">Menu</option>
+                    </select>
+
+                    <select class="select" aria-label="Filter alasan" x-model="filterReason">
+                        <option value="">Semua Alasan</option>
+                        <template x-for="reason in allReasons" :key="reason">
+                            <option :value="reason" x-text="reason"></option>
+                        </template>
+                    </select>
+
+                </div>
+
+                <span class="table-meta" x-text="'Menampilkan ' + filtered.length + ' dari ' + history.length + ' catatan'"></span>
+
+            </div>
+
             <button type="button" class="primary-button" @click="openForm()">+ Catat Waste</button>
-        </div>
-
-        <div class="table-toolbar">
-
-            <input
-                type="search"
-                class="search-input"
-                placeholder="Cari nama barang atau menu..."
-                aria-label="Cari nama barang atau menu"
-                x-model="search"
-            >
-
-            <select class="select" aria-label="Filter jenis" x-model="filterType">
-                <option value="">Semua Jenis</option>
-                <option value="bahan">Bahan / Barang</option>
-                <option value="menu">Menu</option>
-            </select>
-
-            <select class="select" aria-label="Filter alasan" x-model="filterReason">
-                <option value="">Semua Alasan</option>
-                <template x-for="reason in allReasons" :key="reason">
-                    <option :value="reason" x-text="reason"></option>
-                </template>
-            </select>
-
-            <span class="table-meta" x-text="'Menampilkan ' + filtered.length + ' dari ' + history.length + ' catatan'"></span>
 
         </div>
 

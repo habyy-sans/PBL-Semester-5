@@ -22,25 +22,23 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">💵</span>
+                    <span class="dash-kpi-icon"><x-icon name="banknote" /></span>
                     <span>Total Revenue</span>
                 </div>
-                <a href="{{ route('manager.report') }}" class="dash-kpi-link">Details</a>
             </div>
             <div class="dash-kpi-bottom">
                 <div class="dash-kpi-value" id="statOmzet">Rp 0</div>
-                <span class="dash-kpi-badge positive" id="statOmzetDelta">+0%</span>
+                <span class="dash-kpi-subtext" id="statOmzetDelta">+0%</span>
             </div>
         </div>
 
         <!-- CARD 2: ON PROGRESS / PESANAN DC -->
-        <a href="{{ route('manager.restock.draft') }}" class="dash-kpi-card">
+        <a href="{{ route('manager.restock') }}" class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">📦</span>
+                    <span class="dash-kpi-icon"><x-icon name="package" /></span>
                     <span>Pesanan DC</span>
                 </div>
-                <span class="dash-kpi-link">Restock</span>
             </div>
             <div class="dash-kpi-bottom">
                 <div class="dash-kpi-value" id="statDC">0 Pesanan</div>
@@ -52,14 +50,13 @@
         <a href="{{ route('manager.alert') }}" class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">📊</span>
+                    <span class="dash-kpi-icon"><x-icon name="chart-column" /></span>
                     <span>Kondisi Stok</span>
                 </div>
-                <span class="dash-kpi-link">Alerts</span>
             </div>
             <div class="dash-kpi-bottom">
                 <div class="dash-kpi-value" id="statLow">0 Item</div>
-                <span class="dash-kpi-badge warning" id="statLowSub">Batas aman</span>
+                <span class="dash-kpi-subtext" id="statLowSub">Batas aman</span>
             </div>
         </a>
 
@@ -67,14 +64,13 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">☕</span>
+                    <span class="dash-kpi-icon"><x-icon name="coffee" /></span>
                     <span>Today Sales</span>
                 </div>
-                <span class="dash-kpi-link">Kasir</span>
             </div>
             <div class="dash-kpi-bottom">
                 <div class="dash-kpi-value" id="statSalesCount">0 Transaksi</div>
-                <span class="dash-kpi-badge positive">Aktif</span>
+                <span class="dash-kpi-subtext">Aktif</span>
             </div>
         </div>
 
@@ -82,14 +78,13 @@
         <a href="{{ route('manager.report') }}" class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">⚠️</span>
+                    <span class="dash-kpi-icon"><x-icon name="triangle-alert" /></span>
                     <span>Waste Terkini</span>
                 </div>
-                <span class="dash-kpi-link">Laporan</span>
             </div>
             <div class="dash-kpi-bottom">
                 <div class="dash-kpi-value" id="statWaste">Rp 0</div>
-                <span class="dash-kpi-badge danger" id="statWasteSub">0 Laporan</span>
+                <span class="dash-kpi-subtext" id="statWasteSub">0 Laporan</span>
             </div>
         </a>
 
@@ -102,7 +97,7 @@
         <div class="dash-card">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
-                    <div class="dash-card-icon">📈</div>
+                    <div class="dash-card-icon"><x-icon name="trending-up" /></div>
                     <h3 class="dash-card-title">Sales Statistic</h3>
                 </div>
 
@@ -139,7 +134,7 @@
         <div class="dash-card dash-score-card">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
-                    <div class="dash-card-icon">⭐</div>
+                    <div class="dash-card-icon"><x-icon name="star" /></div>
                     <h3 class="dash-card-title">Score & Quality</h3>
                 </div>
                 <span class="dash-kpi-link" id="alertCountBadge"><span id="alertCount">0</span> Alert</span>
@@ -169,7 +164,7 @@
         <div class="dash-card">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
-                    <div class="dash-card-icon">🎯</div>
+                    <div class="dash-card-icon"><x-icon name="target" /></div>
                     <h3 class="dash-card-title">Items Performance</h3>
                 </div>
                 <span class="dash-kpi-subtext">Proporsi Pesanan</span>
@@ -184,7 +179,7 @@
         <div class="dash-card">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
-                    <div class="dash-card-icon">📑</div>
+                    <div class="dash-card-icon"><x-icon name="clipboard-list" /></div>
                     <h3 class="dash-card-title">Recent Transaction</h3>
                 </div>
 
@@ -201,12 +196,10 @@
                 <table class="dash-table">
                     <thead>
                         <tr>
-                            <th style="width: 36px;"><input type="checkbox" id="checkAllTrx" aria-label="Pilih semua"></th>
                             <th>Customer / Kasir</th>
                             <th>Waktu</th>
                             <th>Menu Pesanan</th>
                             <th style="text-align: right;">Total</th>
-                            <th style="width: 40px;"></th>
                         </tr>
                     </thead>
                     <tbody id="recentTrxBody">

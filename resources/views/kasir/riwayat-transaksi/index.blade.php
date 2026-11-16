@@ -10,7 +10,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">▤</div>
+            <div class="stat-icon"><x-icon name="receipt" /></div>
             <div class="stat-content">
                 <span class="stat-label">Total Transaksi</span>
                 <strong id="statCount">0</strong>
@@ -19,7 +19,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">↻</div>
+            <div class="stat-icon"><x-icon name="banknote" /></div>
             <div class="stat-content">
                 <span class="stat-label">Omzet</span>
                 <strong id="statRevenue">Rp 0</strong>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">▣</div>
+            <div class="stat-icon"><x-icon name="chart-column" /></div>
             <div class="stat-content">
                 <span class="stat-label">Rata-rata / Transaksi</span>
                 <strong id="statAvg">Rp 0</strong>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">△</div>
+            <div class="stat-icon"><x-icon name="coffee" /></div>
             <div class="stat-content">
                 <span class="stat-label">Menu Terjual</span>
                 <strong id="statQty">0</strong>

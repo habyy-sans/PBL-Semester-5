@@ -1,10 +1,11 @@
+// Nama icon Lucide (Iconify) — dirender lewat window.KopIcon() dari layout
 const ICONS = {
-    pesanan_masuk: '↻',
-    surat_jalan: '▱',
-    restock: '↻',
-    waste: '△',
-    stok_menipis: '△',
-    approval: '✓',
+    pesanan_masuk: 'refresh-cw',
+    surat_jalan: 'truck',
+    restock: 'refresh-cw',
+    waste: 'triangle-alert',
+    stok_menipis: 'triangle-alert',
+    approval: 'circle-check',
 };
 
 const DANGER_TYPES = ['waste', 'stok_menipis', 'restock'];
@@ -76,7 +77,7 @@ export default function notificationBell(config) {
         },
 
         icon(type) {
-            return ICONS[type] ?? '•';
+            return window.KopIcon(ICONS[type] ?? 'bell');
         },
 
         isDanger(type) {

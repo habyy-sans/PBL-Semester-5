@@ -16,6 +16,7 @@ body {
     font-family: "Poppins", sans-serif;
     background: #f8f4ed;
     color: #3f2a1d;
+    font-weight: 500;
     min-height: 100vh;
 }
 
@@ -38,7 +39,7 @@ body {
     --border: #ead8bd;
 
     --text: #3f2a1d;
-    --muted: #9a806b;
+    --muted: #7d6450;
 
     --orange: #d99a4e;
     --red: #c94c4c;
@@ -121,7 +122,7 @@ body {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #e9cdb0;
 
@@ -147,7 +148,7 @@ body {
 
 .menu-title {
 
-    font-size: 8px;
+    font-size: 11px;
 
     letter-spacing: 1px;
 
@@ -181,7 +182,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 
@@ -208,7 +209,7 @@ body {
 
     text-align: center;
 
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .menu-badge {
@@ -226,7 +227,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .menu-badge.danger {
@@ -266,7 +267,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -317,9 +318,9 @@ body {
 
     display: block;
 
-    color: #a28772;
+    color: #7d6450;
 
-    font-size: 9px;
+    font-size: 11px;
 
     margin-bottom: 2px;
 }
@@ -335,7 +336,7 @@ body {
 
 .breadcrumb p {
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #aa917e;
 
@@ -407,7 +408,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -415,7 +416,7 @@ body {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: var(--text);
 }
@@ -424,9 +425,9 @@ body {
 
     display: block;
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 
@@ -497,7 +498,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -510,9 +511,9 @@ body {
 
     display: block;
 
-    color: #a98e79;
+    color: #7d6450;
 
-    font-size: 8px;
+    font-size: 11px;
 
     margin-bottom: 2px;
 }
@@ -530,9 +531,9 @@ body {
 
 .stat-content small {
 
-    font-size: 7px;
+    font-size: 11px;
 
-    color: #a78c78;
+    color: #7d6450;
 }
 
 .positive {
@@ -597,7 +598,7 @@ body {
 
 .card-header h3 {
 
-    font-size: 13px;
+    font-size: 14px;
 
     font-weight: 600;
 
@@ -606,9 +607,9 @@ body {
 
 .card-header p {
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a78c78;
+    color: #7d6450;
 
     margin-top: 2px;
 }
@@ -630,7 +631,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     padding: 0 9px;
 
@@ -676,7 +677,7 @@ body {
 
     margin-top: 4px;
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: #8f7764;
 }
@@ -750,7 +751,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 7px;
+    font-size: 11px;
 
     cursor: pointer;
 
@@ -807,7 +808,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 8px;
+    font-size: 11px;
 
     font-weight: 600;
 }
@@ -871,14 +872,14 @@ body {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #4a2c1b;
 }
 
 .alert-item p {
 
-    font-size: 7px;
+    font-size: 11px;
 
     color: #a68a76;
 
@@ -917,7 +918,7 @@ body {
 
     display: block;
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: #a68a76;
 }
@@ -928,7 +929,7 @@ body {
 
     margin-top: 4px;
 
-    font-size: 11px;
+    font-size: 12px;
 
     color: #4a2c1b;
 }
@@ -966,7 +967,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -990,7 +991,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 9px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -1029,9 +1030,9 @@ body {
 
     text-align: center;
 
-    color: #ae9885;
+    color: #7d6450;
 
-    font-size: 10px;
+    font-size: 12px;
 
     padding: 60px 0;
 }
@@ -1076,7 +1077,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 11px;
 
@@ -1097,9 +1098,9 @@ body {
 
     margin-left: auto;
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 
@@ -1109,7 +1110,7 @@ body {
 
     padding: 6px 11px;
 
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .status.info {
@@ -1139,7 +1140,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 10px;
 
@@ -1207,7 +1208,7 @@ body {
 
     color: #775b46;
 
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .info-note.error {
@@ -1233,7 +1234,7 @@ body {
 
     color: #687e34;
 
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .modal-backdrop {
@@ -1269,7 +1270,7 @@ body {
 
 .modal-box h4 {
 
-    font-size: 13px;
+    font-size: 14px;
 
     font-weight: 600;
 
@@ -1280,7 +1281,7 @@ body {
 
     margin-top: 8px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     line-height: 1.6;
 
@@ -1332,7 +1333,7 @@ body {
 
     margin-bottom: 6px;
 
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 
     color: #775b46;
@@ -1353,7 +1354,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
 
     padding: 0 12px;
 
@@ -1414,7 +1415,7 @@ textarea.form-input {
 
     min-width: 60px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #775b46;
 }
@@ -1423,7 +1424,7 @@ textarea.form-input {
 
     margin-top: 5px;
 
-    font-size: 9px;
+    font-size: 11px;
 
     line-height: 1.5;
 
@@ -1434,7 +1435,7 @@ textarea.form-input {
 
     margin-top: 5px;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: var(--red);
 }
@@ -1461,7 +1462,7 @@ textarea.form-input {
     color: var(--brown);
 
     font-family: inherit;
-    font-size: 10px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -1496,7 +1497,7 @@ textarea.form-input {
 
     margin-bottom: 6px;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     color: #775b46;
@@ -1511,7 +1512,7 @@ textarea.form-input {
 
     padding: 4px 0;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #634a37;
 }
@@ -1531,9 +1532,9 @@ textarea.form-input {
 
 .filter-label {
 
-    font-size: 9px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 .date-input {
@@ -1551,7 +1552,7 @@ textarea.form-input {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 8px;
 
@@ -1607,7 +1608,7 @@ textarea.form-input {
 
     text-align: center;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #775b46;
 }
@@ -1655,7 +1656,7 @@ th {
 
     color: #775b46;
 
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 12px;
 }
@@ -1666,7 +1667,7 @@ td {
 
     border-bottom: 1px solid #eee2d2;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #634a37;
 }
@@ -1679,7 +1680,7 @@ td {
 
     border-radius: 20px;
 
-    font-size: 7px;
+    font-size: 11px;
 }
 
 .status.success {
@@ -1811,14 +1812,14 @@ td {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .product-card span {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: var(--brown);
 
@@ -1838,7 +1839,7 @@ td {
 
 .cart-card h4 {
 
-    font-size: 12px;
+    font-size: 13px;
 
     margin-bottom: 20px;
 }
@@ -1847,9 +1848,9 @@ td {
 
     text-align: center;
 
-    color: #ae9885;
+    color: #7d6450;
 
-    font-size: 9px;
+    font-size: 11px;
 
     padding-top: 70px;
 }
@@ -1881,7 +1882,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 9px;
+    font-size: 11px;
 
     cursor: pointer;
 
@@ -1933,7 +1934,7 @@ td {
 
     font-style: normal;
 
-    font-size: 7px;
+    font-size: 11px;
 
     padding: 3px 7px;
 
@@ -1966,7 +1967,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     text-decoration: underline;
 
@@ -2015,14 +2016,14 @@ td {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: var(--text);
 }
 
 .cart-line-info small {
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: var(--muted);
 }
@@ -2033,7 +2034,7 @@ td {
 
     text-align: right;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     color: var(--brown);
@@ -2060,7 +2061,7 @@ td {
 
     color: var(--brown);
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -2076,7 +2077,7 @@ td {
 
     text-align: center;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .cart-total {
@@ -2089,7 +2090,7 @@ td {
 
     margin-bottom: 8px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #775b46;
 }
@@ -2126,7 +2127,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -2142,7 +2143,7 @@ td {
 
     padding: 12px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     margin-top: 4px;
 }
@@ -2173,7 +2174,7 @@ td {
 
     color: white;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 
@@ -2206,7 +2207,7 @@ td {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #9b806b;
 }
@@ -2398,7 +2399,7 @@ td {
 .admin-page-heading p,
 .admin-password-card > p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 4px;
 }
 
@@ -2413,7 +2414,7 @@ td {
     justify-content: center;
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2451,7 +2452,7 @@ td {
 .admin-card-links a,
 .admin-role-card a {
     color: var(--brown);
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -2464,7 +2465,7 @@ td {
     display: inline-block;
     margin-right: 5px;
     color: var(--muted);
-    font-size: 8px;
+    font-size: 11px;
     text-transform: uppercase;
 }
 
@@ -2484,19 +2485,19 @@ td {
     width: 100%;
     max-width: none;
     height: 36px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-filter {
     height: 36px;
     max-width: 220px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-toolbar .outline-button,
 .admin-toolbar .table-meta,
 .admin-clear-filter {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-clear-filter {
@@ -2514,7 +2515,7 @@ td {
 
 .admin-table th,
 .admin-table td {
-    font-size: 10px;
+    font-size: 12px;
     padding: 12px 13px;
     vertical-align: middle;
 }
@@ -2526,7 +2527,7 @@ td {
 .admin-secondary-line {
     display: block;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 3px;
 }
 
@@ -2539,7 +2540,7 @@ td {
 
 .admin-small-button {
     padding: 5px 9px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
 }
 
@@ -2549,7 +2550,7 @@ td {
     color: var(--brown);
     cursor: pointer;
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     padding: 5px 2px;
 }
 
@@ -2590,7 +2591,7 @@ td {
 
 .admin-form-field label {
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -2604,7 +2605,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     padding: 9px 11px;
 }
 
@@ -2622,7 +2623,7 @@ td {
 .admin-field-error,
 .required-mark {
     color: var(--red);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-form-actions,
@@ -2637,7 +2638,7 @@ td {
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 11px 14px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-notice.success {
@@ -2677,7 +2678,7 @@ td {
 
 .admin-confirm-dialog p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
     margin-top: 8px;
 }
@@ -2685,7 +2686,7 @@ td {
 .admin-modal-label {
     display: block;
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 16px;
 }
 
@@ -2699,7 +2700,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-danger-button {
@@ -2722,13 +2723,13 @@ td {
 
 .admin-role-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 12px;
 }
 
 .admin-role-card p {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin: 7px 0 13px;
 }
 
@@ -2738,7 +2739,7 @@ td {
 
 .admin-password-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -2756,7 +2757,7 @@ td {
     border: 0;
     color: var(--text);
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     outline: none;
     padding: 0 9px;
 }
@@ -2773,7 +2774,7 @@ td {
     display: inline-flex;
     align-items: center;
     min-height: 34px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2814,7 +2815,7 @@ td {
     .admin-page-heading .primary-button,
     .admin-page-heading .outline-button {
         padding: 7px 9px;
-        font-size: 8px;
+        font-size: 11px;
     }
 
     .admin-kpi-grid,
@@ -2887,7 +2888,7 @@ td {
 .admin-page-heading p,
 .admin-password-card > p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 4px;
 }
 
@@ -2902,7 +2903,7 @@ td {
     justify-content: center;
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2940,7 +2941,7 @@ td {
 .admin-card-links a,
 .admin-role-card a {
     color: var(--brown);
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -2953,7 +2954,7 @@ td {
     display: inline-block;
     margin-right: 5px;
     color: var(--muted);
-    font-size: 8px;
+    font-size: 11px;
     text-transform: uppercase;
 }
 
@@ -2973,19 +2974,19 @@ td {
     width: 100%;
     max-width: none;
     height: 36px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-filter {
     height: 36px;
     max-width: 220px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-toolbar .outline-button,
 .admin-toolbar .table-meta,
 .admin-clear-filter {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-clear-filter {
@@ -3003,7 +3004,7 @@ td {
 
 .admin-table th,
 .admin-table td {
-    font-size: 10px;
+    font-size: 12px;
     padding: 12px 13px;
     vertical-align: middle;
 }
@@ -3015,7 +3016,7 @@ td {
 .admin-secondary-line {
     display: block;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 3px;
 }
 
@@ -3028,7 +3029,7 @@ td {
 
 .admin-small-button {
     padding: 5px 9px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
 }
 
@@ -3038,7 +3039,7 @@ td {
     color: var(--brown);
     cursor: pointer;
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     padding: 5px 2px;
 }
 
@@ -3079,7 +3080,7 @@ td {
 
 .admin-form-field label {
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -3093,7 +3094,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     padding: 9px 11px;
 }
 
@@ -3111,7 +3112,7 @@ td {
 .admin-field-error,
 .required-mark {
     color: var(--red);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-form-actions,
@@ -3126,7 +3127,7 @@ td {
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 11px 14px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-notice.success {
@@ -3166,7 +3167,7 @@ td {
 
 .admin-confirm-dialog p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
     margin-top: 8px;
 }
@@ -3191,13 +3192,13 @@ td {
 
 .admin-role-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 12px;
 }
 
 .admin-role-card p {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin: 7px 0 13px;
 }
 
@@ -3207,7 +3208,7 @@ td {
 
 .admin-password-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -3225,7 +3226,7 @@ td {
     border: 0;
     color: var(--text);
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     outline: none;
     padding: 0 9px;
 }
@@ -3242,7 +3243,7 @@ td {
     display: inline-flex;
     align-items: center;
     min-height: 34px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -3283,7 +3284,7 @@ td {
     .admin-page-heading .primary-button,
     .admin-page-heading .outline-button {
         padding: 7px 9px;
-        font-size: 8px;
+        font-size: 11px;
     }
 
     .admin-kpi-grid,
@@ -3349,7 +3350,7 @@ td {
     display: grid;
     gap: 5px;
     color: var(--text-muted, #806f63);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .report-filter-form input {
@@ -3360,7 +3361,7 @@ td {
     display: block;
     margin-top: 6px;
     color: #8d7b6c;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .report-pagination {
@@ -3370,7 +3371,7 @@ td {
     gap: 12px;
     padding: 14px 16px 4px;
     color: #8d7b6c;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .report-pagination nav p {
@@ -3380,7 +3381,7 @@ td {
 .report-note {
     margin: 16px 2px;
     color: #8d7b6c;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.6;
 }
 
@@ -3449,7 +3450,7 @@ td {
 
 .sj-company p {
     margin: 5px 0 0;
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: .7px;
     color: #777;
 }
@@ -3506,7 +3507,7 @@ td {
 .sj-label {
     display: block;
     color: #8b674f;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1px;
     margin-bottom: 10px;
@@ -3521,7 +3522,7 @@ td {
 .sj-party p {
     margin: 4px 0;
     color: #555;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.6;
 }
 
@@ -3540,13 +3541,13 @@ td {
 .sj-meta span {
     display: block;
     color: #777;
-    font-size: 10px;
+    font-size: 12px;
     margin-bottom: 5px;
 }
 
 .sj-meta strong {
     color: #333;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .sj-section h3 {
@@ -3564,7 +3565,7 @@ td {
     background: #5c3928 !important;
     color: #fff !important;
     padding: 12px 10px;
-    font-size: 10px;
+    font-size: 12px;
     text-align: left;
     border: 1px solid #5c3928;
 }
@@ -3573,7 +3574,7 @@ td {
     background: #fff !important;
     color: #333 !important;
     padding: 12px 10px;
-    font-size: 11px;
+    font-size: 12px;
     border: 1px solid #ddd;
 }
 
@@ -3582,7 +3583,7 @@ td {
     padding: 14px;
     border: 1px solid #ddd;
     background: #fafafa;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .sj-notes p {
@@ -3600,18 +3601,18 @@ td {
 }
 
 .sj-signature p {
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 7px;
 }
 
 .sj-signature strong {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .sj-signature span {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 5px;
 }
 
@@ -3625,7 +3626,7 @@ td {
     padding-top: 12px;
     text-align: center;
     color: #888;
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.6;
 }
 

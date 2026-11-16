@@ -15,7 +15,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="package" /></div>
             <div class="stat-content">
                 <span class="stat-label">Total Item</span>
                 <strong x-text="items.length"></strong>
@@ -24,7 +24,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">✓</div>
+            <div class="stat-icon"><x-icon name="circle-check" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Aman</span>
                 <strong x-text="count('aman')"></strong>
@@ -33,7 +33,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">!</div>
+            <div class="stat-icon"><x-icon name="triangle-alert" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Menipis</span>
                 <strong x-text="count('menipis')"></strong>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">×</div>
+            <div class="stat-icon"><x-icon name="package-x" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Habis</span>
                 <strong x-text="count('habis')"></strong>

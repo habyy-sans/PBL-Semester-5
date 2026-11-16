@@ -18,7 +18,7 @@
     <header class="pos-topbar">
         <div class="pos-brand-section">
             <div class="pos-brand-logo">
-                <div class="pos-brand-logo-icon">☕</div>
+                <div class="pos-brand-logo-icon"><x-icon name="coffee" /></div>
                 <div class="pos-brand-text">
                     <h1>KOPSYNC</h1>
                     <span>{{ $branchName ?? 'Gerai Pusat' }}</span>
@@ -181,7 +181,7 @@
                     </svg>
                 </div>
                 <span id="placeOrderText">Place Order Rp 0</span>
-                <span class="pos-place-order-chevrons">❯❯❯</span>
+                <span class="pos-place-order-chevrons"><x-icon name="chevrons-right" /></span>
             </button>
 
         </aside>
@@ -346,7 +346,7 @@
             return `
             <div class="pos-product-item ${habis ? 'disabled' : ''}" data-add="${id}">
                 <div class="pos-product-thumb">
-                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}" loading="lazy">` : '<span style="font-size:24px;">☕</span>'}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}" loading="lazy">` : '<span style="font-size:24px;">' + KopIcon('coffee') + '</span>'}
                 </div>
                 <div class="pos-product-info">
                     <h5 class="pos-product-name" title="${m.name}">${m.name}</h5>
@@ -374,7 +374,7 @@
         if (!ids.length) {
             $('cartListBody').innerHTML = `
                 <div class="pos-cart-empty-state">
-                    <div style="font-size: 28px; margin-bottom: 8px;">🛒</div>
+                    <div style="font-size: 28px; margin-bottom: 8px;">${KopIcon('shopping-cart')}</div>
                     <strong>Pesanan masih kosong</strong>
                     <p style="font-size: 11px; margin-top: 4px;">Pilih menu dari katalog untuk memulai transaksi.</p>
                 </div>`;
@@ -390,7 +390,7 @@
             return `
             <div class="pos-receipt-item">
                 <div class="pos-receipt-item-thumb">
-                    ${imgSrc ? `<img src="${imgSrc}" alt="${esc(m.name)}">` : '☕'}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${esc(m.name)}">` : KopIcon('coffee')}
                 </div>
                 <div class="pos-receipt-item-details">
                     <h6 class="pos-receipt-item-name" title="${esc(m.name)}">${esc(m.name)}</h6>
@@ -596,7 +596,7 @@
 
         openModal(`
             <div class="modal-box wide">
-                <h4 style="color:var(--pos-brown-dark);">✔ Transaksi Sukses & Selesai</h4>
+                <h4 style="color:var(--pos-brown-dark);">${KopIcon('circle-check')} Transaksi Sukses & Selesai</h4>
                 <p style="font-size:13px; margin:4px 0 16px 0;">
                     No: <b>${esc(json.no)}</b> · Total: <b>${rp(json.total)}</b>
                     ${json.change ? ` · Kembalian: <b>${rp(json.change)}</b>` : ''}
@@ -645,23 +645,23 @@
                 <!-- Alat Pengujian Sandbox (Gratis) -->
                 <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:12px; text-align:left; font-size:12px; margin-bottom:16px;">
                     <div style="font-weight:600; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>🛠 Alat Pengujian Sandbox:</span>
+                        <span>${KopIcon('wrench')} Alat Pengujian Sandbox:</span>
                         <span style="font-size:11px; color:#64748b;">(Gratis)</span>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; gap:8px;">
                             <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQrUrl" data-url="${json.qr_url}">
-                                🔗 Salin URL QR Code
+                                ${KopIcon('link')} Salin URL QR Code
                             </button>
                             <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQr" data-qr="${json.qr_string}">
-                                📋 Salin String QR
+                                ${KopIcon('copy')} Salin String QR
                             </button>
                         </div>
                         <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="width:100%; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
-                            🌐 Buka Simulator Midtrans ↗
+                            ${KopIcon('globe')} Buka Simulator Midtrans ↗
                         </a>
                         <button type="button" class="primary-button" style="width:100%; padding:8px; font-size:12px; background:#0284c7;" id="btnSimulatePay" data-trx-id="${json.transaksi_id}">
-                            ⚡ Bayar Sekarang (Simulasi Instan)
+                            ${KopIcon('zap')} Bayar Sekarang (Simulasi Instan)
                         </button>
                     </div>
                 </div>
@@ -862,7 +862,7 @@
             .catch(err => {
                 flash('Gagal simulasi: ' + err.message);
                 simPayBtn.disabled = false;
-                simPayBtn.textContent = '⚡ Bayar Sekarang (Simulasi Instan)';
+                simPayBtn.innerHTML = KopIcon('zap') + ' Bayar Sekarang (Simulasi Instan)';
             });
             return;
         }

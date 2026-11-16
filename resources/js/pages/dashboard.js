@@ -166,7 +166,7 @@ function renderSummary() {
     if (s && s.delta_pct !== null && s.delta_pct !== undefined) {
         const pct = s.delta_pct;
         delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin';
-        delta.className = pct >= 0 ? 'positive' : 'danger-text';
+        delta.className = 'dash-kpi-subtext';
     } else {
         // dibanding kemarin pada jam yang sama (supaya adil, hari ini belum selesai)
         const prevOmzet = sum(
@@ -178,10 +178,10 @@ function renderSummary() {
             const pct = ((omzet - prevOmzet) / prevOmzet) * 100;
 
             delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin (jam sama)';
-            delta.className = pct >= 0 ? 'positive' : 'danger-text';
+            delta.className = 'dash-kpi-subtext';
         } else {
             delta.textContent = 'Belum ada pembanding kemarin';
-            delta.className = '';
+            delta.className = 'dash-kpi-subtext';
         }
     }
 
@@ -288,7 +288,7 @@ function renderAlerts() {
 
     $('alertList').innerHTML = alerts.slice(0, 3).map((a) => {
         const badgeClass = a.color === 'red' ? 'danger' : a.color === 'orange' ? 'warning' : 'info';
-        const iconChar = a.color === 'red' ? '!' : a.color === 'orange' ? '▲' : '✓';
+        const iconChar = KopIcon(a.color === 'red' ? 'circle-alert' : a.color === 'orange' ? 'triangle-alert' : 'circle-check');
         const url = actionUrl(a);
 
         return `
@@ -753,7 +753,7 @@ function renderRecentTransactions(catFilter = 'All') {
     }
 
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--pos-muted);">Belum ada transaksi di kategori ini.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px; color:var(--pos-muted);">Belum ada transaksi di kategori ini.</td></tr>';
         return;
     }
 
@@ -765,7 +765,6 @@ function renderRecentTransactions(catFilter = 'All') {
 
         return `
         <tr>
-            <td><input type="checkbox" aria-label="Pilih ${esc(t.no)}"></td>
             <td>
                 <div class="dash-customer-cell">
                     <div class="dash-customer-avatar">${esc(initial)}</div>
@@ -785,9 +784,6 @@ function renderRecentTransactions(catFilter = 'All') {
             </td>
             <td style="text-align: right;">
                 <span class="dash-trx-value">${formatRupiah(total)}</span>
-            </td>
-            <td style="text-align: right; color:var(--pos-muted); cursor:pointer;">
-                <span>⋮</span>
             </td>
         </tr>`;
     }).join('');

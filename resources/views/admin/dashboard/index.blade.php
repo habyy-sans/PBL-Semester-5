@@ -15,27 +15,27 @@
 
     <div class="stats-grid admin-kpi-grid">
         <a class="stat-card" href="{{ route('admin.pengguna.index') }}">
-            <div class="stat-icon">▣</div>
+            <div class="stat-icon"><x-icon name="users" /></div>
             <div class="stat-content"><span class="stat-label">Total Pengguna</span><strong>{{ number_format($summary['users']) }}</strong><small>Seluruh role</small></div>
         </a>
         <a class="stat-card" href="{{ route('admin.cabang.index') }}">
-            <div class="stat-icon">⌂</div>
+            <div class="stat-icon"><x-icon name="store" /></div>
             <div class="stat-content"><span class="stat-label">Total Cabang</span><strong>{{ number_format($summary['cabang']) }}</strong><small>Lokasi operasional</small></div>
         </a>
         <a class="stat-card" href="{{ route('admin.dc.index') }}">
-            <div class="stat-icon">▦</div>
+            <div class="stat-icon"><x-icon name="warehouse" /></div>
             <div class="stat-content"><span class="stat-label">Total DC</span><strong>{{ number_format($summary['dc']) }}</strong><small>Distribution center</small></div>
         </a>
         <a class="stat-card" href="{{ route('admin.bahan-baku.index') }}">
-            <div class="stat-icon">▤</div>
+            <div class="stat-icon"><x-icon name="package" /></div>
             <div class="stat-content"><span class="stat-label">Bahan Baku</span><strong>{{ number_format($summary['bahan']) }}</strong><small>Item bahan terdaftar</small></div>
         </a>
         <a class="stat-card" href="{{ route('admin.menu-produk.index') }}">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="coffee" /></div>
             <div class="stat-content"><span class="stat-label">Menu Produk</span><strong>{{ number_format($summary['menu']) }}</strong><small>Produk terdaftar</small></div>
         </a>
         <a class="stat-card admin-kpi-alert" href="{{ route('admin.stok-cabang.index', ['status' => 'menipis']) }}">
-            <div class="stat-icon">!</div>
+            <div class="stat-icon"><x-icon name="triangle-alert" /></div>
             <div class="stat-content"><span class="stat-label">Stok Menipis</span><strong>{{ number_format($summary['low_stock']) }}</strong><small>Di bawah minimum</small></div>
         </a>
     </div>
