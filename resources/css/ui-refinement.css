@@ -1,0 +1,397 @@
+/* =========================================================
+   UI REFINEMENT — perbaikan tampilan (audit)
+   Dimuat PALING AKHIR di app.css supaya menimpa aturan lama.
+   Isi: icon, scrollbar auto-hide, jarak halaman, perbaikan per role.
+========================================================= */
+
+
+/* ---------- ICON (Iconify / Lucide) ---------- */
+
+.icon {
+    flex-shrink: 0;
+    vertical-align: -0.2em;
+}
+
+.stat-icon .icon,
+.dash-card-icon .icon,
+.dc-mutation-heading-icon .icon {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.dash-card-icon,
+.dc-mutation-heading-icon,
+.dash-kpi-icon,
+.notification-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Icon: satu gaya monokrom hitam. Latar kotak icon dibuat netral
+   (tidak ada lagi warna dekoratif per kartu). */
+.stat-icon,
+.dash-card-icon,
+.dash-kpi-icon,
+.dc-mutation-heading-icon {
+    background: #f4ece0;
+    color: #1f1410;
+}
+
+.stat-icon {
+    font-size: 14px;
+}
+
+/* Pengecualian: icon STATUS boleh berwarna karena bermakna
+   (peringatan / kritis). Dipilih lewat nama icon Iconify. */
+.icon[data-iconify="lucide:triangle-alert"] {
+    color: #b45309; /* peringatan / menipis */
+}
+
+.icon[data-iconify="lucide:circle-alert"],
+.icon[data-iconify="lucide:package-x"],
+.icon[data-iconify="lucide:equal-not"] {
+    color: var(--red); /* kritis / habis / selisih */
+}
+
+.notification-button {
+    color: #1f1410;
+}
+
+.notification-button .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.notification-icon .icon {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* ---------- SCROLLBAR AUTO-HIDE ----------
+   Transparan saat diam, muncul saat di-scroll (class .is-scrolling
+   dipasang oleh resources/js/scroll-autohide.js). Sama seperti notifikasi. */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.25s ease;
+}
+
+*.is-scrolling {
+    scrollbar-color: rgba(143, 71, 19, 0.45) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(143, 71, 19, 0.45);
+}
+
+
+/* =========================================================
+   TYPOGRAPHY GLOBAL (semua role)
+   Satu font (Poppins) + satu skala ukuran berdasarkan FUNGSI elemen.
+   Mengubah angka di sini = mengubah seluruh aplikasi.
+========================================================= */
+
+:root {
+    --font-main: "Poppins", sans-serif;
+
+    /* skala ukuran */
+    --fs-badge: 11px;   /* badge, status, catatan kecil */
+    --fs-label: 12px;   /* label, subjudul, header tabel, tombol kecil */
+    --fs-body: 13px;    /* isi card, isi tabel, input, tombol */
+    --fs-card-title: 15px;
+    --fs-page-title: 18px;
+    --fs-stat: 22px;    /* angka besar pada kartu statistik */
+
+    /* ketebalan */
+    --fw-regular: 500;  /* teks biasa */
+    --fw-medium: 600;   /* label, header tabel, tombol */
+    --fw-bold: 700;     /* judul, angka penting */
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-main);
+}
+
+body {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-regular);
+}
+
+/* ---- Header & sidebar ---- */
+.top-header .breadcrumb h2 {
+    font-size: var(--fs-page-title);
+    font-weight: var(--fw-bold);
+}
+
+.top-header .breadcrumb p {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-regular);
+}
+
+.top-header .breadcrumb span {
+    font-size: var(--fs-badge);
+    font-weight: var(--fw-medium);
+}
+
+.sidebar .menu-item,
+.sidebar .logout-button {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-medium);
+}
+
+.sidebar .menu-title {
+    font-size: var(--fs-badge);
+    font-weight: var(--fw-bold);
+}
+
+/* ---- Konten utama ----
+   Prefix .main-content ditulis dua kali supaya lebih kuat dari aturan lama
+   tanpa memakai !important. */
+
+/* judul card */
+.main-content.main-content h3,
+.main-content.main-content .dash-card-title,
+.main-content.main-content .summary-title,
+.main-content.main-content .section-title,
+.main-content.main-content .dc-mutation-filter-heading h3,
+.main-content.main-content .dc-mutation-table-heading h3,
+.main-content.main-content .dc-branch-heading h2,
+.main-content.main-content .admin-page-heading h1 {
+    font-size: var(--fs-card-title);
+    font-weight: var(--fw-bold);
+}
+
+/* subjudul / keterangan card */
+.main-content.main-content .dc-mutation-filter-heading p,
+.main-content.main-content .dc-mutation-filter-heading small,
+.main-content.main-content .dc-mutation-table-heading p,
+.main-content.main-content .dc-branch-heading p,
+.main-content.main-content .admin-page-heading p {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-regular);
+}
+
+/* kartu statistik */
+.main-content.main-content .stat-label {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+}
+
+.main-content.main-content .stat-content strong {
+    font-size: var(--fs-stat);
+    font-weight: var(--fw-bold);
+}
+
+.main-content.main-content .stat-content small {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-regular);
+}
+
+/* tabel */
+.main-content.main-content table th {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+}
+
+.main-content.main-content table td {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-regular);
+}
+
+/* label form */
+.main-content.main-content label,
+.main-content.main-content .form-label,
+.main-content.main-content .filter-label {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+}
+
+/* input, select, textarea */
+.main-content.main-content input:not([type="checkbox"]):not([type="radio"]),
+.main-content.main-content select,
+.main-content.main-content textarea {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-regular);
+}
+
+/* tombol */
+.main-content.main-content button,
+.main-content.main-content .primary-button,
+.main-content.main-content .outline-button {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-medium);
+}
+
+.main-content.main-content .btn-sm,
+.main-content.main-content .admin-small-button,
+.main-content.main-content .text-button,
+.main-content.main-content table button {
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+}
+
+/* badge / status */
+.main-content.main-content .status,
+.main-content.main-content .menu-badge,
+.main-content.main-content .dash-kpi-badge,
+.main-content.main-content .pos-badge {
+    font-size: var(--fs-badge);
+    font-weight: var(--fw-medium);
+}
+
+
+/* =========================================================
+   ROLE DC
+========================================================= */
+
+/* Monitoring Stok Cabang: jarak antar card + heading rapi.
+   Nama cabang paling besar, deskripsi kecil, "x dari y bahan" di pojok
+   kanan atas sejajar dengan baris deskripsi. */
+.dc-branch-card {
+    margin-top: 13px;
+}
+
+.dc-branch-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dc-branch-heading h2 {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: var(--fw-bold);
+}
+
+.dc-branch-heading p {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: var(--fs-label);
+}
+
+.dc-branch-total {
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
+}
+
+/* Riwayat Mutasi: semua filter + tombol dalam satu baris */
+.dc-mutation-filter-form {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
+}
+
+.dc-mutation-filter-actions {
+    grid-column: auto;
+    flex-wrap: nowrap;
+    margin-top: 0;
+}
+
+.dc-mutation-filter-actions .primary-button,
+.dc-mutation-filter-actions .outline-button {
+    min-height: 38px;
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+    .dc-mutation-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dc-mutation-filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+/* =========================================================
+   ROLE MANAGER — Dashboard: kartu KPI (baris atas)
+   Tanpa label link, tanpa badge berwarna: cukup teks hitam
+   dengan ukuran yang seragam di kelima kartu.
+   (Halaman Laporan Cabang memakai .report-kpi-row, tidak ikut diubah.)
+========================================================= */
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-card {
+    min-height: 112px;
+    gap: 12px;
+}
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-top {
+    margin-bottom: 0;
+}
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-label-group {
+    color: #1f1410;
+    font-size: var(--fs-body);
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
+}
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-value {
+    color: #1f1410;
+    font-size: var(--fs-stat);
+    font-weight: var(--fw-bold);
+    white-space: nowrap;
+}
+
+.dash-kpi-row:not(.report-kpi-row) .dash-kpi-subtext {
+    padding: 0;
+    background: none;
+    color: #1f1410;
+    font-size: var(--fs-label);
+    font-weight: var(--fw-regular);
+}
+
+/* =========================================================
+   ROLE IC — Waste Log
+========================================================= */
+
+.waste-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.waste-head-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.waste-head-left .table-toolbar {
+    margin-bottom: 8px;
+}
+
+.waste-head-left .table-meta {
+    display: block;
+    margin-left: 0;
+}
+
+.waste-head .primary-button {
+    flex-shrink: 0;
+}

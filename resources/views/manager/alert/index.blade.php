@@ -10,7 +10,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">△</div>
+            <div class="stat-icon"><x-icon name="triangle-alert" /></div>
             <div class="stat-content">
                 <span class="stat-label">Alert Baru</span>
                 <strong id="stAll">0</strong>
@@ -19,7 +19,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="package" /></div>
             <div class="stat-content">
                 <span class="stat-label">Alert Restock</span>
                 <strong id="stRestock">0 Item</strong>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">Rp</div>
+            <div class="stat-icon"><x-icon name="banknote" /></div>
             <div class="stat-content">
                 <span class="stat-label">Alert Waste</span>
                 <strong id="stWaste">0 Laporan</strong>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">↻</div>
+            <div class="stat-icon"><x-icon name="file-text" /></div>
             <div class="stat-content">
                 <span class="stat-label">Draft Pengiriman</span>
                 <strong id="stDraft">0 Draft</strong>

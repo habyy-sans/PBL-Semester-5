@@ -23,9 +23,9 @@
     @endif
 
     <div class="stats-grid admin-user-stats">
-        <div class="stat-card"><div class="stat-icon">▣</div><div class="stat-content"><span class="stat-label">Total Pengguna</span><strong>{{ number_format($totals['all']) }}</strong></div></div>
-        <div class="stat-card"><div class="stat-icon">✓</div><div class="stat-content"><span class="stat-label">Aktif</span><strong>{{ number_format($totals['active']) }}</strong></div></div>
-        <div class="stat-card"><div class="stat-icon">—</div><div class="stat-content"><span class="stat-label">Nonaktif</span><strong>{{ number_format($totals['inactive']) }}</strong></div></div>
+        <div class="stat-card"><div class="stat-icon"><x-icon name="users" /></div><div class="stat-content"><span class="stat-label">Total Pengguna</span><strong>{{ number_format($totals['all']) }}</strong></div></div>
+        <div class="stat-card"><div class="stat-icon"><x-icon name="circle-check" /></div><div class="stat-content"><span class="stat-label">Aktif</span><strong>{{ number_format($totals['active']) }}</strong></div></div>
+        <div class="stat-card"><div class="stat-icon"><x-icon name="user-x" /></div><div class="stat-content"><span class="stat-label">Nonaktif</span><strong>{{ number_format($totals['inactive']) }}</strong></div></div>
     </div>
 
     <div class="page-card admin-data-card">

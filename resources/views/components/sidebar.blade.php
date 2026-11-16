@@ -33,7 +33,6 @@
                         href="{{ route($item['route']) }}"
                         class="menu-item {{ $isActive ? 'active' : '' }}"
                     >
-                        <span class="menu-icon">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
                     </a>
                 @endforeach
@@ -49,7 +48,6 @@
             @csrf
 
             <button type="submit" class="logout-button">
-                <span>↪</span>
                 Logout
             </button>
         </form>

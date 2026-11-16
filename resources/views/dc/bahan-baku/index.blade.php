@@ -1018,28 +1018,9 @@
     {{-- Header halaman --}}
     <div class="dash-card-header dc-page-header">
         <div class="dash-card-title-group">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">
-                    Operasional Gudang DC
-                </p>
-                <h2 class="dash-card-title mt-1">
-                    Stok Gudang DC
-                </h2>
-                <p class="report-section-desc mt-1">
-                    Pantau persediaan bahan baku, kelola informasi bahan,
-                    dan catat penambahan stok gudang DC.
-                </p>
-            </div>
         </div>
 
-        <button
-            type="button"
-            @click="openCreate()"
-            class="bb-primary-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition"
-        >
-            <span class="text-lg">+</span>
-            Tambah Bahan Baku
-        </button>
+        <button type="button" @click="openCreate()" class="primary-button">+ Tambah Bahan Baku</button>
     </div>
 
     {{-- Kartu ringkasan --}}
@@ -1052,7 +1033,7 @@
                        x-text="items.length"></p>
                     <p class="mt-1 text-xs text-stone-400">Terdaftar di sistem</p>
                 </div>
-                <span class="rounded-xl bg-amber-50 p-3 text-xl">▦</span>
+                <span class="stat-icon"><x-icon name="package" /></span>
             </div>
         </div>
 
@@ -1066,7 +1047,7 @@
                         Stok kosong atau mencapai batas minimum
                     </p>
                 </div>
-                <span class="rounded-xl bg-orange-50 p-3 text-xl">!</span>
+                <span class="stat-icon"><x-icon name="circle-alert" /></span>
             </div>
         </div>
 
@@ -1080,7 +1061,7 @@
                         Stok di atas batas minimum
                     </p>
                 </div>
-                <span class="rounded-xl bg-green-50 p-3 text-xl">✓</span>
+                <span class="stat-icon"><x-icon name="circle-check" /></span>
             </div>
         </div>
     </div>
@@ -1099,7 +1080,7 @@
                 <button
                     type="button"
                     @click="resetFilters()"
-                    class="self-start rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 xl:self-auto"
+                    class="outline-button self-start xl:self-auto"
                 >
                     Reset filter
                 </button>
@@ -1111,7 +1092,7 @@
                         Pencarian
                     </label>
                     <div class="relative">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">⌕</span>
+                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"><x-icon name="search" /></span>
                         <input
                             id="searchBahan"
                             type="search"
@@ -1249,7 +1230,7 @@
 
                             <td class="px-4 py-4">
                                 <span
-                                    class="inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold"
+                                    class="status whitespace-nowrap"
                                     :class="statusClass(bahan)"
                                     x-text="statusLabel(bahan)"
                                 ></span>

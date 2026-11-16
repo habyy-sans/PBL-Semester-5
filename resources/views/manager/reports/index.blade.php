@@ -11,7 +11,7 @@
     <section class="dash-card report-period-card">
         <div class="dash-card-header">
             <div class="dash-card-title-group">
-                <div class="dash-card-icon">📅</div>
+                <div class="dash-card-icon"><x-icon name="calendar-days" /></div>
                 <div>
                     <h3 class="dash-card-title">Periode Laporan</h3>
                     <p class="report-section-desc">
@@ -32,7 +32,7 @@
                     'export' => 1
                 ]) }}"
             >
-                <span>📥</span> Unduh CSV
+                <span><x-icon name="download" /></span> Unduh CSV
             </a>
         </div>
 
@@ -68,7 +68,6 @@
 
             <button type="submit" class="report-apply-btn">
                 Terapkan Filter
-                <span>→</span>
             </button>
         </form>
     </section>
@@ -81,7 +80,7 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">💵</span>
+                    <span class="dash-kpi-icon"><x-icon name="banknote" /></span>
                     <span>Total Omzet</span>
                 </div>
                 <span class="dash-kpi-link">Revenue</span>
@@ -101,7 +100,7 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">📦</span>
+                    <span class="dash-kpi-icon"><x-icon name="package" /></span>
                     <span>Total HPP</span>
                 </div>
                 <span class="dash-kpi-link">Cost</span>
@@ -121,7 +120,7 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">⚠️</span>
+                    <span class="dash-kpi-icon"><x-icon name="triangle-alert" /></span>
                     <span>Kerugian Waste</span>
                 </div>
                 <span class="dash-kpi-link">Waste</span>
@@ -141,7 +140,7 @@
         <div class="dash-kpi-card">
             <div class="dash-kpi-top">
                 <div class="dash-kpi-label-group">
-                    <span class="dash-kpi-icon">📈</span>
+                    <span class="dash-kpi-icon"><x-icon name="trending-up" /></span>
                     <span>Estimasi Laba</span>
                 </div>
                 <span class="dash-kpi-link">Profit</span>
@@ -165,7 +164,7 @@
 
         <div class="dash-card-header">
             <div class="dash-card-title-group">
-                <div class="dash-card-icon">📊</div>
+                <div class="dash-card-icon"><x-icon name="chart-column" /></div>
                 <div>
                     <h3 class="dash-card-title">Estimasi Laba Rugi Harian</h3>
                     <p class="report-section-desc">
@@ -232,7 +231,7 @@
                         <tr>
                             <td colspan="7" class="report-empty-cell">
                                 <div class="report-empty-state">
-                                    <span>📊</span>
+                                    <span><x-icon name="chart-column" /></span>
                                     <strong>Belum ada data laporan</strong>
                                     <p>
                                         Tidak ditemukan transaksi atau waste
@@ -263,7 +262,7 @@
 
         <div class="dash-card-header">
             <div class="dash-card-title-group">
-                <div class="dash-card-icon">📦</div>
+                <div class="dash-card-icon"><x-icon name="package" /></div>
                 <div>
                     <h3 class="dash-card-title">Mutasi Stok per Bahan</h3>
                     <p class="report-section-desc">
@@ -318,7 +317,7 @@
                         <tr>
                             <td colspan="5" class="report-empty-cell">
                                 <div class="report-empty-state">
-                                    <span>📦</span>
+                                    <span><x-icon name="package" /></span>
                                     <strong>Belum ada data mutasi stok</strong>
                                     <p>
                                         Tidak ditemukan pergerakan stok pada periode ini.
@@ -348,7 +347,7 @@
 
         <div class="dash-card-header">
             <div class="dash-card-title-group">
-                <div class="dash-card-icon">🎯</div>
+                <div class="dash-card-icon"><x-icon name="target" /></div>
                 <div>
                     <h3 class="dash-card-title">Penjualan per Menu</h3>
                     <p class="report-section-desc">
@@ -403,7 +402,7 @@
                         <tr>
                             <td colspan="5" class="report-empty-cell">
                                 <div class="report-empty-state">
-                                    <span>🎯</span>
+                                    <span><x-icon name="target" /></span>
                                     <strong>Belum ada data penjualan menu</strong>
                                     <p>
                                         Tidak ditemukan penjualan menu pada periode ini.
@@ -430,7 +429,7 @@
 
     {{-- CATATAN LAPORAN --}}
     <div class="report-disclaimer">
-        <span>ℹ️</span>
+        <span><x-icon name="info" /></span>
         <p>
             HPP dan estimasi laba dihitung berdasarkan harga bahan baku
             serta resep yang tersedia saat laporan diakses. Nilai ini

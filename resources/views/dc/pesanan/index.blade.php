@@ -25,7 +25,7 @@
         <div class="stats-grid">
 
             <div class="stat-card">
-                <div class="stat-icon">!</div>
+                <div class="stat-icon"><x-icon name="circle-alert" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Pesanan Baru</span>
                     <strong x-text="count('baru')"></strong>
@@ -34,7 +34,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">↻</div>
+                <div class="stat-icon"><x-icon name="refresh-cw" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Pengiriman Parsial</span>
                     <strong x-text="count('diproses')"></strong>
@@ -43,7 +43,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">≡</div>
+                <div class="stat-icon"><x-icon name="clipboard-list" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Total Pesanan</span>
                     <strong x-text="orders.length"></strong>
@@ -52,7 +52,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">↻</div>
+                <div class="stat-icon"><x-icon name="package" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Item Perlu Disiapkan</span>
                     <strong x-text="pendingItems()"></strong>

@@ -10,7 +10,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">▣</div>
+            <div class="stat-icon"><x-icon name="users" /></div>
             <div class="stat-content">
                 <span class="stat-label">Total Pengguna</span>
                 <strong id="stTotal">0</strong>
@@ -19,7 +19,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">↻</div>
+            <div class="stat-icon"><x-icon name="circle-check" /></div>
             <div class="stat-content">
                 <span class="stat-label">Pengguna Aktif</span>
                 <strong id="stActive">0</strong>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">△</div>
+            <div class="stat-icon"><x-icon name="user-x" /></div>
             <div class="stat-content">
                 <span class="stat-label">Pengguna Nonaktif</span>
                 <strong id="stInactive">0</strong>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="store" /></div>
             <div class="stat-content">
                 <span class="stat-label">Store Tanpa Manager</span>
                 <strong id="stNoManager">0</strong>

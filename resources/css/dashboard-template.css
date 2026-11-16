@@ -69,7 +69,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--pos-text);
 }
@@ -80,7 +80,7 @@
 }
 
 .dash-kpi-link {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
     text-decoration: none;
     font-weight: 500;
@@ -109,7 +109,7 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     padding: 2px 6px;
     border-radius: 6px;
@@ -132,7 +132,7 @@
 }
 
 .dash-kpi-subtext {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -184,7 +184,7 @@
     align-items: center;
     justify-content: center;
     color: var(--pos-brown);
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .dash-card-title {
@@ -198,7 +198,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--pos-muted);
 }
@@ -231,7 +231,7 @@
     padding: 5px 12px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
     cursor: pointer;
@@ -269,7 +269,7 @@
 
 .dash-score-number {
     font-size: 42px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--pos-brown-dark);
     line-height: 1;
 }
@@ -280,12 +280,12 @@
 }
 
 .dash-score-meta strong {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--pos-text);
 }
 
 .dash-score-meta span {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -327,7 +327,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     flex-shrink: 0;
 }
@@ -354,7 +354,7 @@
 }
 
 .dash-alert-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--pos-text);
     white-space: nowrap;
@@ -363,7 +363,7 @@
 }
 
 .dash-alert-sub {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -376,7 +376,7 @@
     border-radius: 8px;
     padding: 5px 12px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-brown-dark);
     cursor: pointer;
@@ -427,7 +427,7 @@
     padding: 4px 10px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
     cursor: pointer;
@@ -446,7 +446,7 @@
 .dash-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .dash-table th {
@@ -482,7 +482,7 @@
     border: 1px solid var(--pos-border);
     color: var(--pos-brown-dark);
     font-weight: 700;
-    font-size: 11px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -500,7 +500,7 @@
 }
 
 .dash-customer-meta {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -528,7 +528,7 @@
 .report-section-desc {
     margin: 4px 0 0;
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
 }
 
@@ -552,7 +552,7 @@
 
 .report-date-field label {
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -565,7 +565,7 @@
     border: 1px solid var(--pos-border);
     border-radius: 9px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -591,7 +591,7 @@
     padding: 9px 16px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -669,7 +669,7 @@
     background: var(--pos-cream-bg);
     border: 1px solid var(--pos-border);
     border-radius: 999px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -722,14 +722,14 @@
 
 .report-empty-state strong {
     color: var(--pos-text);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .report-empty-state p {
     max-width: 300px;
     margin: 0;
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
 }
 
@@ -748,7 +748,7 @@
 
 .report-table-footer > span {
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .report-table-footer nav {
@@ -779,7 +779,7 @@
     background: #ffffff;
     border: 1px solid var(--pos-border);
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -819,7 +819,7 @@
 .report-disclaimer p {
     margin: 0;
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.6;
 }
 
@@ -968,14 +968,14 @@
 .dc-mutation-table-heading p {
     margin-top: 3px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .dc-mutation-filter-heading small {
     display: block;
     margin-top: 6px;
-    color: #a28772;
-    font-size: 9px;
+    color: #7d6450;
+    font-size: 11px;
 }
 
 .dc-mutation-filter-form {
@@ -997,7 +997,7 @@
 
 .dc-mutation-field label {
     color: #927660;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -1011,7 +1011,7 @@
     background: white;
     color: var(--text);
     font-family: inherit;
-    font-size: 10px;
+    font-size: 12px;
     outline: none;
 }
 
@@ -1032,7 +1032,7 @@
 .dc-mutation-filter-actions .outline-button {
     min-height: 36px;
     padding: 8px 15px;
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -1063,7 +1063,7 @@
 
 .dc-mutation-summary-top small {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-summary-card > strong {
@@ -1077,7 +1077,7 @@
 .dc-mutation-summary-card > p {
     margin-top: 4px;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-table-card {
@@ -1100,7 +1100,7 @@
     border-radius: 20px;
     background: #fbf6ed;
     color: var(--brown);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-table {
@@ -1109,25 +1109,25 @@
 
 .dc-mutation-table th {
     padding: 13px 12px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-table td {
     padding: 13px 12px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-secondary {
     display: block;
     margin-top: 4px;
     color: var(--muted);
-    font-size: 8px;
-    font-weight: 400;
+    font-size: 11px;
+    font-weight: 500;
 }
 
 .dc-mutation-reference {
     color: var(--brown);
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 }
 
@@ -1135,7 +1135,7 @@
     display: block;
     max-width: 220px;
     color: #806b59;
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.5;
 }
 
@@ -1154,12 +1154,12 @@
 
 .dc-mutation-empty strong {
     color: var(--text);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .dc-mutation-empty p {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .dc-mutation-pagination {

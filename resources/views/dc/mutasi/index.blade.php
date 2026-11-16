@@ -1,13 +1,16 @@
 
 @extends('layouts.app')
 
+@section('title', 'Riwayat Mutasi Stok')
+@section('description', 'Catatan stok masuk, pengiriman, dan pembatalan pengiriman gudang DC.')
+
 @section('content')
 <div class="dc-mutation-page">
 
     {{-- FILTER PANEL --}}
     <section class="dashboard-card dc-mutation-filter">
         <div class="dc-mutation-filter-heading">
-            <div class="dc-mutation-heading-icon">🗓️</div>
+            <div class="dc-mutation-heading-icon"><x-icon name="calendar-days" /></div>
             <div>
                 <h3>Filter Riwayat Mutasi</h3>
                 <p>Pilih periode dan jenis mutasi untuk melihat pergerakan stok gudang DC.</p>
@@ -69,7 +72,7 @@
 
             <div class="dc-mutation-filter-actions">
                 <button type="submit" class="primary-button">
-                    Terapkan Filter →
+                    Terapkan Filter
                 </button>
 
                 <button
@@ -95,7 +98,7 @@
     <section class="dc-mutation-summary">
         <div class="dc-mutation-summary-card">
             <div class="dc-mutation-summary-top">
-                <span>📦</span>
+                <span><x-icon name="package" /></span>
                 <small>Total Data</small>
             </div>
             <strong>{{ number_format($summary['total'], 0, ',', '.') }}</strong>
@@ -104,7 +107,7 @@
 
         <div class="dc-mutation-summary-card">
             <div class="dc-mutation-summary-top">
-                <span>🟢</span>
+                <span><x-icon name="package-plus" /></span>
                 <small>Stok Masuk</small>
             </div>
             <strong>{{ number_format($summary['penerimaan'], 0, ',', '.') }}</strong>
@@ -113,7 +116,7 @@
 
         <div class="dc-mutation-summary-card">
             <div class="dc-mutation-summary-top">
-                <span>🚚</span>
+                <span><x-icon name="truck" /></span>
                 <small>Stok Keluar</small>
             </div>
             <strong>{{ number_format($summary['pengiriman'], 0, ',', '.') }}</strong>
@@ -122,7 +125,7 @@
 
         <div class="dc-mutation-summary-card">
             <div class="dc-mutation-summary-top">
-                <span>↩️</span>
+                <span><x-icon name="undo-2" /></span>
                 <small>Pembatalan</small>
             </div>
             <strong>{{ number_format($summary['pembatalan'], 0, ',', '.') }}</strong>
@@ -226,7 +229,7 @@
                         <tr>
                             <td colspan="6">
                                 <div class="dc-mutation-empty">
-                                    <span>📋</span>
+                                    <span><x-icon name="clipboard-list" /></span>
                                     <strong>Belum Ada Riwayat Mutasi</strong>
                                     <p>Data akan muncul ketika terdapat penambahan stok atau pengiriman barang.</p>
                                 </div>

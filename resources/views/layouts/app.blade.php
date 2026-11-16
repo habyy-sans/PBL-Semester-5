@@ -24,6 +24,9 @@
 
     <!-- Tailwind + style.css + Alpine -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Icon (Iconify / Lucide) untuk JavaScript -->
+    <x-icon-runtime />
 </head>
 
 <body x-data="{ sidebarOpen: false }">

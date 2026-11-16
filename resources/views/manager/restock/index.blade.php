@@ -10,7 +10,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">△</div>
+            <div class="stat-icon"><x-icon name="clock" /></div>
             <div class="stat-content">
                 <span class="stat-label">Menunggu Approval</span>
                 <strong id="stApproval">0 Draft</strong>
@@ -19,7 +19,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">↻</div>
+            <div class="stat-icon"><x-icon name="warehouse" /></div>
             <div class="stat-content">
                 <span class="stat-label">Di Antrean DC</span>
                 <strong id="stQueue">0 Instruksi</strong>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">▱</div>
+            <div class="stat-icon"><x-icon name="truck" /></div>
             <div class="stat-content">
                 <span class="stat-label">Dalam Pengiriman</span>
                 <strong id="stShip">0 Instruksi</strong>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="circle-check" /></div>
             <div class="stat-content">
                 <span class="stat-label">Selesai Diterima</span>
                 <strong id="stDone">0 Instruksi</strong>

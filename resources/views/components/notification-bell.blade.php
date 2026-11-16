@@ -13,7 +13,7 @@
         :aria-label="unread > 0 ? 'Notifikasi, ' + unread + ' belum dibaca' : 'Notifikasi'"
         aria-haspopup="true"
     >
-        🔔
+        <x-icon name="bell" size="1.25em" />
         <b class="notification-badge" x-show="unread > 0" x-cloak x-text="badgeText"></b>
     </button>
 
@@ -64,7 +64,7 @@
                     :disabled="busyId === item.id"
                     @click="openItem(item)"
                 >
-                    <span class="notification-icon" :class="{ 'is-danger': isDanger(item.type) }" x-text="icon(item.type)"></span>
+                    <span class="notification-icon" :class="{ 'is-danger': isDanger(item.type) }" x-html="icon(item.type)"></span>
 
                     <span class="notification-body">
                         <span class="notification-title" x-text="item.title"></span>

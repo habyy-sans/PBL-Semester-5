@@ -28,7 +28,7 @@
         <div class="stats-grid">
 
             <div class="stat-card">
-                <div class="stat-icon">▱</div>
+                <div class="stat-icon"><x-icon name="truck" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Dalam Pengiriman</span>
                     <strong x-text="count('dikirim')"></strong>
@@ -37,7 +37,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">!</div>
+                <div class="stat-icon"><x-icon name="circle-alert" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Menunggu Pengecekan</span>
                     <strong x-text="count('menunggu')"></strong>
@@ -46,7 +46,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">✓</div>
+                <div class="stat-icon"><x-icon name="circle-check" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Sudah Diterima</span>
                     <strong x-text="count('diterima')"></strong>
@@ -55,7 +55,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">≠</div>
+                <div class="stat-icon"><x-icon name="equal-not" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Ada Selisih</span>
                     <strong x-text="withDifference()"></strong>
