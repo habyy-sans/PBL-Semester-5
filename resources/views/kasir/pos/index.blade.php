@@ -25,7 +25,22 @@
                 </div>
             </div>
             <div class="pos-topbar-divider"></div>
-            <div class="pos-date-badge">{{ $todayDateStr }}</div>
+            <div class="pos-date-badge"
+            x-data="{ 
+                     currentTime: '',
+                     updateTime() {
+                         const now = new Date();
+                         const hours = String(now.getHours()).padStart(2, '0');
+                         const minutes = String(now.getMinutes()).padStart(2, '0');
+                         const seconds = String(now.getSeconds()).padStart(2, '0');
+                         this.currentTime = `${hours}:${minutes}:${seconds} WIB`;
+                     }
+                 }" 
+                 x-init="updateTime(); setInterval(() => updateTime(), 1000)"
+            ><span>{{ $todayDateStr }}</span>
+                <span class="pos-time-separator">•</span>
+                <strong x-text="currentTime" class="pos-realtime-clock">--:--:-- WIB</strong>
+        </div>
         </div>
 
         <div class="pos-topbar-actions">
@@ -76,7 +91,7 @@
                     placeholder="Cari kopi, minuman, atau menu makanan..."
                     autocomplete="off"
                 >
-                <span class="pos-search-shortcut">⌘ K</span>
+                {{-- <span class="pos-search-shortcut">⌘ K</span> --}}
             </div>
 
             <!-- CATEGORY CARDS (Sesuai Template Image 1) -->
@@ -115,12 +130,7 @@
                 </button>
             </div>
 
-            <!-- ORDER TYPE SEGMENTED BUTTONS -->
-            <div class="pos-order-types" id="orderTypeBox">
-                <button type="button" class="pos-order-type-btn active" data-type="Dine In">Dine In</button>
-                <button type="button" class="pos-order-type-btn" data-type="Take Away">Take Away</button>
-                <button type="button" class="pos-order-type-btn" data-type="Online">Order Online</button>
-            </div>
+        
 
             <!-- CUSTOMER NAME & TABLE INPUTS -->
             <div class="pos-meta-inputs">
@@ -373,8 +383,8 @@
 
         if (!ids.length) {
             $('cartListBody').innerHTML = `
-                <div class="pos-cart-empty-state">
-                    <div style="font-size: 28px; margin-bottom: 8px;">${KopIcon('shopping-cart')}</div>
+                <div class="pos-cart-empty-state" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px;">
+                    <div style="font-size: 28px; margin-bottom: 8px; display: flex; justify-content: center; align-items: center;">${KopIcon('shopping-cart')}</div>
                     <strong>Pesanan masih kosong</strong>
                     <p style="font-size: 11px; margin-top: 4px;">Pilih menu dari katalog untuk memulai transaksi.</p>
                 </div>`;
@@ -935,6 +945,20 @@
 }
 @keyframes posSpinAnim {
     to { transform: rotate(360deg); }
+}
+.pos-date-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pos-time-separator {
+    opacity: 0.5;
+}
+
+.pos-realtime-clock {
+    font-variant-numeric: tabular-nums; /* Mencegah layout goyang saat angka detik berganti */
+    font-weight: 600;
 }
 </style>
 

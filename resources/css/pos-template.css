@@ -92,9 +92,12 @@
 }
 
 .pos-date-badge {
-    font-size: 13px;
+    /* font-size: 13px;
     font-weight: 500;
-    color: var(--pos-text);
+    color: var(--pos-text); */
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .pos-topbar-actions {
@@ -114,6 +117,14 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--pos-text);
+}
+.pos-time-separator {
+    opacity: 0.5;
+}
+
+.pos-realtime-clock {
+    font-variant-numeric: tabular-nums; /* Mencegah layout goyang saat angka detik berganti */
+    font-weight: 600;
 }
 
 .pos-stat-pill b {
