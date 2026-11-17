@@ -56,7 +56,20 @@
                 <option value="1">Shift 1 (07.00 – 16.00)</option>
                 <option value="2">Shift 2 (16.01 – 23.59)</option>
             </select>
-            <select id="trxHour" class="select"></select>
+
+            {{-- Filter jam: dropdown kustom supaya daftar bisa di-scroll (scrollbar auto-hide).
+                 <select id="trxHour"> tetap ada (disembunyikan) karena dipakai logika filter di bawah. --}}
+            <div class="kop-dropdown" id="trxHourDropdown">
+                <select id="trxHour" class="select kop-dropdown-native" tabindex="-1" aria-hidden="true"></select>
+
+                <button type="button" class="select kop-dropdown-btn" id="trxHourBtn"
+                        aria-haspopup="listbox" aria-expanded="false">
+                    <span id="trxHourLabel">Semua Jam</span>
+                </button>
+
+                <ul class="kop-dropdown-list" id="trxHourList" role="listbox" aria-label="Filter jam"></ul>
+            </div>
+
             <select id="trxMethod" class="select">
                 <option value="semua">Semua Metode</option>
                 <option value="tunai">Tunai</option>
@@ -181,7 +194,51 @@
 
         $('trxHour').innerHTML = '<option value="semua">Semua Jam</option>' +
             hours.map(h => `<option value="${h}" ${String(h) === String(fHour) ? 'selected' : ''}>Jam ${pad(h)}.00 – ${pad(h)}.59</option>`).join('');
+
+        syncHourDropdown();
     }
+
+    // ---------- DROPDOWN JAM (kustom, bisa di-scroll) ----------
+    // Menampilkan isi <select id="trxHour"> sebagai daftar yang bisa di-scroll.
+    // Saat opsi dipilih, nilai dikirim ke <select> lalu event "change" dipicu,
+    // jadi logika filter di bawah tidak perlu diubah.
+    function syncHourDropdown() {
+        const sel = $('trxHour');
+
+        $('trxHourList').innerHTML = [...sel.options].map(o =>
+            `<li role="option" aria-selected="${o.selected}">
+                <button type="button" data-hour="${o.value}" class="${o.selected ? 'is-active' : ''}">${o.textContent}</button>
+            </li>`
+        ).join('');
+
+        $('trxHourLabel').textContent = sel.options[sel.selectedIndex]
+            ? sel.options[sel.selectedIndex].textContent
+            : 'Semua Jam';
+    }
+
+    function setHourDropdown(open) {
+        $('trxHourDropdown').classList.toggle('is-open', open);
+        $('trxHourBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    document.addEventListener('click', e => {
+        if (e.target.closest('#trxHourBtn')) {
+            return setHourDropdown(!$('trxHourDropdown').classList.contains('is-open'));
+        }
+
+        const option = e.target.closest('[data-hour]');
+        if (option) {
+            $('trxHour').value = option.dataset.hour;
+            $('trxHour').dispatchEvent(new Event('change', { bubbles: true }));
+            syncHourDropdown();
+        }
+
+        setHourDropdown(false); // klik di luar / setelah memilih = tutup
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') setHourDropdown(false);
+    });
 
     function renderStats(list) {
         const done = list.filter(t => t.status === 'selesai');

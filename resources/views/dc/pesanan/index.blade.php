@@ -165,7 +165,7 @@
 
             <div>
 
-                <button type="button" class="outline-button" @click="back()">← Kembali ke Daftar</button>
+                <button type="button" class="outline-button" @click="back()">Kembali ke Daftar</button>
 
                 <!-- INFO PESANAN -->
                 <div class="report-grid section-gap">

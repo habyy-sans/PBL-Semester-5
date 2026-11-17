@@ -14,62 +14,6 @@
 
 <div class="pos-wrapper">
 
-    <!-- TOP BAR (Sesuai Template Image 1) -->
-    <header class="pos-topbar">
-        <div class="pos-brand-section">
-            <div class="pos-brand-logo">
-                <div class="pos-brand-logo-icon"><x-icon name="coffee" /></div>
-                <div class="pos-brand-text">
-                    <h1>KOPSYNC</h1>
-                    <span>{{ $branchName ?? 'Gerai Pusat' }}</span>
-                </div>
-            </div>
-            <div class="pos-topbar-divider"></div>
-            <div class="pos-date-badge"
-            x-data="{ 
-                     currentTime: '',
-                     updateTime() {
-                         const now = new Date();
-                         const hours = String(now.getHours()).padStart(2, '0');
-                         const minutes = String(now.getMinutes()).padStart(2, '0');
-                         const seconds = String(now.getSeconds()).padStart(2, '0');
-                         this.currentTime = `${hours}:${minutes}:${seconds} WIB`;
-                     }
-                 }" 
-                 x-init="updateTime(); setInterval(() => updateTime(), 1000)"
-            ><span>{{ $todayDateStr }}</span>
-                <span class="pos-time-separator">•</span>
-                <strong x-text="currentTime" class="pos-realtime-clock">--:--:-- WIB</strong>
-        </div>
-        </div>
-
-        <div class="pos-topbar-actions">
-            <div class="pos-stat-pill">
-                <span>Total :</span>
-                <b>{{ $todayOrdersCount ?? 0 }} Pesanan Hari Ini</b>
-            </div>
-
-            <a href="{{ route('kasir.history') }}" class="pos-report-link" title="Lihat Riwayat & Laporan">
-                <span>Riwayat</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-            </a>
-
-            <div class="pos-user-profile">
-                <div class="pos-user-avatar">{{ $cashierInitial }}</div>
-                <div class="pos-user-meta">
-                    <strong>{{ $cashierName }}</strong>
-                    <span>Kasir</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <!-- MAIN TWO-COLUMN LAYOUT -->
     <div class="pos-layout-modern">
 

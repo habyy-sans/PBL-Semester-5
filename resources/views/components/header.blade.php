@@ -24,18 +24,7 @@
 
     <div class="header-right">
 
-        @if ($role === 'admin')
-            <form class="admin-header-search" method="GET" action="{{ route('admin.pengguna.index') }}">
-                <input
-                    type="search"
-                    name="q"
-                    value="{{ request()->routeIs('admin.pengguna.index') ? request('q') : '' }}"
-                    placeholder="Cari pengguna..."
-                    aria-label="Cari pengguna"
-                >
-                <button type="submit" aria-label="Cari"><x-icon name="search" /></button>
-            </form>
-            <a class="primary-button admin-quick-action" href="{{ route('admin.pengguna.create') }}">+ Pengguna</a>
+        @if ($role === 'admin')           
         @endif
 
         @if (in_array($role, ['dc', 'manager', 'ic'], true))

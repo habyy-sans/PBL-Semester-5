@@ -5,12 +5,8 @@
 
 @section('content')
 <section class="page active admin-panel">
-    <div class="admin-page-heading">
-        <div>
-            <h1>{{ $record ? 'Edit' : 'Tambah' }} {{ $title }}</h1>
-            <p>Pastikan data yang disimpan sesuai dengan kebutuhan operasional.</p>
-        </div>
-        <a class="outline-button" href="{{ route($routeName.'.index') }}">Kembali</a>
+    <div class="admin-page-heading">        
+        <a class="outline-button2" href="{{ route($routeName.'.index') }}">Kembali</a>
     </div>
 
     <div class="page-card admin-form-card">
@@ -53,7 +49,7 @@
                 @endforeach
             </div>
             <div class="admin-form-actions">
-                <a class="outline-button" href="{{ route($routeName.'.index') }}">Batal</a>
+                <a class="outline-button1" href="{{ route($routeName.'.index') }}">Batal</a>
                 <button class="primary-button" type="submit">{{ $record ? 'Simpan Perubahan' : 'Simpan Data' }}</button>
             </div>
         </form>

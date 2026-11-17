@@ -8,6 +8,7 @@
 /* ---------- ICON (Iconify / Lucide) ---------- */
 
 .icon {
+    display: inline-block; /* Tailwind (preflight) membuat svg jadi display:block, sehingga tidak ikut text-align:center / sejajar teks */
     flex-shrink: 0;
     vertical-align: -0.2em;
 }
@@ -367,7 +368,8 @@ body {
 }
 
 /* =========================================================
-   ROLE IC — Waste Log
+   ROLE IC — Waste Log: search/filter sejajar tombol "+ Catat Waste",
+   teks "Menampilkan x dari y catatan" tepat di bawah search.
 ========================================================= */
 
 .waste-head {
@@ -394,4 +396,123 @@ body {
 
 .waste-head .primary-button {
     flex-shrink: 0;
+}
+
+/* =========================================================
+   ROLE ADMIN
+========================================================= */
+
+/* Jarak antar bagian.
+   .page.active (display:block) mengalahkan .admin-panel (display:flex + gap),
+   sehingga gap tidak pernah jalan. Dibuat lebih spesifik di sini. */
+.page.active.admin-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+/* Judul halaman sudah ada di header atas, jadi baris ini hanya berisi tombol aksi */
+.admin-page-heading {
+    justify-content: flex-end;
+}
+
+/* Pagination: tombol sama seperti tombol lain di aplikasi */
+.kop-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.kop-pagination .outline-button,
+.kop-pagination .primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: var(--fs-label);
+    font-weight: var(--fw-medium);
+    text-decoration: none;
+}
+
+.kop-pagination .outline-button.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.kop-pagination-gap {
+    padding: 0 4px;
+    color: var(--muted);
+}
+
+/* =========================================================
+   ROLE KASIR — Riwayat Transaksi: dropdown jam yang bisa di-scroll
+   (scrollbar auto-hide ikut aturan global: muncul hanya saat di-scroll)
+========================================================= */
+
+.kop-dropdown {
+    position: relative;
+}
+
+.kop-dropdown-native {
+    display: none; /* tetap ada untuk logika filter, tidak ditampilkan */
+}
+
+.main-content.main-content .kop-dropdown-btn {
+    min-width: 128px;
+    padding-right: 28px;
+    text-align: left;
+    font-weight: var(--fw-regular);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c3a12' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+}
+
+.kop-dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 30;
+    display: none;
+    min-width: 100%;
+    max-height: 240px;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(63, 42, 29, 0.14);
+}
+
+.kop-dropdown.is-open .kop-dropdown-list {
+    display: block;
+}
+
+.main-content.main-content .kop-dropdown-list button {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-regular);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.main-content.main-content .kop-dropdown-list button:hover {
+    background: #fff5e7;
+}
+
+.main-content.main-content .kop-dropdown-list button.is-active {
+    background: #f4ece0;
+    font-weight: var(--fw-medium);
 }
