@@ -12,6 +12,25 @@
     $todayDateStr = \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y');
 @endphp
 
+@push('header_custom')
+<div class="header-clock-badge" 
+     x-data="{ 
+         currentTime: '',
+         updateTime() {
+             const now = new Date();
+             const h = String(now.getHours()).padStart(2, '0');
+             const m = String(now.getMinutes()).padStart(2, '0');
+             const s = String(now.getSeconds()).padStart(2, '0');
+             this.currentTime = `${h}:${m}:${s} WIB`;
+         }
+     }" 
+     x-init="updateTime(); setInterval(() => updateTime(), 1000)">
+    <span>{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
+    <span class="clock-divider">•</span>
+    <strong x-text="currentTime" class="live-clock">--:--:-- WIB</strong>
+</div>
+@endpush
+
 <div class="pos-wrapper">
 
     <!-- MAIN TWO-COLUMN LAYOUT -->
@@ -568,30 +587,35 @@
     // MODAL QRIS DINAMIS DENGAN POLLING & SIMULATOR
     function openQrisModal(json, u) {
         openModal(`
-            <div class="modal-box wide" style="text-align: center;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <h4 style="margin:0; color:var(--pos-brown-dark);">Pembayaran Direct QRIS</h4>
-                    <span style="background:${json.is_mock ? '#fef3c7' : '#dcfce7'}; color:${json.is_mock ? '#b45309' : '#15803d'}; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600;">
-                        ${json.is_mock ? 'Mode Simulasi' : 'Midtrans Sandbox'}
-                    </span>
+            <div class="modal-box wide" style="max-width: 440px; padding: 24px; position: relative;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px;">
+                    <div style="text-align: left;">
+                        <h4 style="margin:0; font-size: 18px; color:var(--pos-brown-dark); font-weight: 700;">Pembayaran Direct QRIS</h4>
+                        <span style="display: inline-block; margin-top: 4px; background:${json.is_mock ? '#fef3c7' : '#dcfce7'}; color:${json.is_mock ? '#b45309' : '#15803d'}; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:600;">
+                            ${json.is_mock ? 'Mode Simulasi' : 'Midtrans Sandbox'}
+                        </span>
+                    </div>
+                    <button type="button" class="outline-button" data-close style="border:none; padding:4px 8px; font-size:18px; line-height:1; color:#94a3b8; cursor:pointer;" title="Tutup">&times;</button>
                 </div>
 
                 <p style="font-size:13px; color:var(--pos-muted); margin:0 0 12px 0;">
                     Silakan scan QRIS di bawah ini dengan GoPay, BCA, Livin, ShopeePay, atau aplikasi perbankan lainnya.
                 </p>
 
-                <div style="background:#fff; padding:12px; border-radius:12px; display:inline-block; border:1px solid var(--pos-border); box-shadow:0 4px 14px rgba(0,0,0,0.06); margin-bottom:12px;">
-                    <img src="${json.qr_url}" alt="QRIS Code" style="width:200px; height:200px; display:block; object-fit:contain; border-radius:8px;">
+                <div style="background:#f8fafc; border:1px solid var(--pos-border); border-radius:14px; padding:16px; margin-bottom:14px; text-align:center;">
+                    <div style="background:#fff; padding:10px; border-radius:10px; display:inline-block; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-bottom:10px;">
+                        <img src="${json.qr_url}" alt="QRIS Code" style="width:170px; height:170px; display:block; object-fit:contain; border-radius:6px;">
+                    </div>
+                    <div style="font-size:22px; font-weight:800; color:var(--pos-brown-dark); margin-bottom:2px;">
+                        ${rp(json.total)}
+                    </div>
+                    <div style="font-size:11px; color:var(--pos-muted);">
+                        Order: <b>${json.no}</b> · Ref: <code style="font-size:11px;">${json.order_id}</code>
+                    </div>
                 </div>
 
-                <div style="font-size:22px; font-weight:700; color:var(--pos-brown-dark); margin-bottom:4px;">
-                    ${rp(json.total)}
-                </div>
-                <div style="font-size:12px; color:var(--pos-muted); margin-bottom:14px;">
-                    Order: <b>${json.no}</b> · Ref: <code>${json.order_id}</code>
-                </div>
 
-                <div id="qrisStatusNotice" style="padding:10px 14px; background:var(--pos-cream-bg); border-radius:8px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; border:1px solid var(--pos-border);">
+                <div id="qrisStatusNotice" style="padding:10px 14px; background:#fffbe8; border:1px solid #fde047; color:#a16207; border-radius:10px; font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
                     <span class="pos-spin-loader"></span>
                     <span>Menunggu konfirmasi pembayaran pelanggan...</span>
                 </div>
@@ -599,29 +623,29 @@
                 <!-- Alat Pengujian Sandbox (Gratis) -->
                 <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:12px; text-align:left; font-size:12px; margin-bottom:16px;">
                     <div style="font-weight:600; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>${KopIcon('wrench')} Alat Pengujian Sandbox:</span>
+                        <span>Alat Pengujian Sandbox:</span>
                         <span style="font-size:11px; color:#64748b;">(Gratis)</span>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; gap:8px;">
-                            <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQrUrl" data-url="${json.qr_url}">
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="outline-button" style="flex:1; padding:5px 6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:5px;" id="btnCopyQrUrl" data-url="${json.qr_url}">
                                 ${KopIcon('link')} Salin URL QR Code
                             </button>
-                            <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQr" data-qr="${json.qr_string}">
+                            <button type="button" class="outline-button" style="flex:1; padding:5px 6px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:5px;" id="btnCopyQr" data-qr="${json.qr_string}">
                                 ${KopIcon('copy')} Salin String QR
                             </button>
                         </div>
-                        <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="width:100%; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
-                            ${KopIcon('globe')} Buka Simulator Midtrans ↗
+                        <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="width:100%; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center; gap:5px;">
+                            ${KopIcon('globe')} Buka Simulator Midtrans
                         </a>
                         <button type="button" class="primary-button" style="width:100%; padding:8px; font-size:12px; background:#0284c7;" id="btnSimulatePay" data-trx-id="${json.transaksi_id}">
-                            ${KopIcon('zap')} Bayar Sekarang (Simulasi Instan)
+                             Bayar Sekarang (Simulasi Instan)
                         </button>
                     </div>
                 </div>
 
-                <div class="modal-actions" style="justify-content:center;">
-                    <button type="button" class="outline-button" id="btnCancelPendingTrx" data-trx-id="${json.transaksi_id}" style="color:var(--pos-red-text); border-color:rgba(220,38,38,0.3);">
+                <div class="modal-actions" style="justify-content:center; margin:0;">
+                    <button type="button" class="outline-button" id="btnCancelPendingTrx" data-trx-id="${json.transaksi_id}" style="width:100%; color:var(--pos-red-text); border-color:rgba(220,38,38,0.3); padding:9px;">
                         Batalkan Transaksi
                     </button>
                 </div>
@@ -825,7 +849,32 @@
         const cancelTrxBtn = t.closest('#btnCancelPendingTrx');
         if (cancelTrxBtn) {
             const trxId = cancelTrxBtn.dataset.trxId;
-            if (confirm('Batalkan transaksi QRIS ini?')) {
+
+            openModal(`
+                <div class="modal-box" style="max-width: 360px; text-align: center; padding: 20px;">
+                    <div style="width: 44px; height: 44px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        ${KopIcon('triangle-alert')}
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 16px; color: var(--pos-brown-dark); font-weight: 700;">Batalkan Transaksi?</h4>
+                    <p style="margin: 0 0 18px 0; font-size: 12px; color: var(--pos-muted);">
+                        Apakah kamu yakin ingin membatalkan transaksi QRIS ini? Status pesanan akan diubah menjadi batal.
+                    </p>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="outline-button" data-close style="flex: 1; padding: 8px; font-size: 12px;">
+                            Kembali
+                        </button>
+                        <button type="button" class="primary-button" id="btnConfirmCancelTrx" data-trx-id="${trxId}" style="flex: 1; padding: 8px; font-size: 12px; background: #dc2626; border: none;">
+                            Ya, Batalkan
+                        </button>
+                    </div>
+                </div>
+            `);
+            return;
+        }
+
+            const confirmCancelBtn = t.closest('#btnConfirmCancelTrx');
+            if (confirmCancelBtn) {
+                const trxId = confirmCancelBtn.dataset.trxId;
                 fetch(`/kasir/pos/cancel/${trxId}`, {
                     method: 'POST',
                     headers: {
@@ -837,7 +886,7 @@
                     closeModal();
                     flash('Transaksi QRIS dibatalkan.');
                 });
-            }
+            
             return;
         }
 
@@ -903,6 +952,28 @@
 .pos-realtime-clock {
     font-variant-numeric: tabular-nums; /* Mencegah layout goyang saat angka detik berganti */
     font-weight: 600;
+}
+
+.header-clock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4A2C11;
+    white-space: nowrap;
+    margin-right: 12px;
+}
+
+.clock-divider {
+    opacity: 0.4;
+}
+
+.live-clock {
+    display: inline-block;
+    min-width: 96px; 
+    text-align: left;
+    font-variant-numeric: tabular-nums; 
+    font-weight: 700;
 }
 </style>
 

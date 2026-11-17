@@ -24,6 +24,8 @@
 
     <div class="header-right">
 
+        @stack('header_custom')
+        
         @if ($role === 'admin')           
         @endif
 
