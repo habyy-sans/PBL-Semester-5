@@ -5,11 +5,7 @@
 
 @section('content')
 <section class="page active admin-panel">
-    <div class="admin-page-heading">
-        <div>
-            <h1>{{ $title }}</h1>
-            <p>Stok menipis ditandai saat jumlah saat ini kurang dari batas minimum lokasi.</p>
-        </div>
+    <div class="admin-page-heading">    
         <span class="status {{ $lowCount > 0 ? 'warning' : 'success' }}">{{ number_format($lowCount) }} menipis</span>
     </div>
     @if (session('success'))

@@ -6,11 +6,7 @@
 @section('content')
 <section class="page active admin-panel">
     <div class="admin-page-heading">
-        <div>
-            <h1>{{ $pengguna ? 'Edit Pengguna' : 'Tambah Pengguna' }}</h1>
-            <p>Role DC ditempatkan ke DC; role cabang ditempatkan ke satu cabang.</p>
-        </div>
-        <a class="outline-button" href="{{ route('admin.pengguna.index') }}">Kembali</a>
+        <a class="outline-button2" href="{{ route('admin.pengguna.index') }}">Kembali</a>
     </div>
     @if ($errors->any())
         <div class="admin-notice error" role="alert">

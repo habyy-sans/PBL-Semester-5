@@ -6,10 +6,6 @@
 @section('content')
 <section class="page active admin-panel">
     <div class="admin-page-heading">
-        <div>
-            <h1>Kelola Pengguna</h1>
-            <p>Kelola akses admin, cabang, dan distribution center.</p>
-        </div>
         <a class="primary-button" href="{{ route('admin.pengguna.create') }}">+ Tambah Pengguna</a>
     </div>
 

@@ -6,10 +6,6 @@
 @section('content')
 <section class="page active admin-panel">
     <div class="admin-page-heading">
-        <div>
-            <h1>Ringkasan operasional</h1>
-            <p>Pantau data master serta bahan yang perlu segera diperhatikan.</p>
-        </div>
         <a class="primary-button" href="{{ route('admin.pengguna.create') }}">+ Tambah Pengguna</a>
     </div>
 
