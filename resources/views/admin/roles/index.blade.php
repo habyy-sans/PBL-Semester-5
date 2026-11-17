@@ -6,10 +6,6 @@
 @section('content')
 <section class="page active admin-panel">
     <div class="admin-page-heading">
-        <div>
-            <h1>Role & Hak Akses</h1>
-            <p>Role disimpan pada kolom pengguna.role sesuai daftar baku aplikasi.</p>
-        </div>
         <a class="primary-button" href="{{ route('admin.pengguna.create') }}">+ Tetapkan Role</a>
     </div>
     <div class="admin-role-grid">

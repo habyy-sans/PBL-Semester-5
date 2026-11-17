@@ -181,7 +181,7 @@
             <div>
 
                 <div class="no-print">
-                    <button type="button" class="outline-button" @click="back()">← Kembali ke Daftar</button>
+                    <button type="button" class="outline-button" @click="back()">Kembali ke Daftar</button>
                 </div>
 
                 <div class="page-card section-gap sj-document">
@@ -211,7 +211,7 @@
                             class="outline-button"
                             @click="back()"
                         >
-                            ← Kembali ke Daftar
+                            Kembali ke Daftar
                         </button>
 
                         <div class="sj-action-right">

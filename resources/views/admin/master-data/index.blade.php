@@ -5,12 +5,8 @@
 
 @section('content')
 <section class="page active admin-panel">
-    <div class="admin-page-heading">
-        <div>
-            <h1>{{ $title }}</h1>
-            <p>Kelola data master untuk mendukung operasional lintas cabang.</p>
-        </div>
-        <a class="primary-button" href="{{ route($routeName.'.create') }}">+ Tambah {{ $title }}</a>
+    <div class="admin-page-heading">        
+        <a class="primary-button" href="{{ route($routeName.'.create') }}">+ {{ $title }}</a>
     </div>
 
     @if (session('success'))
@@ -41,11 +37,7 @@
                 @foreach ($sortable as $field)
                     <option value="{{ $field }}" @selected($sort === $field)>{{ str($field)->replace('_', ' ')->title() }}</option>
                 @endforeach
-            </select>
-            <select class="select admin-filter" name="direction" aria-label="Arah urutan">
-                <option value="asc" @selected($direction === 'asc')>A–Z / Kecil–Besar</option>
-                <option value="desc" @selected($direction === 'desc')>Z–A / Besar–Kecil</option>
-            </select>
+            </select>            
             <button type="submit" class="outline-button">Terapkan</button>
             @if (request()->query())
                 <a class="admin-clear-filter" href="{{ route($routeName.'.index') }}">Reset</a>
