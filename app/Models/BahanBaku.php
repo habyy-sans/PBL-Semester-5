@@ -6,7 +6,15 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama_bahan', 'kategori', 'satuan', 'nama_kemasan', 'isi_per_kemasan', 'harga_beli'])]
+#[Fillable([
+    'nama_bahan',
+    'kategori',
+    'satuan',
+    'nama_kemasan',
+    'isi_per_kemasan',
+    'harga_beli',
+    'minimum_order_qty',
+])]
 class BahanBaku extends Model
 {
     protected $table = 'bahan_baku';
@@ -15,14 +23,12 @@ class BahanBaku extends Model
 
     public $timestamps = false;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'isi_per_kemasan' => 'decimal:3',
             'harga_beli' => 'decimal:2',
+            'minimum_order_qty' => 'integer',
         ];
     }
 
@@ -39,5 +45,25 @@ class BahanBaku extends Model
     public function resep(): HasMany
     {
         return $this->hasMany(ResepMenu::class, 'bahan_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'bahan_id');
+    }
+
+    public function wasteLogs(): HasMany
+    {
+        return $this->hasMany(WasteLog::class, 'bahan_id');
+    }
+
+    public function detailDraftInstruksi(): HasMany
+    {
+        return $this->hasMany(DetailDraftInstruksi::class, 'bahan_id');
+    }
+
+    public function detailSuratJalan(): HasMany
+    {
+        return $this->hasMany(DetailSuratJalan::class, 'bahan_id');
     }
 }

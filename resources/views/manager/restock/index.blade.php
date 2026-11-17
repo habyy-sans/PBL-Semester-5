@@ -10,7 +10,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">△</div>
+            <div class="stat-icon"><x-icon name="clock" /></div>
             <div class="stat-content">
                 <span class="stat-label">Menunggu Approval</span>
                 <strong id="stApproval">0 Draft</strong>
@@ -19,7 +19,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">↻</div>
+            <div class="stat-icon"><x-icon name="warehouse" /></div>
             <div class="stat-content">
                 <span class="stat-label">Di Antrean DC</span>
                 <strong id="stQueue">0 Instruksi</strong>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">▱</div>
+            <div class="stat-icon"><x-icon name="truck" /></div>
             <div class="stat-content">
                 <span class="stat-label">Dalam Pengiriman</span>
                 <strong id="stShip">0 Instruksi</strong>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="circle-check" /></div>
             <div class="stat-content">
                 <span class="stat-label">Selesai Diterima</span>
                 <strong id="stDone">0 Instruksi</strong>
@@ -73,7 +73,7 @@
             <table class="table-fixed">
                 <colgroup>
                     <col style="width: 12%">
-                    <col style="width: 14%">
+                    <col style="width: 25%">
                     <col style="width: 11%">
                     <col style="width: 9%">
                     <col style="width: 16%">
@@ -133,6 +133,15 @@
 
     const $  = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     // ---------- STATE (diisi dari backend) ----------
     let ITEMS      = {};     // info bahan, kunci = bahan_id
@@ -151,6 +160,7 @@
     let mAdd    = 1;
     let mReason = REASONS[0];
     let mNote   = '';
+    let deepLinkHandled = false;
 
     // 3430 ml (isi 700) => "4 Kotak 630 ml"
     const fmtStock = (item, amount) => {
@@ -206,9 +216,11 @@ async function loadData() {
     }
 
     ITEMS = {};
-    json.items.forEach(i => ITEMS[String(i.bahan_id)] = i);
+    (json.manual_items || json.items).forEach(i => {
+        ITEMS[String(i.bahan_id)] = i;
+    });
 
-    // Tetap simpan daftar stok menipis untuk pilihan Reorder Manual.
+    // Daftar stok menipis tetap khusus untuk restock otomatis.
     draftItems = json.items;
 
     // Daftar instruksi sepenuhnya berasal dari database.
@@ -219,6 +231,15 @@ async function loadData() {
     }
 
     renderTable();
+
+    if (!deepLinkHandled) {
+        deepLinkHandled = true;
+        const draftId = new URLSearchParams(window.location.search).get('draft_id');
+
+        if (draftId) {
+            showDraft(draftId);
+        }
+    }
 }
 
 
@@ -273,16 +294,16 @@ async function loadData() {
 
         $('rsBody').innerHTML = list.map(o => `
             <tr>
-                <td><strong>${o.no}</strong></td>
-                <td class="col-nowrap">${o.date}</td>
+                <td><strong>${esc(o.no)}</strong></td>
+                <td class="col-nowrap">${esc(o.date)}</td>
                 <td><span class="status info">${o.source === 'otomatis' ? 'Otomatis' : 'Manual'}</span></td>
                 <td>${o.items.length} jenis</td>
                 <td style="text-align:right"><strong>${rp(orderCost(o))}</strong></td>
                 <td><span class="status ${STATUS[o.status].cls}">${STATUS[o.status].label}</span></td>
                 <td>
                     ${o.status === 'approval'
-                        ? `<button type="button" class="primary-button btn-sm" data-review="${o.id}">Tinjau</button>`
-                        : `<button type="button" class="outline-button btn-sm" data-detail="${o.no}">Detail</button>`
+                        ? `<button type="button" class="primary-button btn-sm" data-review="${esc(o.id)}">Tinjau</button>`
+                        : `<button type="button" class="outline-button btn-sm" data-detail="${esc(o.no)}">Detail</button>`
                     }
                 </td>
             </tr>
@@ -387,13 +408,18 @@ async function loadData() {
                                         Harga beli per ${line.pack}:
                                         <strong>${rp(line.harga_beli)}</strong>
                                     </div>
+
+                                    <div style="font-size:11px;color:#8b735f;margin-top:3px">
+                                        Minimum pemesanan:
+                                        <strong>${line.minimum_order_qty || 1} ${line.pack}</strong>
+                                    </div>
                                 </td>
 
                                 <td style="min-width:190px">
                                     <div class="form-row">
                                         <input
                                             type="number"
-                                            min="0"
+                                            min="${line.minimum_order_qty || 1}"
                                             step="1"
                                             class="table-input"
                                             data-review-qty="${line.item}"
@@ -536,7 +562,7 @@ async function loadData() {
                 <td><strong>${name}</strong></td>
                 <td>${l.qty} ${pack}</td>
                 <td>${l.qty_base.toLocaleString('id-ID')} ${it.satuan || ''}</td>
-                <td style="text-align:right">${rp(l.qty_base * l.harga_beli)}</td>
+                <td style="text-align:right">${rp(l.qty * l.harga_beli)}</td>
             </tr>`;
         }).join('');
 
@@ -578,11 +604,17 @@ async function loadData() {
 
     function showManual() {
         const keys = Object.keys(mLines);
+        const moq = Number(ITEMS[mPick]?.minimum_order_qty) || 1;
+        if (mAdd < moq) mAdd = moq;
 
         const options = Object.entries(ITEMS)
-            .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
-            .map(([k, i]) => `<option value="${k}" ${k === mPick ? 'selected' : ''}>${i.nama_bahan} (${i.nama_kemasan})</option>`)
-            .join('');
+        .sort((a, b) => a[1].nama_bahan.localeCompare(b[1].nama_bahan))
+        .map(([k, i]) => `
+            <option value="${k}" ${k === mPick ? 'selected' : ''}>
+                ${esc(i.nama_bahan)} (${esc(i.nama_kemasan)}) — MOQ ${i.minimum_order_qty || 1}
+            </option>
+        `)
+        .join('');
 
         openModal(`
             <div class="modal-box wide">
@@ -593,10 +625,12 @@ async function loadData() {
                     <label class="form-label">Tambah Bahan</label>
                     <div class="form-row">
                         <select id="mPick" class="form-input">${options}</select>
-                        <input type="number" min="1" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
+                        <input type="number" min="${moq}" step="1" id="mAdd" class="form-input unit" value="${mAdd}">
                         <button type="button" class="outline-button" data-madd>Tambah</button>
                     </div>
-                    <div class="form-hint">Jumlah dalam kemasan.</div>
+                    <div class="form-hint">
+                        MOQ: ${ITEMS[mPick]?.minimum_order_qty || 1} ${ITEMS[mPick]?.nama_kemasan || ''}
+                    </div>
                 </div>
 
                 <div class="summary-box">
@@ -604,7 +638,14 @@ async function loadData() {
                     ${keys.length ? keys.map(k => `
                     <div class="form-row" style="margin-bottom:8px">
                         <span style="flex:1;font-size:10px">${ITEMS[k].nama_bahan}</span>
-                        <input type="number" min="0" step="1" class="table-input qty" data-mqty="${k}" value="${mLines[k]}">
+                        <input
+                            type="number"
+                            min="${ITEMS[k].minimum_order_qty || 1}"
+                            step="1"
+                            class="table-input qty"
+                            data-mqty="${k}"
+                            value="${mLines[k]}"
+                        >
                         <span class="form-unit">${ITEMS[k].nama_kemasan}</span>
                         <button type="button" class="outline-button btn-sm" data-mremove="${k}">Hapus</button>
                     </div>`).join('') : '<div class="form-hint">Belum ada bahan dipilih.</div>'}
@@ -652,7 +693,6 @@ async function loadData() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            closeModal();
             flash(json.message || 'Reorder manual gagal dikirim. Coba lagi.', false);
             return;
         }
@@ -691,15 +731,6 @@ async function loadData() {
         const t = e.target;
 
         if (t.id === 'rsSearch') { keyword = t.value; renderTable(); }
-
-        if (t.dataset.qty) {
-            const id = t.dataset.qty;
-            draftQty[id] = Math.max(0, parseInt(t.value, 10) || 0);
-
-            $('sub-' + id).textContent = rp(draftQty[id] * ITEMS[id].harga_beli);
-            $('draftTotal').textContent = rp(dTotal());
-            $('btnApprove').disabled = !dCount();
-        }
 
         if (t.dataset.reviewQty) {
             const id = t.dataset.reviewQty;

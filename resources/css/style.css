@@ -16,6 +16,7 @@ body {
     font-family: "Poppins", sans-serif;
     background: #f8f4ed;
     color: #3f2a1d;
+    font-weight: 500;
     min-height: 100vh;
 }
 
@@ -38,7 +39,7 @@ body {
     --border: #ead8bd;
 
     --text: #3f2a1d;
-    --muted: #9a806b;
+    --muted: #7d6450;
 
     --orange: #d99a4e;
     --red: #c94c4c;
@@ -128,7 +129,7 @@ body {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #e9cdb0;
 
@@ -154,7 +155,7 @@ body {
 
 .menu-title {
 
-    font-size: 8px;
+    font-size: 11px;
 
     letter-spacing: 1px;
 
@@ -188,7 +189,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 
@@ -215,7 +216,7 @@ body {
 
     text-align: center;
 
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .menu-badge {
@@ -233,7 +234,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .menu-badge.danger {
@@ -273,7 +274,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -324,9 +325,9 @@ body {
 
     display: block;
 
-    color: #a28772;
+    color: #7d6450;
 
-    font-size: 9px;
+    font-size: 11px;
 
     margin-bottom: 2px;
 }
@@ -342,7 +343,7 @@ body {
 
 .breadcrumb p {
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #aa917e;
 
@@ -414,7 +415,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -422,7 +423,7 @@ body {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: var(--text);
 }
@@ -431,9 +432,9 @@ body {
 
     display: block;
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 
@@ -504,7 +505,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -517,9 +518,9 @@ body {
 
     display: block;
 
-    color: #a98e79;
+    color: #7d6450;
 
-    font-size: 8px;
+    font-size: 11px;
 
     margin-bottom: 2px;
 }
@@ -537,9 +538,9 @@ body {
 
 .stat-content small {
 
-    font-size: 7px;
+    font-size: 11px;
 
-    color: #a78c78;
+    color: #7d6450;
 }
 
 .positive {
@@ -604,7 +605,7 @@ body {
 
 .card-header h3 {
 
-    font-size: 13px;
+    font-size: 14px;
 
     font-weight: 600;
 
@@ -613,9 +614,9 @@ body {
 
 .card-header p {
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a78c78;
+    color: #7d6450;
 
     margin-top: 2px;
 }
@@ -637,7 +638,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     padding: 0 9px;
 
@@ -683,7 +684,7 @@ body {
 
     margin-top: 4px;
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: #8f7764;
 }
@@ -757,7 +758,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 7px;
+    font-size: 11px;
 
     cursor: pointer;
 
@@ -814,7 +815,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    font-size: 8px;
+    font-size: 11px;
 
     font-weight: 600;
 }
@@ -878,14 +879,14 @@ body {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #4a2c1b;
 }
 
 .alert-item p {
 
-    font-size: 7px;
+    font-size: 11px;
 
     color: #a68a76;
 
@@ -924,7 +925,7 @@ body {
 
     display: block;
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: #a68a76;
 }
@@ -935,7 +936,7 @@ body {
 
     margin-top: 4px;
 
-    font-size: 11px;
+    font-size: 12px;
 
     color: #4a2c1b;
 }
@@ -973,7 +974,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -997,7 +998,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 9px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -1036,9 +1037,9 @@ body {
 
     text-align: center;
 
-    color: #ae9885;
+    color: #7d6450;
 
-    font-size: 10px;
+    font-size: 12px;
 
     padding: 60px 0;
 }
@@ -1083,7 +1084,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 11px;
 
@@ -1104,9 +1105,9 @@ body {
 
     margin-left: auto;
 
-    font-size: 8px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 
@@ -1116,7 +1117,7 @@ body {
 
     padding: 6px 11px;
 
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .status.info {
@@ -1146,7 +1147,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 10px;
 
@@ -1214,7 +1215,7 @@ body {
 
     color: #775b46;
 
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .info-note.error {
@@ -1240,7 +1241,7 @@ body {
 
     color: #687e34;
 
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .modal-backdrop {
@@ -1276,7 +1277,7 @@ body {
 
 .modal-box h4 {
 
-    font-size: 13px;
+    font-size: 14px;
 
     font-weight: 600;
 
@@ -1287,7 +1288,7 @@ body {
 
     margin-top: 8px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     line-height: 1.6;
 
@@ -1339,7 +1340,7 @@ body {
 
     margin-bottom: 6px;
 
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 
     color: #775b46;
@@ -1360,7 +1361,7 @@ body {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
 
     padding: 0 12px;
 
@@ -1421,7 +1422,7 @@ textarea.form-input {
 
     min-width: 60px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #775b46;
 }
@@ -1430,7 +1431,7 @@ textarea.form-input {
 
     margin-top: 5px;
 
-    font-size: 9px;
+    font-size: 11px;
 
     line-height: 1.5;
 
@@ -1441,7 +1442,7 @@ textarea.form-input {
 
     margin-top: 5px;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: var(--red);
 }
@@ -1468,7 +1469,7 @@ textarea.form-input {
     color: var(--brown);
 
     font-family: inherit;
-    font-size: 10px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -1503,7 +1504,7 @@ textarea.form-input {
 
     margin-bottom: 6px;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     color: #775b46;
@@ -1518,7 +1519,7 @@ textarea.form-input {
 
     padding: 4px 0;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #634a37;
 }
@@ -1538,9 +1539,9 @@ textarea.form-input {
 
 .filter-label {
 
-    font-size: 9px;
+    font-size: 11px;
 
-    color: #a98e79;
+    color: #7d6450;
 }
 
 .date-input {
@@ -1558,7 +1559,7 @@ textarea.form-input {
     color: var(--text);
 
     font-family: inherit;
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 0 8px;
 
@@ -1614,7 +1615,7 @@ textarea.form-input {
 
     text-align: center;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #775b46;
 }
@@ -1662,7 +1663,7 @@ th {
 
     color: #775b46;
 
-    font-size: 9px;
+    font-size: 11px;
 
     padding: 12px;
 }
@@ -1673,7 +1674,7 @@ td {
 
     border-bottom: 1px solid #eee2d2;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #634a37;
 }
@@ -1686,7 +1687,7 @@ td {
 
     border-radius: 20px;
 
-    font-size: 7px;
+    font-size: 11px;
 }
 
 .status.success {
@@ -1818,14 +1819,14 @@ td {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .product-card span {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: var(--brown);
 
@@ -1845,7 +1846,7 @@ td {
 
 .cart-card h4 {
 
-    font-size: 12px;
+    font-size: 13px;
 
     margin-bottom: 20px;
 }
@@ -1854,9 +1855,9 @@ td {
 
     text-align: center;
 
-    color: #ae9885;
+    color: #7d6450;
 
-    font-size: 9px;
+    font-size: 11px;
 
     padding-top: 70px;
 }
@@ -1888,7 +1889,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 9px;
+    font-size: 11px;
 
     cursor: pointer;
 
@@ -1940,7 +1941,7 @@ td {
 
     font-style: normal;
 
-    font-size: 7px;
+    font-size: 11px;
 
     padding: 3px 7px;
 
@@ -1973,7 +1974,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     text-decoration: underline;
 
@@ -2022,14 +2023,14 @@ td {
 
     display: block;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: var(--text);
 }
 
 .cart-line-info small {
 
-    font-size: 8px;
+    font-size: 11px;
 
     color: var(--muted);
 }
@@ -2040,7 +2041,7 @@ td {
 
     text-align: right;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     color: var(--brown);
@@ -2067,7 +2068,7 @@ td {
 
     color: var(--brown);
 
-    font-size: 11px;
+    font-size: 12px;
 
     cursor: pointer;
 }
@@ -2083,7 +2084,7 @@ td {
 
     text-align: center;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .cart-total {
@@ -2096,7 +2097,7 @@ td {
 
     margin-bottom: 8px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #775b46;
 }
@@ -2133,7 +2134,7 @@ td {
 
     font-family: inherit;
 
-    font-size: 8px;
+    font-size: 11px;
 
     cursor: pointer;
 }
@@ -2149,7 +2150,7 @@ td {
 
     padding: 12px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     margin-top: 4px;
 }
@@ -2180,7 +2181,7 @@ td {
 
     color: white;
 
-    font-size: 10px;
+    font-size: 12px;
 }
 
 
@@ -2213,7 +2214,7 @@ td {
 
     display: block;
 
-    font-size: 9px;
+    font-size: 11px;
 
     color: #9b806b;
 }
@@ -2405,7 +2406,7 @@ td {
 .admin-page-heading p,
 .admin-password-card > p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 4px;
 }
 
@@ -2420,7 +2421,7 @@ td {
     justify-content: center;
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2458,7 +2459,7 @@ td {
 .admin-card-links a,
 .admin-role-card a {
     color: var(--brown);
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -2471,7 +2472,7 @@ td {
     display: inline-block;
     margin-right: 5px;
     color: var(--muted);
-    font-size: 8px;
+    font-size: 11px;
     text-transform: uppercase;
 }
 
@@ -2491,19 +2492,19 @@ td {
     width: 100%;
     max-width: none;
     height: 36px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-filter {
     height: 36px;
     max-width: 220px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-toolbar .outline-button,
 .admin-toolbar .table-meta,
 .admin-clear-filter {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-clear-filter {
@@ -2521,7 +2522,7 @@ td {
 
 .admin-table th,
 .admin-table td {
-    font-size: 10px;
+    font-size: 12px;
     padding: 12px 13px;
     vertical-align: middle;
 }
@@ -2533,7 +2534,7 @@ td {
 .admin-secondary-line {
     display: block;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 3px;
 }
 
@@ -2546,7 +2547,7 @@ td {
 
 .admin-small-button {
     padding: 5px 9px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
 }
 
@@ -2556,7 +2557,7 @@ td {
     color: var(--brown);
     cursor: pointer;
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     padding: 5px 2px;
 }
 
@@ -2597,7 +2598,7 @@ td {
 
 .admin-form-field label {
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -2611,7 +2612,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     padding: 9px 11px;
 }
 
@@ -2629,7 +2630,7 @@ td {
 .admin-field-error,
 .required-mark {
     color: var(--red);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-form-actions,
@@ -2644,7 +2645,7 @@ td {
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 11px 14px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-notice.success {
@@ -2684,7 +2685,7 @@ td {
 
 .admin-confirm-dialog p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
     margin-top: 8px;
 }
@@ -2692,7 +2693,7 @@ td {
 .admin-modal-label {
     display: block;
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 16px;
 }
 
@@ -2706,7 +2707,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-danger-button {
@@ -2729,13 +2730,13 @@ td {
 
 .admin-role-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 12px;
 }
 
 .admin-role-card p {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin: 7px 0 13px;
 }
 
@@ -2745,7 +2746,7 @@ td {
 
 .admin-password-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -2763,7 +2764,7 @@ td {
     border: 0;
     color: var(--text);
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     outline: none;
     padding: 0 9px;
 }
@@ -2780,7 +2781,7 @@ td {
     display: inline-flex;
     align-items: center;
     min-height: 34px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2821,7 +2822,7 @@ td {
     .admin-page-heading .primary-button,
     .admin-page-heading .outline-button {
         padding: 7px 9px;
-        font-size: 8px;
+        font-size: 11px;
     }
 
     .admin-kpi-grid,
@@ -2894,7 +2895,7 @@ td {
 .admin-page-heading p,
 .admin-password-card > p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 4px;
 }
 
@@ -2909,7 +2910,7 @@ td {
     justify-content: center;
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2947,7 +2948,7 @@ td {
 .admin-card-links a,
 .admin-role-card a {
     color: var(--brown);
-    font-size: 10px;
+    font-size: 12px;
     text-decoration: none;
 }
 
@@ -2960,7 +2961,7 @@ td {
     display: inline-block;
     margin-right: 5px;
     color: var(--muted);
-    font-size: 8px;
+    font-size: 11px;
     text-transform: uppercase;
 }
 
@@ -2980,19 +2981,19 @@ td {
     width: 100%;
     max-width: none;
     height: 36px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-filter {
     height: 36px;
     max-width: 220px;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-toolbar .outline-button,
 .admin-toolbar .table-meta,
 .admin-clear-filter {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-clear-filter {
@@ -3010,7 +3011,7 @@ td {
 
 .admin-table th,
 .admin-table td {
-    font-size: 10px;
+    font-size: 12px;
     padding: 12px 13px;
     vertical-align: middle;
 }
@@ -3022,7 +3023,7 @@ td {
 .admin-secondary-line {
     display: block;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 3px;
 }
 
@@ -3035,7 +3036,7 @@ td {
 
 .admin-small-button {
     padding: 5px 9px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
 }
 
@@ -3045,7 +3046,7 @@ td {
     color: var(--brown);
     cursor: pointer;
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     padding: 5px 2px;
 }
 
@@ -3086,7 +3087,7 @@ td {
 
 .admin-form-field label {
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -3100,7 +3101,7 @@ td {
     background: white;
     color: var(--text);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     padding: 9px 11px;
 }
 
@@ -3118,7 +3119,7 @@ td {
 .admin-field-error,
 .required-mark {
     color: var(--red);
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .admin-form-actions,
@@ -3133,7 +3134,7 @@ td {
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 11px 14px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-notice.success {
@@ -3173,7 +3174,7 @@ td {
 
 .admin-confirm-dialog p {
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
     margin-top: 8px;
 }
@@ -3198,13 +3199,13 @@ td {
 
 .admin-role-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 12px;
 }
 
 .admin-role-card p {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 11px;
     margin: 7px 0 13px;
 }
 
@@ -3214,7 +3215,7 @@ td {
 
 .admin-password-card h2 {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -3232,7 +3233,7 @@ td {
     border: 0;
     color: var(--text);
     font: inherit;
-    font-size: 9px;
+    font-size: 11px;
     outline: none;
     padding: 0 9px;
 }
@@ -3249,7 +3250,7 @@ td {
     display: inline-flex;
     align-items: center;
     min-height: 34px;
-    font-size: 9px;
+    font-size: 11px;
     text-decoration: none;
     white-space: nowrap;
 }
@@ -3290,7 +3291,7 @@ td {
     .admin-page-heading .primary-button,
     .admin-page-heading .outline-button {
         padding: 7px 9px;
-        font-size: 8px;
+        font-size: 11px;
     }
 
     .admin-kpi-grid,
@@ -3330,5 +3331,371 @@ td {
 
     .admin-header-search {
         display: none;
+    }
+}
+
+/* =========================================
+   MANAGER BRANCH REPORT
+========================================= */
+
+.report-filter-toolbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.report-filter-form {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.report-filter-form label {
+    display: grid;
+    gap: 5px;
+    color: var(--text-muted, #806f63);
+    font-size: 13px;
+}
+
+.report-filter-form input {
+    min-width: 155px;
+}
+
+.report-box small {
+    display: block;
+    margin-top: 6px;
+    color: #8d7b6c;
+    font-size: 12px;
+}
+
+.report-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 4px;
+    color: #8d7b6c;
+    font-size: 13px;
+}
+
+.report-pagination nav p {
+    margin: 0;
+}
+
+.report-note {
+    margin: 16px 2px;
+    color: #8d7b6c;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+    .report-filter-toolbar,
+    .report-filter-form,
+    .report-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .report-filter-form label,
+    .report-filter-form input,
+    .report-filter-form button,
+    .report-filter-toolbar > a {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
+   SURAT JALAN FORMAL - KOPSYNC
+========================================================= */
+
+.sj-document {
+    background: #fff !important;
+    color: #252525 !important;
+    padding: 36px !important;
+    border: 1px solid #dedede;
+    border-radius: 8px;
+}
+
+.sj-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+.sj-company {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.sj-company-mark {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #5c3928;
+    color: #fff;
+    font-weight: 700;
+    font-size: 17px;
+    border-radius: 8px;
+}
+
+.sj-company h2 {
+    margin: 0;
+    color: #5c3928;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.sj-company p {
+    margin: 5px 0 0;
+    font-size: 11px;
+    letter-spacing: .7px;
+    color: #777;
+}
+
+.sj-title {
+    text-align: right;
+}
+
+.sj-title h1 {
+    margin: 0;
+    color: #5c3928;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.sj-title strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.sj-divider {
+    height: 3px;
+    background: #5c3928;
+    margin: 22px 0;
+}
+
+.sj-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.sj-action-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sj-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.sj-party {
+    padding: 17px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.sj-label {
+    display: block;
+    color: #8b674f;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.sj-party h3 {
+    margin: 0 0 8px;
+    color: #3d3029;
+    font-size: 15px;
+}
+
+.sj-party p {
+    margin: 4px 0;
+    color: #555;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.sj-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border: 1px solid #ddd;
+    margin-bottom: 28px;
+}
+
+.sj-meta div {
+    padding: 13px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.sj-meta span {
+    display: block;
+    color: #777;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.sj-meta strong {
+    color: #333;
+    font-size: 13px;
+}
+
+.sj-section h3 {
+    color: #5c3928;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.sj-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sj-table th {
+    background: #5c3928 !important;
+    color: #fff !important;
+    padding: 12px 10px;
+    font-size: 12px;
+    text-align: left;
+    border: 1px solid #5c3928;
+}
+
+.sj-table td {
+    background: #fff !important;
+    color: #333 !important;
+    padding: 12px 10px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+}
+
+.sj-notes {
+    margin-top: 22px;
+    padding: 14px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    font-size: 12px;
+}
+
+.sj-notes p {
+    margin: 7px 0 0;
+    color: #555;
+    white-space: pre-wrap;
+}
+
+.sj-signature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-top: 48px;
+    text-align: center;
+}
+
+.sj-signature p {
+    font-size: 12px;
+    margin-bottom: 7px;
+}
+
+.sj-signature strong {
+    display: block;
+    font-size: 12px;
+}
+
+.sj-signature span {
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.sj-sign-space {
+    height: 75px;
+}
+
+.sj-footer {
+    border-top: 1px solid #ddd;
+    margin-top: 35px;
+    padding-top: 12px;
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* PRINT A4 */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+
+    body {
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .sidebar,
+    .top-header,
+    .no-print,
+    .flash-success {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .page-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .sj-document {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .sj-header,
+    .sj-parties,
+    .sj-meta,
+    .sj-signature,
+    .sj-notes {
+        break-inside: avoid;
+    }
+
+    .sj-table {
+        page-break-inside: auto;
+    }
+
+    .sj-table tr {
+        break-inside: avoid;
+    }
+
+    .sj-table thead {
+        display: table-header-group;
+    }
+
+    .sj-footer {
+        break-inside: avoid;
     }
 }

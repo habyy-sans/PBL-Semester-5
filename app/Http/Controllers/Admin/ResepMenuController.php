@@ -73,4 +73,50 @@ class ResepMenuController extends MasterDataController
     ];
 
     protected array $with = ['varian.menu', 'bahan'];
+
+    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $data = $this->validatedData($request);
+
+        $exists = ResepMenu::query()
+            ->where('varian_id', $data['varian_id'])
+            ->where('bahan_id', $data['bahan_id'])
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->withErrors([
+                'bahan_id' => 'Bahan baku ini sudah ada di resep varian yang dipilih.',
+            ]);
+        }
+
+        ResepMenu::query()->create($data);
+
+        return redirect()
+            ->route($this->routeName.'.index')
+            ->with('success', $this->title.' berhasil ditambahkan.');
+    }
+
+    public function update(\Illuminate\Http\Request $request, int $record): \Illuminate\Http\RedirectResponse
+    {
+        $model = $this->findRecord($record);
+        $data = $this->validatedData($request, $model);
+
+        $exists = ResepMenu::query()
+            ->where('varian_id', $data['varian_id'])
+            ->where('bahan_id', $data['bahan_id'])
+            ->where('resep_id', '!=', $record)
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->withErrors([
+                'bahan_id' => 'Bahan baku ini sudah ada di resep varian yang dipilih.',
+            ]);
+        }
+
+        $model->update($data);
+
+        return redirect()
+            ->route($this->routeName.'.index')
+            ->with('success', $this->title.' berhasil diperbarui.');
+    }
 }

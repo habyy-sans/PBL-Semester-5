@@ -221,8 +221,18 @@ class ReportService
             ->whereIn('bahan_id', $grouped->keys())
             ->pluck('nama_bahan', 'bahan_id');
 
+        $currentStocks = StokCabang::query()
+        ->when(
+            $cabangId !== null,
+            fn ($query) => $query->where('cabang_id', $cabangId)
+        )
+        ->whereIn('bahan_id', $grouped->keys())
+        ->get(['bahan_id', 'jumlah_stok'])
+        ->groupBy('bahan_id')
+        ->map(fn ($rows) => (float) $rows->sum('jumlah_stok'));
+
         return $grouped
-            ->map(function ($group, $bahanId) use ($names) {
+            ->map(function ($group, $bahanId) use ($names, $currentStocks) {
                 $sum = fn (string $jenis) => (float) $group
                     ->where('jenis_mutasi', $jenis)
                     ->sum('jumlah');
@@ -233,6 +243,7 @@ class ReportService
                     'masuk' => $sum('penerimaan_cabang'),
                     'keluar' => $sum('penjualan'),
                     'waste' => $sum('waste'),
+                    'stok_saat_ini' => (float) ($currentStocks[$bahanId] ?? 0),
                 ];
             })
             ->sortBy('name')

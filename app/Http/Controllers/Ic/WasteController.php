@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Http\Controllers\Ic;
-
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Models\MenuProduk;
 use App\Models\StockMovement;
 use App\Models\StokCabang;
 use App\Models\WasteLog;
+use App\Models\NotifikasiAlert;
 use App\Services\CatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class WasteController extends Controller
 
     public function __construct(
         private readonly CatalogService $catalog,
+        private readonly NotificationService $notifications,
     ) {}
 
     /**
@@ -162,6 +164,8 @@ class WasteController extends Controller
                 ]);
 
                 // 2) Kurangi stok cabang.
+                $wasLow = (float) $stok->jumlah_stok < (float) $stok->stok_minimum;
+
                 $stok->jumlah_stok = (float) $stok->jumlah_stok - $qty;
                 $stok->save();
 
@@ -178,8 +182,36 @@ class WasteController extends Controller
                     'kelompok_id' => $kelompokId,
                 ]);
 
+                // Stok baru saja turun di bawah minimum: beri tahu Manager dan IC cabang.
+                $this->notifications->lowStock($stok, $wasLow, 'waste:'.$kelompokId);
+
                 $logs[] = $log;
             }
+
+            NotifikasiAlert::query()->create([
+                'cabang_id' => $user->cabang_id,
+                'bahan_id' => null,
+                'tipe' => 'waste',
+                'pesan' => 'Laporan waste [kelompok_id='.$kelompokId.']',
+                'status_baca' => false,
+                'tanggal' => now(),
+            ]);
+
+            // Beri tahu Manager cabang bahwa ada laporan waste baru.
+            $wasteLines = [];
+
+            foreach ($merged as $bahanId => $item) {
+                $bahan = $stokMap->get($bahanId)->bahan;
+                $wasteLines[] = $bahan->nama_bahan.' '.$this->num($item['qty']).' '.$bahan->satuan;
+            }
+
+            $this->notifications->wasteReported(
+                $kelompokId,
+                (int) $logs[0]->waste_id,
+                (int) $user->cabang_id,
+                $wasteLines,
+                $data['items'][0]['alasan'],
+            );
 
             return response()->json([
                 'kelompok_id' => $kelompokId,

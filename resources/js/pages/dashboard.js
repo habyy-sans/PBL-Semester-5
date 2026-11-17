@@ -12,6 +12,16 @@ function formatRupiah(value) {
     }).format(value);
 }
 
+function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 const font = (size) => ({ family: 'Poppins', size });
 
 const axisTicks = { color: '#aa917e', font: font(8) };
@@ -82,6 +92,18 @@ const fmtDate = (s) => {
     return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 
+const FULL_MONTHS = [
+    'Januari', 'Februari', 'Maret', 'April',
+    'Mei', 'Juni', 'Juli', 'Agustus',
+    'September', 'Oktober', 'November', 'Desember'
+];
+
+const fmtFullDateTime = (date, time) => {
+    const [year, month, day] = date.split('-');
+
+    return `${Number(day)} ${FULL_MONTHS[Number(month) - 1]} ${year}, ${time} WIB`;
+};
+
 const toMinutes = (time) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
@@ -144,7 +166,7 @@ function renderSummary() {
     if (s && s.delta_pct !== null && s.delta_pct !== undefined) {
         const pct = s.delta_pct;
         delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin';
-        delta.className = pct >= 0 ? 'positive' : 'danger-text';
+        delta.className = 'dash-kpi-subtext';
     } else {
         // dibanding kemarin pada jam yang sama (supaya adil, hari ini belum selesai)
         const prevOmzet = sum(
@@ -156,10 +178,10 @@ function renderSummary() {
             const pct = ((omzet - prevOmzet) / prevOmzet) * 100;
 
             delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1).replace('.', ',') + '% dari kemarin (jam sama)';
-            delta.className = pct >= 0 ? 'positive' : 'danger-text';
+            delta.className = 'dash-kpi-subtext';
         } else {
             delta.textContent = 'Belum ada pembanding kemarin';
-            delta.className = '';
+            delta.className = 'dash-kpi-subtext';
         }
     }
 
@@ -266,7 +288,7 @@ function renderAlerts() {
 
     $('alertList').innerHTML = alerts.slice(0, 3).map((a) => {
         const badgeClass = a.color === 'red' ? 'danger' : a.color === 'orange' ? 'warning' : 'info';
-        const iconChar = a.color === 'red' ? '!' : a.color === 'orange' ? '▲' : '✓';
+        const iconChar = KopIcon(a.color === 'red' ? 'circle-alert' : a.color === 'orange' ? 'triangle-alert' : 'circle-check');
         const url = actionUrl(a);
 
         return `
@@ -274,11 +296,11 @@ function renderAlerts() {
             <div class="dash-alert-left">
                 <div class="dash-alert-badge-icon ${badgeClass}">${iconChar}</div>
                 <div class="dash-alert-info">
-                    <strong class="dash-alert-title" title="${a.title}">${a.title}</strong>
-                    <span class="dash-alert-sub" title="${a.text}">${a.text}</span>
+                    <strong class="dash-alert-title" title="${esc(a.title)}">${esc(a.title)}</strong>
+                    <span class="dash-alert-sub" title="${esc(a.text)}">${esc(a.text)}</span>
                 </div>
             </div>
-            <a href="${url}" class="dash-alert-action-btn">Solve</a>
+            <a href="${esc(url)}" class="dash-alert-action-btn">Solve</a>
         </div>`;
     }).join('') || '<div style="text-align:center; padding:16px; font-size:12px; color:var(--pos-muted);">Semua kondisi stok dan operasional aman.</div>';
 }
@@ -437,14 +459,76 @@ const omzetDummy = {
 };
 
 function buildOmzetData(period) {
-    if (period !== 'daily') {
-        const dummy = omzetDummy[period];
-        const labels = dummy.labels;
-        const coffee = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.55)));
-        const tea    = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.28)));
-        const snack  = dummy.values.map((v) => (v === null ? null : Math.round(v * 0.17)));
+    if (period === 'monthly') {
+        const end = parseDate(LATEST_DATE);
+        const labels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
+        const coffee = [0, 0, 0, 0];
+        const tea    = [0, 0, 0, 0];
+        const snack  = [0, 0, 0, 0];
 
-        return { labels, coffee, tea, snack };
+        DONE.forEach((t) => {
+            const diffDays = Math.floor((end - parseDate(t.date)) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays < 28) {
+                const weekIdx = 3 - Math.floor(diffDays / 7);
+                t.items.forEach((i) => {
+                    const m = MENUS[i.menu];
+                    if (!m) return;
+                    const c = (m.category || '').toLowerCase();
+                    const val = m.price * i.qty;
+                    if (c.includes('coffee') && !c.includes('non')) coffee[weekIdx] += val;
+                    else if (c.includes('tea') || c.includes('non') || c.includes('beverage')) tea[weekIdx] += val;
+                    else snack[weekIdx] += val;
+                });
+            }
+        });
+
+        if (coffee.some((v) => v > 0) || tea.some((v) => v > 0) || snack.some((v) => v > 0)) {
+            return { labels, coffee, tea, snack };
+        }
+
+        const dummy = omzetDummy.monthly;
+        return {
+            labels: dummy.labels,
+            coffee: dummy.values.map((v) => (v === null ? null : Math.round(v * 0.55))),
+            tea:    dummy.values.map((v) => (v === null ? null : Math.round(v * 0.28))),
+            snack:  dummy.values.map((v) => (v === null ? null : Math.round(v * 0.17))),
+        };
+    }
+
+    if (period === 'yearly') {
+        const labels = MONTHS;
+        const coffee = new Array(12).fill(0);
+        const tea    = new Array(12).fill(0);
+        const snack  = new Array(12).fill(0);
+
+        const currentYear = parseDate(LATEST_DATE).getFullYear();
+        DONE.forEach((t) => {
+            const d = parseDate(t.date);
+            if (d.getFullYear() === currentYear) {
+                const mIdx = d.getMonth();
+                t.items.forEach((i) => {
+                    const m = MENUS[i.menu];
+                    if (!m) return;
+                    const c = (m.category || '').toLowerCase();
+                    const val = m.price * i.qty;
+                    if (c.includes('coffee') && !c.includes('non')) coffee[mIdx] += val;
+                    else if (c.includes('tea') || c.includes('non') || c.includes('beverage')) tea[mIdx] += val;
+                    else snack[mIdx] += val;
+                });
+            }
+        });
+
+        if (coffee.some((v) => v > 0) || tea.some((v) => v > 0) || snack.some((v) => v > 0)) {
+            return { labels, coffee, tea, snack };
+        }
+
+        const dummy = omzetDummy.yearly;
+        return {
+            labels: dummy.labels,
+            coffee: dummy.values.map((v) => (v === null ? null : Math.round(v * 0.55))),
+            tea:    dummy.values.map((v) => (v === null ? null : Math.round(v * 0.28))),
+            snack:  dummy.values.map((v) => (v === null ? null : Math.round(v * 0.17))),
+        };
     }
 
     const slots = [8, 10, 12, 14, 16, 18, 20, 22];
@@ -597,7 +681,7 @@ function createRadarChart() {
 
     const sortedMenuIds = Object.keys(MENUS).sort((a, b) => menuCounts[b] - menuCounts[a]).slice(0, 6);
     const labels = sortedMenuIds.map((id) => MENUS[id]?.name || 'Menu #' + id);
-    const values = sortedMenuIds.map((id) => Math.max(menuCounts[id] || 0, 3));
+    const values = sortedMenuIds.map((id) => menuCounts[id] || 0);
 
     if (radarChart) radarChart.destroy();
 
@@ -630,6 +714,8 @@ function createRadarChart() {
             },
             scales: {
                 r: {
+                    beginAtZero: true,
+                    min: 0,
                     angleLines: { color: 'rgba(120, 90, 60, 0.15)' },
                     grid: { color: 'rgba(120, 90, 60, 0.1)' },
                     pointLabels: {
@@ -667,7 +753,7 @@ function renderRecentTransactions(catFilter = 'All') {
     }
 
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--pos-muted);">Belum ada transaksi di kategori ini.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px; color:var(--pos-muted);">Belum ada transaksi di kategori ini.</td></tr>';
         return;
     }
 
@@ -679,28 +765,25 @@ function renderRecentTransactions(catFilter = 'All') {
 
         return `
         <tr>
-            <td><input type="checkbox" aria-label="Pilih ${t.no}"></td>
             <td>
                 <div class="dash-customer-cell">
-                    <div class="dash-customer-avatar">${initial}</div>
+                    <div class="dash-customer-avatar">${esc(initial)}</div>
                     <div class="dash-customer-info">
-                        <span class="dash-customer-name">${t.no}</span>
-                        <span class="dash-customer-meta">Kasir: ${cashierName}</span>
+                        <span class="dash-customer-name">${esc(t.no)}</span>
+                        <span class="dash-customer-meta">Kasir: ${esc(cashierName)}</span>
                     </div>
                 </div>
             </td>
             <td>
-                <span style="font-weight:600;">${t.time}</span>
-                <span style="display:block; font-size:10px; color:var(--pos-muted);">${t.date}</span>
+                <span style="font-weight:600;">
+                    ${esc(fmtFullDateTime(t.date, t.time))}
+                </span>
             </td>
             <td>
-                <span style="display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:220px;" title="${itemNames}">${itemNames}</span>
+                <span style="display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; max-width:220px;" title="${esc(itemNames)}">${esc(itemNames)}</span>
             </td>
             <td style="text-align: right;">
                 <span class="dash-trx-value">${formatRupiah(total)}</span>
-            </td>
-            <td style="text-align: right; color:var(--pos-muted); cursor:pointer;">
-                <span>⋮</span>
             </td>
         </tr>`;
     }).join('');

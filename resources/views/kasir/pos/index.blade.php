@@ -18,7 +18,7 @@
     <header class="pos-topbar">
         <div class="pos-brand-section">
             <div class="pos-brand-logo">
-                <div class="pos-brand-logo-icon">☕</div>
+                <div class="pos-brand-logo-icon"><x-icon name="coffee" /></div>
                 <div class="pos-brand-text">
                     <h1>KOPSYNC</h1>
                     <span>{{ $branchName ?? 'Gerai Pusat' }}</span>
@@ -181,7 +181,7 @@
                     </svg>
                 </div>
                 <span id="placeOrderText">Place Order Rp 0</span>
-                <span class="pos-place-order-chevrons">❯❯❯</span>
+                <span class="pos-place-order-chevrons"><x-icon name="chevrons-right" /></span>
             </button>
 
         </aside>
@@ -238,6 +238,15 @@
 
     const $ = id => document.getElementById(id);
     const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    const esc = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
 
     // HITUNGAN STOK & KAPASITAS PORSI
     const maxPortions = id => {
@@ -337,7 +346,7 @@
             return `
             <div class="pos-product-item ${habis ? 'disabled' : ''}" data-add="${id}">
                 <div class="pos-product-thumb">
-                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}" loading="lazy">` : '<span style="font-size:24px;">☕</span>'}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}" loading="lazy">` : '<span style="font-size:24px;">' + KopIcon('coffee') + '</span>'}
                 </div>
                 <div class="pos-product-info">
                     <h5 class="pos-product-name" title="${m.name}">${m.name}</h5>
@@ -365,7 +374,7 @@
         if (!ids.length) {
             $('cartListBody').innerHTML = `
                 <div class="pos-cart-empty-state">
-                    <div style="font-size: 28px; margin-bottom: 8px;">🛒</div>
+                    <div style="font-size: 28px; margin-bottom: 8px;">${KopIcon('shopping-cart')}</div>
                     <strong>Pesanan masih kosong</strong>
                     <p style="font-size: 11px; margin-top: 4px;">Pilih menu dari katalog untuk memulai transaksi.</p>
                 </div>`;
@@ -381,12 +390,12 @@
             return `
             <div class="pos-receipt-item">
                 <div class="pos-receipt-item-thumb">
-                    ${imgSrc ? `<img src="${imgSrc}" alt="${m.name}">` : '☕'}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${esc(m.name)}">` : KopIcon('coffee')}
                 </div>
                 <div class="pos-receipt-item-details">
-                    <h6 class="pos-receipt-item-name" title="${m.name}">${m.name}</h6>
+                    <h6 class="pos-receipt-item-name" title="${esc(m.name)}">${esc(m.name)}</h6>
                     <div class="pos-receipt-item-sub">${rp(m.price)} × ${cart[id]}</div>
-                    <span class="pos-receipt-item-tag">Less Sugar</span>
+                    <span class="pos-receipt-item-tag">${esc(m.variant || 'Regular')}</span>
                 </div>
                 <div class="pos-receipt-item-right">
                     <span class="pos-receipt-item-price">${rp(itemTotal)}</span>
@@ -448,8 +457,16 @@
     }
 
     // MODAL
+    let qrisPollingInterval = null;
+
     const openModal = html => $('modalRoot').innerHTML = `<div class="modal-backdrop" id="modalBg">${html}</div>`;
-    const closeModal = () => $('modalRoot').innerHTML = '';
+    const closeModal = () => {
+        if (qrisPollingInterval) {
+            clearInterval(qrisPollingInterval);
+            qrisPollingInterval = null;
+        }
+        $('modalRoot').innerHTML = '';
+    };
 
     function showSop(id) {
         const m = MENUS[id];
@@ -544,6 +561,146 @@
             </div>`);
     }
 
+    // HASIL TRANSAKSI SUKSES
+    function handleSuccessfulPayment(json, u) {
+        if (qrisPollingInterval) {
+            clearInterval(qrisPollingInterval);
+            qrisPollingInterval = null;
+        }
+
+        Object.entries(u).forEach(([item, amt]) => stock[item] -= amt);
+        const cutsHtml = (json.cuts || []).map(c => `
+            <div class="summary-line">
+                <span>${esc(c.name)}</span>
+                <span style="color:var(--pos-brown-dark); font-weight:600;">-${c.amount} ${esc(c.unit)}</span>
+            </div>`).join('');
+
+        cart = {};
+        cash = 0;
+        method = 'tunai';
+        refresh();
+
+        const statPillB = document.querySelector('.pos-stat-pill b');
+        if (statPillB) {
+            const countMatch = statPillB.textContent.match(/\d+/);
+            if (countMatch) {
+                const newCount = parseInt(countMatch[0], 10) + 1;
+                statPillB.textContent = `${newCount} Pesanan Hari Ini`;
+            }
+        }
+
+        // Next TRX no
+        const currentNo = json.no || '#TRX-0000';
+        const numPart = parseInt(currentNo.replace(/\D/g, ''), 10) || 0;
+        $('activeReceiptNo').textContent = `#TRX-${String(numPart + 1).padStart(4, '0')}`;
+
+        openModal(`
+            <div class="modal-box wide">
+                <h4 style="color:var(--pos-brown-dark);">${KopIcon('circle-check')} Transaksi Sukses & Selesai</h4>
+                <p style="font-size:13px; margin:4px 0 16px 0;">
+                    No: <b>${esc(json.no)}</b> · Total: <b>${rp(json.total)}</b>
+                    ${json.change ? ` · Kembalian: <b>${rp(json.change)}</b>` : ''}
+                </p>
+                <div class="summary-box">
+                    <div class="summary-title">PENGURANGAN STOK BAHAN BAKU REAL-TIME</div>
+                    ${cutsHtml || '<div style="font-size:12px; color:var(--pos-muted);">Semua bahan baku resep otomatis terpotong.</div>'}
+                </div>
+                <div class="modal-actions" style="margin-top:18px;">
+                    <button type="button" class="primary-button" data-close>Transaksi Baru</button>
+                </div>
+            </div>`);
+    }
+
+    // MODAL QRIS DINAMIS DENGAN POLLING & SIMULATOR
+    function openQrisModal(json, u) {
+        openModal(`
+            <div class="modal-box wide" style="text-align: center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="margin:0; color:var(--pos-brown-dark);">Pembayaran Direct QRIS</h4>
+                    <span style="background:${json.is_mock ? '#fef3c7' : '#dcfce7'}; color:${json.is_mock ? '#b45309' : '#15803d'}; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600;">
+                        ${json.is_mock ? 'Mode Simulasi' : 'Midtrans Sandbox'}
+                    </span>
+                </div>
+
+                <p style="font-size:13px; color:var(--pos-muted); margin:0 0 12px 0;">
+                    Silakan scan QRIS di bawah ini dengan GoPay, BCA, Livin, ShopeePay, atau aplikasi perbankan lainnya.
+                </p>
+
+                <div style="background:#fff; padding:12px; border-radius:12px; display:inline-block; border:1px solid var(--pos-border); box-shadow:0 4px 14px rgba(0,0,0,0.06); margin-bottom:12px;">
+                    <img src="${json.qr_url}" alt="QRIS Code" style="width:200px; height:200px; display:block; object-fit:contain; border-radius:8px;">
+                </div>
+
+                <div style="font-size:22px; font-weight:700; color:var(--pos-brown-dark); margin-bottom:4px;">
+                    ${rp(json.total)}
+                </div>
+                <div style="font-size:12px; color:var(--pos-muted); margin-bottom:14px;">
+                    Order: <b>${json.no}</b> · Ref: <code>${json.order_id}</code>
+                </div>
+
+                <div id="qrisStatusNotice" style="padding:10px 14px; background:var(--pos-cream-bg); border-radius:8px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; border:1px solid var(--pos-border);">
+                    <span class="pos-spin-loader"></span>
+                    <span>Menunggu konfirmasi pembayaran pelanggan...</span>
+                </div>
+
+                <!-- Alat Pengujian Sandbox (Gratis) -->
+                <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:12px; text-align:left; font-size:12px; margin-bottom:16px;">
+                    <div style="font-weight:600; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>${KopIcon('wrench')} Alat Pengujian Sandbox:</span>
+                        <span style="font-size:11px; color:#64748b;">(Gratis)</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQrUrl" data-url="${json.qr_url}">
+                                ${KopIcon('link')} Salin URL QR Code
+                            </button>
+                            <button type="button" class="outline-button" style="flex:1; padding:6px 8px; font-size:11px;" id="btnCopyQr" data-qr="${json.qr_string}">
+                                ${KopIcon('copy')} Salin String QR
+                            </button>
+                        </div>
+                        <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noopener noreferrer" class="outline-button" style="width:100%; padding:6px 8px; font-size:11px; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
+                            ${KopIcon('globe')} Buka Simulator Midtrans ↗
+                        </a>
+                        <button type="button" class="primary-button" style="width:100%; padding:8px; font-size:12px; background:#0284c7;" id="btnSimulatePay" data-trx-id="${json.transaksi_id}">
+                            ${KopIcon('zap')} Bayar Sekarang (Simulasi Instan)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="justify-content:center;">
+                    <button type="button" class="outline-button" id="btnCancelPendingTrx" data-trx-id="${json.transaksi_id}" style="color:var(--pos-red-text); border-color:rgba(220,38,38,0.3);">
+                        Batalkan Transaksi
+                    </button>
+                </div>
+            </div>
+        `);
+
+        // Polling status berkala setiap 2.5 detik
+        if (qrisPollingInterval) clearInterval(qrisPollingInterval);
+        qrisPollingInterval = setInterval(() => {
+            fetch(`/kasir/pos/status/${json.transaksi_id}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'berhasil') {
+                    clearInterval(qrisPollingInterval);
+                    qrisPollingInterval = null;
+                    handleSuccessfulPayment({
+                        no: res.no,
+                        total: res.total,
+                        cuts: res.cuts || []
+                    }, u);
+                } else if (res.status === 'batal') {
+                    clearInterval(qrisPollingInterval);
+                    qrisPollingInterval = null;
+                    closeModal();
+                    flash('Transaksi QRIS telah dibatalkan.');
+                }
+            })
+            .catch(() => {});
+        }, 2500);
+    }
+
     // PROCESS PAYMENT SERVER CALL
     function processPay() {
         const t = total();
@@ -573,38 +730,11 @@
             return json;
         })
         .then(json => {
-            Object.entries(u).forEach(([item, amt]) => stock[item] -= amt);
-            const cutsHtml = (json.cuts || []).map(c => `
-                <div class="summary-line">
-                    <span>${c.name}</span>
-                    <span style="color:var(--pos-brown-dark); font-weight:600;">-${c.amount} ${c.unit}</span>
-                </div>`).join('');
+            if (json.type === 'qris') {
+                return openQrisModal(json, u);
+            }
 
-            cart = {};
-            cash = 0;
-            method = 'tunai';
-            refresh();
-
-            // Next TRX no
-            const currentNo = json.no || '#TRX-0000';
-            const numPart = parseInt(currentNo.replace(/\D/g, ''), 10) || 0;
-            $('activeReceiptNo').textContent = `#TRX-${String(numPart + 1).padStart(4, '0')}`;
-
-            openModal(`
-                <div class="modal-box wide">
-                    <h4 style="color:var(--pos-brown-dark);">✔ Transaksi Sukses & Selesai</h4>
-                    <p style="font-size:13px; margin:4px 0 16px 0;">
-                        No: <b>${json.no}</b> · Total: <b>${rp(json.total)}</b>
-                        ${json.change ? ` · Kembalian: <b>${rp(json.change)}</b>` : ''}
-                    </p>
-                    <div class="summary-box">
-                        <div class="summary-title">PENGURANGAN STOK BAHAN BAKU REAL-TIME</div>
-                        ${cutsHtml || '<div style="font-size:12px; color:var(--pos-muted);">Semua bahan otomatis terpotong.</div>'}
-                    </div>
-                    <div class="modal-actions" style="margin-top:18px;">
-                        <button type="button" class="primary-button" data-close>Transaksi Baru</button>
-                    </div>
-                </div>`);
+            handleSuccessfulPayment(json, u);
         })
         .catch(err => {
             flash(err.message || 'Gagal memproses transaksi.');
@@ -686,6 +816,77 @@
         // Confirm Pay
         if (t.id === 'btnConfirmPay') return processPay();
 
+        // Salin URL QR Code
+        const copyQrUrlBtn = t.closest('#btnCopyQrUrl');
+        if (copyQrUrlBtn) {
+            const qrUrl = copyQrUrlBtn.dataset.url || '';
+            navigator.clipboard.writeText(qrUrl).then(() => {
+                flash('URL QR Code berhasil disalin ke clipboard!');
+            }).catch(() => {
+                prompt('Salin URL QR berikut:', qrUrl);
+            });
+            return;
+        }
+
+        // Salin String QR
+        const copyQrBtn = t.closest('#btnCopyQr');
+        if (copyQrBtn) {
+            const qrStr = copyQrBtn.dataset.qr || '';
+            navigator.clipboard.writeText(qrStr).then(() => {
+                flash('String QR berhasil disalin ke clipboard!');
+            }).catch(() => {
+                prompt('Salin string QR berikut:', qrStr);
+            });
+            return;
+        }
+
+        // Simulasi Pembayaran Cepat (Testing Sandbox)
+        const simPayBtn = t.closest('#btnSimulatePay');
+        if (simPayBtn) {
+            const trxId = simPayBtn.dataset.trxId;
+            simPayBtn.disabled = true;
+            simPayBtn.textContent = 'Memverifikasi Pembayaran...';
+
+            fetch(`/kasir/pos/simulate/${trxId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            })
+            .then(r => r.json())
+            .then(res => {
+                flash('Pembayaran QRIS berhasil disimulasikan!');
+            })
+            .catch(err => {
+                flash('Gagal simulasi: ' + err.message);
+                simPayBtn.disabled = false;
+                simPayBtn.innerHTML = KopIcon('zap') + ' Bayar Sekarang (Simulasi Instan)';
+            });
+            return;
+        }
+
+        // Batal Transaksi Pending QRIS
+        const cancelTrxBtn = t.closest('#btnCancelPendingTrx');
+        if (cancelTrxBtn) {
+            const trxId = cancelTrxBtn.dataset.trxId;
+            if (confirm('Batalkan transaksi QRIS ini?')) {
+                fetch(`/kasir/pos/cancel/${trxId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                }).finally(() => {
+                    closeModal();
+                    flash('Transaksi QRIS dibatalkan.');
+                });
+            }
+            return;
+        }
+
         // Close Modal
         if (t.closest('[data-close]') || t.id === 'modalBg') return closeModal();
     });
@@ -721,5 +922,20 @@
 
 })();
 </script>
+
+<style>
+.pos-spin-loader {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--pos-border);
+    border-top-color: var(--pos-brown-dark);
+    border-radius: 50%;
+    animation: posSpinAnim 0.8s linear infinite;
+    display: inline-block;
+}
+@keyframes posSpinAnim {
+    to { transform: rotate(360deg); }
+}
+</style>
 
 @endsection

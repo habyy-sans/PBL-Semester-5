@@ -6,13 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use App\Models\Cabang;
 use App\Models\StokCabang;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StokCabangController extends Controller
 {
+    public function __construct(
+        private readonly NotificationService $notifications,
+    ) {}
+
     public function index(Request $request): View
     {
         $query = StokCabang::query()->with(['cabang', 'bahan']);
@@ -66,7 +72,18 @@ class StokCabangController extends Controller
             'stok_minimum' => ['required', 'numeric', 'min:0'],
         ]);
 
-        $stokCabang->update($data);
+        DB::transaction(function () use ($stokCabang, $data) {
+            $stock = StokCabang::query()
+                ->whereKey($stokCabang->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $wasLow = (float) $stock->jumlah_stok < (float) $stock->stok_minimum;
+
+            $stock->update($data);
+
+            // Minimum dinaikkan hingga stok berada di bawahnya: beri tahu Manager dan IC cabang.
+            $this->notifications->lowStock($stock, $wasLow, 'min:'.now()->format('YmdHisu'));
+        });
 
         return back()->with('success', 'Batas minimum stok cabang berhasil diperbarui.');
     }

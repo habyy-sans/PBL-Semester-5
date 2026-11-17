@@ -28,7 +28,7 @@
         <div class="stats-grid">
 
             <div class="stat-card">
-                <div class="stat-icon">▱</div>
+                <div class="stat-icon"><x-icon name="truck" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Dalam Pengiriman</span>
                     <strong x-text="count('dikirim')"></strong>
@@ -37,7 +37,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">!</div>
+                <div class="stat-icon"><x-icon name="circle-alert" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Menunggu Pengecekan</span>
                     <strong x-text="count('menunggu')"></strong>
@@ -46,7 +46,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">✓</div>
+                <div class="stat-icon"><x-icon name="circle-check" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Sudah Diterima</span>
                     <strong x-text="count('diterima')"></strong>
@@ -55,7 +55,7 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">≠</div>
+                <div class="stat-icon"><x-icon name="equal-not" /></div>
                 <div class="stat-content">
                     <span class="stat-label">Ada Selisih</span>
                     <strong x-text="withDifference()"></strong>
@@ -230,6 +230,7 @@
                                                     <input
                                                         type="number"
                                                         min="0"
+                                                        :max="line.sent"
                                                         step="1"
                                                         class="table-input qty"
                                                         :class="{ 'has-error': submitted && invalidQty(line) }"
@@ -348,14 +349,22 @@
 
 @push('scripts')
 <script>
-    // DEMO: data dari blok @php di atas. Nanti diganti data dari database,
-    // dan confirmReceipt() diganti request ke backend (stok cabang bertambah di server).
+    // Data penerimaan berasal dari database; konfirmasi dan perubahan stok diproses server.
     function receivingPage() {
 
         return {
 
             items: @json($items),          // barang, kunci = id barang
             shipments: @json($shipments),
+
+            init() {
+                const requestedId = Number(new URLSearchParams(window.location.search).get('surat_jalan_id'));
+                const shipment = this.shipments.find(item => item.id === requestedId);
+
+                if (shipment) {
+                    this.open(shipment);
+                }
+            },
 
             view: 'list',          // 'list' | 'detail'
             current: null,         // salinan surat jalan yang sedang dibuka
@@ -500,10 +509,10 @@
             },
 
 
-            // Kemasan utuh: harus bilangan bulat >= 0
+            // Kemasan utuh: harus bilangan bulat >= 0 dan <= line.sent
             invalidQty(line) {
 
-                return !Number.isInteger(line.received) || line.received < 0;
+                return !Number.isInteger(line.received) || line.received < 0 || line.received > line.sent;
             },
 
 

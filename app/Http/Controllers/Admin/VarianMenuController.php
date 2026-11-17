@@ -55,5 +55,5 @@ class VarianMenuController extends MasterDataController
 
     protected array $withCount = ['resep'];
 
-    protected array $dependents = ['resep'];
+    protected array $dependents = ['resep', 'detailTransaksi'];
 }

@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\Cabang;
 use App\Models\DraftInstruksi;
+use App\Models\NotifikasiAlert;
 use App\Models\StockMovement;
+use App\Models\StokCabang;
 use App\Models\SuratJalan;
 use App\Models\TransaksiPenjualan;
+use App\Models\WasteLog;
 use App\Services\CatalogService;
 use App\Services\ReportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -54,13 +58,74 @@ class DashboardController extends Controller
      */
     public function alert(Request $request): View
     {
-        $user = $request->user();
-        $cabangId = (int) $user->cabang_id;
+        $cabangId = (int) $request->user()->cabang_id;
+        $requestedStockId = $request->integer('stok_cabang_id');
+        $focusStockKey = $requestedStockId > 0
+            ? StokCabang::query()
+                ->where('stok_cabang_id', $requestedStockId)
+                ->where('cabang_id', $cabangId)
+                ->value('bahan_id')
+            : null;
+        $requestedWasteId = $request->integer('waste_id');
+        $focusWasteGroup = $requestedWasteId > 0
+            ? WasteLog::query()
+                ->where('waste_id', $requestedWasteId)
+                ->where('cabang_id', $cabangId)
+                ->value('kelompok_id')
+            : null;
+
+        $pendingDraft = DraftInstruksi::query()
+            ->where('cabang_id', $cabangId)
+            ->whereIn('status', ['menunggu_persetujuan', 'menunggu'])
+            ->orderByDesc('draft_id')
+            ->get();
+
+        $wasteAlerts = NotifikasiAlert::query()
+            ->where('cabang_id', $cabangId)
+            ->where('tipe', 'waste')
+            ->get()
+            ->mapWithKeys(function ($alert) {
+                preg_match(
+                    '/\[kelompok_id=([^\]]+)\]/',
+                    $alert->pesan,
+                    $matches
+                );
+
+                return ! empty($matches[1])
+                    ? [$matches[1] => [
+                        'alert_id' => $alert->alert_id,
+                        'status_baca' => (bool) $alert->status_baca,
+                    ]]
+                    : [];
+            });
 
         return view('manager.alert.index', [
             'items' => $this->catalog->items($cabangId),
             'mutations' => $this->mutations($cabangId),
-            'draftNo' => $this->latestDraftNo($cabangId),
+            'draftNo' => $pendingDraft->first()
+                ? sprintf('#RS-%04d', $pendingDraft->first()->draft_id)
+                : null,
+            'draftCount' => $pendingDraft->count(),
+            'wasteAlerts' => $wasteAlerts,
+            'focusStockKey' => $focusStockKey,
+            'focusWasteGroup' => $focusWasteGroup,
+        ]);
+    }
+
+    public function evaluateWaste(Request $request, int $alertId): JsonResponse
+    {
+        $alert = NotifikasiAlert::query()
+            ->where('alert_id', $alertId)
+            ->where('cabang_id', $request->user()->cabang_id)
+            ->where('tipe', 'waste')
+            ->firstOrFail();
+
+        $alert->update([
+            'status_baca' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Alert waste berhasil ditandai sudah dievaluasi.',
         ]);
     }
 
@@ -88,14 +153,23 @@ class DashboardController extends Controller
             ->get()
             ->map(fn ($trx) => [
                 'no' => $trx->no_transaksi ?? sprintf('#TRX-%04d', $trx->transaksi_id),
-                'date' => $trx->tanggal->format('Y-m-d'),
-                'time' => $trx->tanggal->format('H:i'),
+                'date' => $trx->tanggal
+                    ->timezone('Asia/Jakarta')
+                    ->format('Y-m-d'),
+
+                'time' => $trx->tanggal
+                    ->timezone('Asia/Jakarta')
+                    ->format('H:i:s'),
                 'cashier' => $trx->kasir?->nama_lengkap ?? '-',
                 'method' => $trx->pembayaran?->metode ?? 'tunai',
                 'cash' => $trx->pembayaran?->jumlah_diterima !== null
                     ? (float) $trx->pembayaran->jumlah_diterima
                     : null,
-                'status' => $trx->status === 'berhasil' ? 'selesai' : 'batal',
+                'status' => match ($trx->status) {
+                    'berhasil' => 'selesai',
+                    'menunggu_pembayaran' => 'pending',
+                    default => 'batal',
+                },
                 'reason' => $trx->alasan_batal,
                 'items' => $trx->detail
                     ->filter(fn ($line) => $line->varian !== null)
@@ -126,21 +200,28 @@ class DashboardController extends Controller
         // sama seperti data demo lama.
         return $rows
             ->groupBy(fn ($movement) => $movement->jenis_mutasi === 'waste'
-                ? 'waste-' . $movement->tanggal->toDateTimeString() . '-' . $movement->keterangan
-                : 'row-' . $movement->movement_id)
+                ? 'waste-'.($movement->kelompok_id
+                    ?? $movement->tanggal->toDateTimeString().'-'.$movement->keterangan)
+                : 'row-'.$movement->movement_id)
             ->map(function ($group) {
                 $first = $group->first();
 
                 return [
                     'id' => (int) $group->min('movement_id'),
-                    'date' => $first->tanggal->format('Y-m-d'),
-                    'time' => $first->tanggal->format('H:i'),
+                    'date' => $first->tanggal
+                        ->timezone('Asia/Jakarta')
+                        ->format('Y-m-d'),
+
+                    'time' => $first->tanggal
+                        ->timezone('Asia/Jakarta')
+                        ->format('H:i:s'),
                     'type' => match ($first->jenis_mutasi) {
                         'penerimaan_cabang' => 'masuk',
                         'waste' => 'waste',
                         default => 'keluar',
                     },
                     'ref' => $first->keterangan ?? '',
+                    'group_id' => $first->kelompok_id,
                     'lines' => $group->map(fn ($movement) => [
                         'item' => (string) $movement->bahan_id,
                         'amount' => in_array($movement->jenis_mutasi, ['penjualan', 'waste'], true)
@@ -154,6 +235,30 @@ class DashboardController extends Controller
     }
 
     /**
+     * Catatan per bahan dibaca kembali dari konfirmasi_penerimaan.kondisi
+     *
+     * @return array<string, string>
+     */
+    private function notesFromKondisi(?string $kondisi): array
+    {
+        if ($kondisi === null || ! preg_match('/^(?:selisih|baik): (.+)$/su', $kondisi, $m)) {
+            return [];
+        }
+
+        $notes = [];
+
+        foreach (explode('; ', $m[1]) as $part) {
+            $pair = explode(': ', $part, 2);
+
+            if (count($pair) === 2) {
+                $notes[trim($pair[0])] = trim($pair[1]);
+            }
+        }
+
+        return $notes;
+    }
+
+    /**
      * Surat jalan (pengiriman DC) untuk JS dashboard.
      *
      * @return array<int, array<string, mixed>>
@@ -162,25 +267,30 @@ class DashboardController extends Controller
     {
         return SuratJalan::query()
             ->where('cabang_id', $cabangId)
-            ->with(['detail', 'konfirmasi'])
+            ->with(['detail.bahan', 'detail.detailDraft', 'konfirmasi'])
             ->orderByDesc('surat_jalan_id')
             ->limit(100)
             ->get()
-            ->map(fn ($sj) => [
-                'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
-                'date' => $sj->tanggal_kirim?->format('d M Y') ?? '-',
-                'origin' => 'Distribution Center',
-                'store' => (string) $sj->cabang_id,
-                'order' => null,
-                'status' => $sj->computed_status,
-                'items' => $sj->detail
-                    ->map(fn ($detail) => [
-                        'item' => (string) $detail->bahan_id,
-                        'sent' => (int) $detail->qty_dikirim,
-                        'received' => $detail->qty_diterima === null ? null : (int) $detail->qty_diterima,
-                        'note' => null,
-                    ])->values()->all(),
-            ])
+            ->map(function ($sj) {
+                $notes = $this->notesFromKondisi($sj->konfirmasi?->kondisi);
+                $draftId = $sj->detail->first()?->detailDraft?->draft_id;
+
+                return [
+                    'no' => sprintf('#SJ-%03d', $sj->surat_jalan_id),
+                    'date' => $sj->tanggal_kirim?->format('d M Y') ?? '-',
+                    'origin' => 'Distribution Center',
+                    'store' => (string) $sj->cabang_id,
+                    'order' => $draftId ? sprintf('#RS-%04d', $draftId) : '-',
+                    'status' => $sj->computed_status,
+                    'items' => $sj->detail
+                        ->map(fn ($detail) => [
+                            'item' => (string) $detail->bahan_id,
+                            'sent' => (int) $detail->qty_dikirim,
+                            'received' => $detail->qty_diterima === null ? null : (int) $detail->qty_diterima,
+                            'note' => $notes[$detail->bahan?->nama_bahan ?? ''] ?? null,
+                        ])->values()->all(),
+                ];
+            })
             ->values()
             ->all();
     }

@@ -3,19 +3,20 @@
 namespace Tests\Feature;
 
 use App\Models\BahanBaku;
+use App\Models\Cabang;
+use App\Models\Dc;
 use App\Models\DetailTransaksi;
 use App\Models\KategoriMenu;
 use App\Models\MenuProduk;
 use App\Models\ResepMenu;
-use App\Models\StokCabang;
 use App\Models\StockMovement;
+use App\Models\StokCabang;
 use App\Models\SuratJalan;
 use App\Models\TransaksiPenjualan;
 use App\Models\VarianMenu;
 use App\Models\WasteLog;
 use App\Services\ReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ReportServiceTest extends TestCase
@@ -34,104 +35,15 @@ class ReportServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Skema minimal untuk sqlite in-memory (tabel domain asli ada di
-        // Supabase dan tidak dimigrasikan lewat Laravel migrations).
-        Schema::create('bahan_baku', function ($table) {
-            $table->id('bahan_id');
-            $table->string('nama_bahan', 100);
-            $table->string('satuan', 20);
-            $table->decimal('harga_beli', 12, 2)->default(0);
-            $table->string('nama_kemasan', 50)->nullable();
-            $table->decimal('isi_per_kemasan', 12, 3)->default(1);
-            $table->string('kategori', 50)->nullable();
-        });
+        Cabang::query()->firstOrCreate(
+            ['cabang_id' => $this->cabangId],
+            ['nama_cabang' => 'Cabang Utama']
+        );
 
-        Schema::create('kategori_menu', function ($table) {
-            $table->id('kategori_menu_id');
-            $table->string('nama_kategori', 100);
-        });
-
-        Schema::create('menu_produk', function ($table) {
-            $table->id('menu_id');
-            $table->bigInteger('kategori_menu_id')->nullable();
-            $table->string('nama_menu', 100);
-            $table->decimal('harga_jual', 12, 2)->default(0);
-            $table->string('emoji', 20)->nullable();
-        });
-
-        Schema::create('varian_menu', function ($table) {
-            $table->id('varian_id');
-            $table->bigInteger('menu_id');
-            $table->string('nama_varian', 50);
-            $table->decimal('harga_tambahan', 12, 2)->default(0);
-        });
-
-        Schema::create('resep_menu', function ($table) {
-            $table->id('resep_id');
-            $table->bigInteger('varian_id');
-            $table->bigInteger('bahan_id');
-            $table->decimal('jumlah_bahan', 14, 3);
-        });
-
-        Schema::create('transaksi_penjualan', function ($table) {
-            $table->id('transaksi_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('kasir_id')->nullable();
-            $table->timestamp('tanggal')->nullable();
-            $table->decimal('total_bayar', 14, 2)->default(0);
-            $table->string('status', 20);
-            $table->string('alasan_batal')->nullable();
-        });
-
-        Schema::create('detail_transaksi', function ($table) {
-            $table->id('detail_id');
-            $table->bigInteger('transaksi_id');
-            $table->bigInteger('varian_id');
-            $table->integer('qty');
-            $table->decimal('harga_satuan', 14, 2);
-            $table->decimal('subtotal', 14, 2);
-        });
-
-        Schema::create('waste_log', function ($table) {
-            $table->id('waste_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('bahan_id');
-            $table->bigInteger('kepala_shift_id')->nullable();
-            $table->decimal('qty', 14, 3);
-            $table->string('alasan');
-            $table->timestamp('tanggal')->nullable();
-            $table->uuid('kelompok_id')->nullable();
-        });
-
-        Schema::create('stock_movements', function ($table) {
-            $table->id('movement_id');
-            $table->bigInteger('bahan_id');
-            $table->bigInteger('cabang_id')->nullable();
-            $table->bigInteger('dc_id')->nullable();
-            $table->string('jenis_mutasi', 30);
-            $table->decimal('jumlah', 14, 3);
-            $table->bigInteger('referensi_id')->nullable();
-            $table->timestamp('tanggal')->nullable();
-            $table->string('keterangan')->nullable();
-            $table->uuid('kelompok_id')->nullable();
-        });
-
-        Schema::create('stok_cabang', function ($table) {
-            $table->id('stok_cabang_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('bahan_id');
-            $table->decimal('jumlah_stok', 14, 3)->default(0);
-            $table->decimal('stok_minimum', 14, 3)->default(0);
-        });
-
-        Schema::create('surat_jalan', function ($table) {
-            $table->id('surat_jalan_id');
-            $table->bigInteger('cabang_id');
-            $table->bigInteger('dc_id');
-            $table->bigInteger('diterbitkan_oleh')->nullable();
-            $table->timestamp('tanggal_kirim')->nullable();
-            $table->string('status', 20)->default('disiapkan');
-        });
+        Dc::query()->firstOrCreate(
+            ['dc_id' => 1],
+            ['nama_dc' => 'DC Pusat', 'alamat' => 'Alamat DC']
+        );
 
         $this->seedCatalog();
         $this->seedTransactions();
@@ -264,7 +176,7 @@ class ReportServiceTest extends TestCase
                 'jenis_mutasi' => $jenis,
                 'jumlah' => $jumlah,
                 'tanggal' => now(),
-                'keterangan' => 'Uji ' . $jenis,
+                'keterangan' => 'Uji '.$jenis,
             ]);
         }
 

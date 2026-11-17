@@ -27,16 +27,15 @@
                 <p class="menu-title">{{ $title }}</p>
  
                 @foreach ($items as $item)
+                    @php
+                        $isActive = request()->routeIs($item['route'])
+                            || (str_ends_with($item['route'], '.index') && request()->routeIs(substr($item['route'], 0, -6) . '.*'));
+                    @endphp
                     <a
                         href="{{ route($item['route']) }}"
-                        class="menu-item {{ request()->routeIs($item['route']) ? 'active' : '' }}"
+                        class="menu-item {{ $isActive ? 'active' : '' }}"
                     >
-                        <span class="menu-icon">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
- 
-                        @isset($item['badge'])
-                            <span class="menu-badge {{ ($item['danger'] ?? false) ? 'danger' : '' }}">{{ $item['badge'] }}</span>
-                        @endisset
                     </a>
                 @endforeach
  
@@ -51,7 +50,6 @@
             @csrf
 
             <button type="submit" class="logout-button">
-                <span>↪</span>
                 Logout
             </button>
         </form>

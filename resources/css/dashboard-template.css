@@ -69,7 +69,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--pos-text);
 }
@@ -80,7 +80,7 @@
 }
 
 .dash-kpi-link {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
     text-decoration: none;
     font-weight: 500;
@@ -109,7 +109,7 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     padding: 2px 6px;
     border-radius: 6px;
@@ -132,7 +132,7 @@
 }
 
 .dash-kpi-subtext {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -184,7 +184,7 @@
     align-items: center;
     justify-content: center;
     color: var(--pos-brown);
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .dash-card-title {
@@ -198,7 +198,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--pos-muted);
 }
@@ -231,7 +231,7 @@
     padding: 5px 12px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
     cursor: pointer;
@@ -269,7 +269,7 @@
 
 .dash-score-number {
     font-size: 42px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--pos-brown-dark);
     line-height: 1;
 }
@@ -280,12 +280,12 @@
 }
 
 .dash-score-meta strong {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--pos-text);
 }
 
 .dash-score-meta span {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -327,7 +327,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     flex-shrink: 0;
 }
@@ -354,7 +354,7 @@
 }
 
 .dash-alert-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--pos-text);
     white-space: nowrap;
@@ -363,7 +363,7 @@
 }
 
 .dash-alert-sub {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -376,7 +376,7 @@
     border-radius: 8px;
     padding: 5px 12px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-brown-dark);
     cursor: pointer;
@@ -427,7 +427,7 @@
     padding: 4px 10px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
     cursor: pointer;
@@ -446,7 +446,7 @@
 .dash-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .dash-table th {
@@ -482,7 +482,7 @@
     border: 1px solid var(--pos-border);
     color: var(--pos-brown-dark);
     font-weight: 700;
-    font-size: 11px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -500,11 +500,716 @@
 }
 
 .dash-customer-meta {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
 .dash-trx-value {
     font-weight: 700;
     color: var(--pos-brown-dark);
+}
+
+/* =========================================
+   MANAGER REPORT PAGE
+   Reuse Manager Dashboard Design System
+========================================= */
+.report-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* PERIOD FILTER CARD */
+
+.report-period-card {
+    gap: 18px;
+}
+
+.report-section-desc {
+    margin: 4px 0 0;
+    color: var(--pos-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.report-filter-form {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 14px;
+}
+
+.report-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 190px;
+}
+
+.report-date-field label {
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.report-date-field input {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 11px;
+    background: #ffffff;
+    color: var(--pos-text);
+    border: 1px solid var(--pos-border);
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-date-field input:focus {
+    border-color: var(--pos-brown);
+    box-shadow: 0 0 0 3px rgba(83, 37, 8, 0.08);
+}
+
+.report-date-separator {
+    padding-bottom: 10px;
+    color: var(--pos-muted);
+    font-size: 14px;
+}
+
+.report-apply-btn,
+.report-export-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.report-apply-btn {
+    color: #ffffff;
+    background: var(--pos-brown);
+    border: 1px solid var(--pos-brown);
+}
+
+.report-apply-btn:hover {
+    background: var(--pos-brown-dark);
+    transform: translateY(-1px);
+}
+
+.report-export-btn {
+    color: var(--pos-brown);
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+}
+
+.report-export-btn:hover {
+    background: var(--pos-cream-bg);
+    border-color: var(--pos-brown);
+}
+
+
+/* KPI CARDS */
+
+.report-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.report-kpi-row .dash-kpi-card {
+    min-width: 0;
+}
+
+.report-kpi-row .dash-kpi-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.report-kpi-row .dash-kpi-value {
+    font-size: clamp(17px, 1.5vw, 22px);
+    overflow-wrap: anywhere;
+}
+
+.report-danger-value {
+    color: var(--pos-red-text) !important;
+}
+
+
+/* REPORT TABLE CARDS */
+
+.report-section-card {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.report-section-card .dash-card-header {
+    align-items: center;
+}
+
+.report-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    color: var(--pos-brown);
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.report-table {
+    min-width: 720px;
+}
+
+.report-table th {
+    white-space: nowrap;
+    background: var(--pos-cream-bg);
+}
+
+.report-table td {
+    white-space: nowrap;
+}
+
+.report-table td:first-child,
+.report-table th:first-child {
+    text-align: left;
+}
+
+.report-danger-text {
+    color: var(--pos-red-text) !important;
+    font-weight: 600;
+}
+
+
+/* EMPTY STATE */
+
+.report-empty-cell {
+    padding: 0 !important;
+}
+
+.report-empty-state {
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+    white-space: normal;
+}
+
+.report-empty-state > span {
+    font-size: 25px;
+    margin-bottom: 3px;
+}
+
+.report-empty-state strong {
+    color: var(--pos-text);
+    font-size: 13px;
+}
+
+.report-empty-state p {
+    max-width: 300px;
+    margin: 0;
+    color: var(--pos-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* PAGINATION */
+
+.report-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--pos-border-light);
+}
+
+.report-table-footer > span {
+    color: var(--pos-muted);
+    font-size: 12px;
+}
+
+.report-table-footer nav {
+    display: flex;
+    align-items: center;
+}
+
+.report-table-footer nav > div:first-child {
+    display: none;
+}
+
+.report-table-footer nav > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.report-table-footer nav a,
+.report-table-footer nav span[aria-current],
+.report-table-footer nav span[aria-disabled] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 29px;
+    min-height: 29px;
+    padding: 5px 9px;
+    color: var(--pos-muted);
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: 8px;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.report-table-footer nav a:hover {
+    color: var(--pos-brown);
+    background: var(--pos-cream-bg);
+    border-color: var(--pos-brown);
+}
+
+.report-table-footer nav span[aria-current] {
+    color: #ffffff;
+    background: var(--pos-brown);
+    border-color: var(--pos-brown);
+}
+
+.report-table-footer nav span[aria-disabled] {
+    opacity: 0.45;
+}
+
+
+/* DISCLAIMER */
+
+.report-disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 16px;
+    background: var(--pos-cream-bg);
+    border: 1px solid var(--pos-border);
+    border-radius: 12px;
+}
+
+.report-disclaimer > span {
+    font-size: 14px;
+}
+
+.report-disclaimer p {
+    margin: 0;
+    color: var(--pos-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1200px) {
+    .report-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .report-period-card {
+        padding: 16px;
+    }
+
+    .report-filter-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .report-date-field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .report-date-separator {
+        display: none;
+    }
+
+    .report-apply-btn,
+    .report-export-btn {
+        width: 100%;
+    }
+
+    .report-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .report-kpi-row .dash-kpi-card {
+        padding: 14px;
+    }
+
+    .report-table-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   REPORT TABLE - COLUMN ALIGNMENT
+========================================= */
+/* Header dan isi kolom angka berada di tengah */
+.report-table th.text-right,
+.report-table td.text-right {
+    text-align: center !important;
+}
+
+/* Kolom pertama tetap rata kiri */
+.report-table th:first-child,
+.report-table td:first-child {
+    text-align: left !important;
+}
+
+
+/* =========================================
+   MANAGER ALERT TABLE ALIGNMENT
+========================================= */
+
+.alert-table th,
+.alert-table td {
+    vertical-align: middle;
+}
+
+.alert-table th:nth-child(1),
+.alert-table td:nth-child(1),
+.alert-table th:nth-child(4),
+.alert-table td:nth-child(4),
+.alert-table th:nth-child(5),
+.alert-table td:nth-child(5),
+.alert-table th:nth-child(6),
+.alert-table td:nth-child(6) {
+    text-align: center !important;
+}
+
+/* Timestamp tidak boleh terpotong */
+.alert-table th:nth-child(4),
+.alert-table td:nth-child(4) {
+    white-space: nowrap;
+    min-width: 220px;
+}
+
+
+/* =========================================================
+   DC - RIWAYAT MUTASI STOK
+   Mengikuti desain Manager Branch Report
+========================================================= */
+
+.dc-mutation-page {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dc-mutation-filter {
+    padding: 22px 24px;
+    border-radius: 18px;
+}
+
+.dc-mutation-filter-heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 22px;
+}
+
+.dc-mutation-heading-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: #fff8ed;
+    font-size: 15px;
+}
+
+.dc-mutation-filter-heading h3,
+.dc-mutation-table-heading h3 {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dc-mutation-filter-heading p,
+.dc-mutation-table-heading p {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.dc-mutation-filter-heading small {
+    display: block;
+    margin-top: 6px;
+    color: #7d6450;
+    font-size: 11px;
+}
+
+.dc-mutation-filter-form {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr;
+    align-items: end;
+    gap: 12px;
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: #f8f4ed;
+}
+
+.dc-mutation-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.dc-mutation-field label {
+    color: #927660;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.dc-mutation-field input,
+.dc-mutation-field select {
+    width: 100%;
+    height: 38px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: white;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.dc-mutation-field input:focus,
+.dc-mutation-field select:focus {
+    border-color: var(--brown);
+}
+
+.dc-mutation-filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 3px;
+}
+
+.dc-mutation-filter-actions .primary-button,
+.dc-mutation-filter-actions .outline-button {
+    min-height: 36px;
+    padding: 8px 15px;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.dc-mutation-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+}
+
+.dc-mutation-summary-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: var(--white);
+}
+
+.dc-mutation-summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dc-mutation-summary-top span {
+    font-size: 15px;
+}
+
+.dc-mutation-summary-top small {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.dc-mutation-summary-card > strong {
+    display: block;
+    margin-top: 9px;
+    color: var(--brown-dark);
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.dc-mutation-summary-card > p {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.dc-mutation-table-card {
+    padding: 20px;
+    border-radius: 18px;
+}
+
+.dc-mutation-table-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.dc-mutation-total {
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fbf6ed;
+    color: var(--brown);
+    font-size: 11px;
+}
+
+.dc-mutation-table {
+    min-width: 850px;
+}
+
+.dc-mutation-table th {
+    padding: 13px 12px;
+    font-size: 11px;
+}
+
+.dc-mutation-table td {
+    padding: 13px 12px;
+    font-size: 11px;
+}
+
+.dc-mutation-secondary {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.dc-mutation-reference {
+    color: var(--brown);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dc-mutation-description {
+    display: block;
+    max-width: 220px;
+    color: #806b59;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.dc-mutation-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 45px 15px;
+    text-align: center;
+}
+
+.dc-mutation-empty > span {
+    font-size: 24px;
+}
+
+.dc-mutation-empty strong {
+    color: var(--text);
+    font-size: 12px;
+}
+
+.dc-mutation-empty p {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.dc-mutation-pagination {
+    display: flex;
+    justify-content: center;
+    padding-top: 16px;
+    border-top: 1px solid #eee1d0;
+    margin-top: 14px;
+}
+
+@media (max-width: 1100px) {
+    .dc-mutation-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dc-mutation-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .dc-mutation-filter,
+    .dc-mutation-table-card {
+        padding: 14px;
+    }
+
+    .dc-mutation-filter-form {
+        grid-template-columns: 1fr;
+        padding: 13px;
+    }
+
+    .dc-mutation-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .dc-mutation-summary-card {
+        padding: 12px;
+    }
+
+    .dc-mutation-summary-card > strong {
+        font-size: 14px;
+    }
+
+    .dc-mutation-filter-actions {
+        flex-direction: column;
+    }
+
+    .dc-mutation-filter-actions > * {
+        width: 100%;
+        text-align: center;
+    }
 }

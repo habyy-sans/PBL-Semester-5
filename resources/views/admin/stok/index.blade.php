@@ -71,8 +71,8 @@
                         <tr>
                             <td>{{ $type === 'cabang' ? $stock->cabang->nama_cabang : $stock->dc->nama_dc }}</td>
                             <td>{{ $stock->bahan->nama_bahan }} <small class="admin-secondary-line">{{ $stock->bahan->kategori }}</small></td>
-                            <td>{{ $stock->jumlah_stok }} {{ $stock->bahan->satuan }}</td>
-                            <td>{{ $stock->stok_minimum }} {{ $stock->bahan->satuan }}</td>
+                            <td>{{ number_format((float) $stock->jumlah_stok, fmod((float) $stock->jumlah_stok, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
+                            <td>{{ number_format((float) $stock->stok_minimum, fmod((float) $stock->stok_minimum, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
                             <td><span class="status {{ $low ? 'warning' : 'success' }}">{{ $low ? 'Menipis' : 'Aman' }}</span></td>
                             <td>
                                 <button

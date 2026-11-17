@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -34,6 +36,15 @@ class AuthController extends Controller
         ]);
 
         $identifier = trim($credentials['identifier']);
+        $throttleKey = Str::transliterate(Str::lower($identifier).'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'identifier' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+            ]);
+        }
 
         $user = Pengguna::query()
             ->where('email', $identifier)
@@ -41,16 +52,22 @@ class AuthController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password_hash)) {
+            RateLimiter::hit($throttleKey);
+
             throw ValidationException::withMessages([
                 'identifier' => 'Email/username atau password salah.',
             ]);
         }
 
         if ($user->status !== 'aktif') {
+            RateLimiter::hit($throttleKey);
+
             throw ValidationException::withMessages([
                 'identifier' => 'Akun Anda nonaktif. Hubungi Admin.',
             ]);
         }
+
+        RateLimiter::clear($throttleKey);
 
         Auth::login($user, $request->boolean('remember'));
 

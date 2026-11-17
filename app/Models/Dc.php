@@ -24,4 +24,14 @@ class Dc extends Model
     {
         return $this->hasMany(StokDc::class, 'dc_id');
     }
+
+    public function suratJalan(): HasMany
+    {
+        return $this->hasMany(SuratJalan::class, 'dc_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'dc_id');
+    }
 }

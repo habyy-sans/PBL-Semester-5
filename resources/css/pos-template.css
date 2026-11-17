@@ -81,7 +81,7 @@
 }
 
 .pos-brand-text span {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -92,7 +92,7 @@
 }
 
 .pos-date-badge {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--pos-text);
 }
@@ -111,7 +111,7 @@
     border: 1px solid var(--pos-border);
     border-radius: 999px;
     padding: 6px 14px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--pos-text);
 }
@@ -128,7 +128,7 @@
     border: 1.5px solid var(--pos-border);
     border-radius: 999px;
     padding: 6px 14px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--pos-brown-dark);
     text-decoration: none;
@@ -169,7 +169,7 @@
     background: var(--pos-red-text);
     color: #ffffff;
     border-radius: 50%;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -192,7 +192,7 @@
     border: 1.5px solid var(--pos-border);
     color: var(--pos-brown-dark);
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,12 +204,12 @@
 
 .pos-user-meta strong {
     display: block;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--pos-text);
 }
 
 .pos-user-meta span {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
@@ -277,7 +277,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
     background: var(--pos-cream-bg);
@@ -334,7 +334,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     padding: 3px 9px;
     border-radius: 999px;
@@ -376,7 +376,7 @@
 }
 
 .pos-cat-items {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--pos-muted);
 }
@@ -481,7 +481,7 @@
 }
 
 .pos-product-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--pos-text);
     margin: 0 0 4px 0;
@@ -493,7 +493,7 @@
 }
 
 .pos-product-price {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--pos-brown);
 }
@@ -507,7 +507,7 @@
 }
 
 .pos-stock-tag {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     padding: 2px 7px;
     border-radius: 999px;
@@ -528,7 +528,7 @@
     background: transparent;
     border: none;
     color: var(--pos-muted);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     text-decoration: underline;
     cursor: pointer;
@@ -551,7 +551,7 @@
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    font-weight: 400;
+    font-weight: 500;
     transition: all 0.2s ease;
     margin-left: auto;
 }
@@ -614,7 +614,7 @@
 }
 
 .pos-receipt-id {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
 }
@@ -650,7 +650,7 @@
     border-radius: 999px;
     padding: 8px 10px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--pos-text);
     cursor: pointer;
@@ -678,7 +678,7 @@
 }
 
 .pos-meta-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--pos-muted);
 }
@@ -691,7 +691,7 @@
     border-radius: 12px;
     padding: 8px 12px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--pos-text);
     outline: none;
     transition: border 0.2s ease;
@@ -710,7 +710,7 @@
 }
 
 .pos-order-list-heading {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--pos-text);
 }
@@ -737,7 +737,7 @@
     text-align: center;
     padding: 30px 10px;
     color: var(--pos-muted);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* Receipt Item Card */
@@ -776,7 +776,7 @@
 }
 
 .pos-receipt-item-name {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--pos-text);
     margin: 0 0 2px 0;
@@ -787,13 +787,13 @@
 }
 
 .pos-receipt-item-sub {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--pos-muted);
 }
 
 .pos-receipt-item-tag {
     display: inline-block;
-    font-size: 9px;
+    font-size: 11px;
     color: var(--pos-brown);
     background: #ffffff;
     border: 1px solid var(--pos-border);
@@ -810,7 +810,7 @@
 }
 
 .pos-receipt-item-price {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--pos-brown-dark);
 }
@@ -833,7 +833,7 @@
     border: none;
     background: var(--pos-cream-bg);
     color: var(--pos-text);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -847,7 +847,7 @@
 }
 
 .pos-qty-pill span {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     min-width: 16px;
     text-align: center;
@@ -866,7 +866,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--pos-muted);
 }
 
@@ -897,7 +897,7 @@
     justify-content: space-between;
     padding: 0 16px;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(83, 37, 8, 0.25);
@@ -931,7 +931,7 @@
 .pos-place-order-chevrons {
     opacity: 0.6;
     letter-spacing: -2px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* Payment Method & Cash Modal */
@@ -948,7 +948,7 @@
     background: #ffffff;
     border-radius: 12px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--pos-text);
     cursor: pointer;

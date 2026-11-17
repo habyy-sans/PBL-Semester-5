@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
+    'no_transaksi',
     'cabang_id',
     'kasir_id',
     'tanggal',
@@ -53,5 +54,10 @@ class TransaksiPenjualan extends Model
     public function pembayaran(): HasOne
     {
         return $this->hasOne(Payment::class, 'transaksi_id');
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->pembayaran();
     }
 }

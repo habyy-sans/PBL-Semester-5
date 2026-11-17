@@ -15,7 +15,7 @@
     <div class="stats-grid">
 
         <div class="stat-card">
-            <div class="stat-icon">≡</div>
+            <div class="stat-icon"><x-icon name="package" /></div>
             <div class="stat-content">
                 <span class="stat-label">Total Item</span>
                 <strong x-text="items.length"></strong>
@@ -24,7 +24,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">✓</div>
+            <div class="stat-icon"><x-icon name="circle-check" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Aman</span>
                 <strong x-text="count('aman')"></strong>
@@ -33,7 +33,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">!</div>
+            <div class="stat-icon"><x-icon name="triangle-alert" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Menipis</span>
                 <strong x-text="count('menipis')"></strong>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon">×</div>
+            <div class="stat-icon"><x-icon name="package-x" /></div>
             <div class="stat-content">
                 <span class="stat-label">Stok Habis</span>
                 <strong x-text="count('habis')"></strong>
@@ -144,6 +144,53 @@
             search: '',
             category: '',
             status: '',
+
+            // Perbarui stok otomatis tiap 10 detik (berhenti saat tab tidak aktif).
+            init() {
+
+                const params = new URLSearchParams(window.location.search);
+                const requestedStockId = Number(params.get('stok_cabang_id'));
+                const requestedBahanId = params.get('bahan_id');
+                if (requestedStockId) {
+                    const target = this.items.find(i => Number(i.stok_cabang_id) === requestedStockId);
+                    if (target) {
+                        this.search = target.name;
+                    }
+                } else if (requestedBahanId) {
+                    const target = this.items.find(i => String(i.id) === String(requestedBahanId));
+                    if (target) {
+                        this.search = target.name;
+                    }
+                }
+
+                const refresh = async () => {
+
+                    if (document.hidden) {
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(@json(route('ic.stock.data')), {
+                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            credentials: 'same-origin',
+                        });
+
+                        if (res.ok && (res.headers.get('content-type') || '').includes('json')) {
+                            this.items = await res.json();
+                        }
+                    } catch (e) {
+                        // Jaringan putus: biarkan data lama, coba lagi pada putaran berikutnya.
+                    }
+                };
+
+                setInterval(refresh, 10000);
+
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        refresh();
+                    }
+                });
+            },
 
             labels: {
                 aman:    { text: 'Aman',    class: 'success' },

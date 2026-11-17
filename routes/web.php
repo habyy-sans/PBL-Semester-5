@@ -14,8 +14,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VarianMenuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
+use App\Http\Controllers\Dc\MutationController as DcMutationController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
+use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Dc\StokDcController as DcStokDcController;
 use App\Http\Controllers\Ic\MutationController;
 use App\Http\Controllers\Ic\ReceivingController;
@@ -25,6 +27,9 @@ use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RestockController;
+use App\Http\Controllers\Manager\ReportController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Data untuk halaman "segera hadir"
@@ -47,7 +52,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->name('login.attempt');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:10,1')->name('login.attempt');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
@@ -60,10 +65,19 @@ Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->grou
 
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::post('/pos', [PosController::class, 'store']);
+    Route::get('/pos/status/{id}', [PosController::class, 'status'])->name('pos.status');
+    Route::post('/pos/cancel/{id}', [PosController::class, 'cancel'])->name('pos.cancel');
+    Route::post('/pos/simulate/{id}', [PaymentWebhookController::class, 'simulate'])->name('pos.simulate');
 
     Route::get('/history', [RiwayatController::class, 'index'])->name('history');
 
 });
+
+/* =========================================================
+   PAYMENT GATEWAY WEBHOOK (MIDTRANS)
+========================================================= */
+Route::post('/midtrans/webhook', [PaymentWebhookController::class, 'handle'])->name('midtrans.webhook');
+
 
 /* =========================================================
    KEPALA SHIFT / IC
@@ -72,6 +86,7 @@ Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->grou
 Route::middleware(['auth', 'role:ic'])->prefix('ic')->name('ic.')->group(function () {
 
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
+    Route::get('/stock/data', [StockController::class, 'data'])->name('stock.data');
 
     Route::get('/receiving', [ReceivingController::class, 'index'])->name('receiving');
     Route::post('/receiving/{id}/confirm', [ReceivingController::class, 'confirm'])->name('receiving.confirm');
@@ -95,6 +110,11 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
 
     Route::get('/alert', [DashboardController::class, 'alert'])->name('alert');
 
+    Route::post('/alert/{alertId}/evaluate', [
+        DashboardController::class,
+        'evaluateWaste'
+    ])->name('alert.evaluate');
+
     Route::view('/restock', 'manager.restock.index')->name('restock');
 
     Route::post('/restock/generate-automatic', [RestockController::class, 'generateAutomatic'])
@@ -109,7 +129,8 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('/restock/draft/update', [RestockController::class, 'updateDraft'])
     ->name('restock.update-draft');
 
-    Route::view('/report', 'manager.reports.index')->name('report');
+    Route::get('/report', [ReportController::class, 'index'])
+    ->name('report');
 
 });
 
@@ -126,10 +147,37 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::get('/shipment', [ShipmentController::class, 'index'])->name('shipment');
     Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
+    Route::post('/shipment/{id}/batalkan', [ShipmentController::class, 'batalkan'])
+    ->name('shipment.batalkan');
 
-    // Stok Gudang DC (Persediaan bahan baku & penambahan stok fisik masuk)
-    Route::get('/stok-dc', [DcStokDcController::class, 'index'])->name('stok-dc.index');
-    Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])->name('stok-dc.add-stock');
+    // Stok Gudang DC dan Kelola Bahan Baku
+    Route::get('/stok-dc', [DcStokDcController::class, 'index'])
+        ->name('stok-dc.index');
+
+    // CRUD Bahan Baku DC
+    Route::post('/bahan-baku', [DcStokDcController::class, 'store'])
+        ->name('bahan-baku.store');
+
+    Route::put('/bahan-baku/{bahanBaku}', [DcStokDcController::class, 'update'])
+        ->name('bahan-baku.update');
+
+    // Tambah stok fisik DC
+    Route::post('/stok-dc/{bahanBaku}/tambah-stok', [DcStokDcController::class, 'addStock'])
+        ->name('stok-dc.add-stock');
+
+    // Backward-compatible URL lama
+    Route::get('/bahan-baku', fn () => redirect()->route('dc.stok-dc.index'))
+        ->name('bahan-baku.index');
+
+    // Riwayat Mutasi Stok DC
+    Route::get('/mutation', [DcMutationController::class, 'index'])
+        ->name('mutation');
+
+    Route::post('/mutation/filter', [DcMutationController::class, 'filter'])
+        ->name('mutation.filter');
+
+    Route::post('/mutation/reset', [DcMutationController::class, 'resetFilter'])
+        ->name('mutation.reset');
 
     // Backward-compatible redirect jika membuka URL lama /dc/bahan-baku
     Route::get('/bahan-baku', fn () => redirect()->route('dc.stok-dc.index'))->name('bahan-baku.index');
@@ -181,4 +229,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         'Atur harga produk.'
     ))->name('price');
 
+});
+/* =========================================================
+   NOTIFIKASI (hanya DC, Manager, IC)
+========================================================= */
+ 
+Route::middleware(['auth', 'role:dc,manager,ic'])->prefix('notifications')->name('notifications.')->group(function () {
+ 
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->whereNumber('id')->name('read');
+ 
 });
