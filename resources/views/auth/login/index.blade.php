@@ -13,7 +13,9 @@
     <aside class="login-brand">
 
         <div class="login-brand-top">
-            <div class="logo-box">K</div>
+            <div class="logo-box">
+                <img src="{{ asset('image/logo_kopsync.png') }}" alt="Logo KopSync" width="40" height="40">
+            </div>
 
             <div>
                 <h1>KopSync</h1>
@@ -45,7 +47,9 @@
 
             <!-- brand (hanya tampil di HP) -->
             <div class="login-card-brand">
-                <div class="logo-box" style="background: var(--brown); color: white;">K</div>
+                <div class="logo-box" style="background: var(--brown); color: white;">
+                    <img src="{{ asset('image/logo_kopsync.png') }}" alt="Logo KopSync" width="40" height="40">
+                </div>
 
                 <div>
                     <strong>KopSync</strong>

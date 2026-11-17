@@ -8,7 +8,9 @@
  
     <!-- LOGO -->
     <div class="sidebar-logo">
-        <div class="logo-box">K</div>
+        <div class="logo-box">
+            <img src="{{ asset('image/logo_kopsync.png') }}" alt="Logo KopSync" width="40" height="40">
+        </div>
  
         <div>
             <h1>KopSync</h1>

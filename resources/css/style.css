@@ -109,6 +109,13 @@ body {
     font-weight: 700;
 }
 
+.logo-box img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 40px;
+}
+
 .sidebar-logo h1 {
 
     font-size: 15px;
