@@ -185,10 +185,11 @@
 
     function renderStats(list) {
         const done = list.filter(t => t.status === 'selesai');
+        const voided = list.filter(t => t.status === 'batal');
         const rev  = done.reduce((s, t) => s + trxTotal(t), 0);
 
-        $('statCount').textContent   = done.length;
-        $('statVoid').textContent    = list.filter(t => t.status === 'batal').length + ' dibatalkan';
+        $('statCount').textContent   = list.length;
+        $('statVoid').textContent    =`${voided.length} dibatalkan`;
         $('statRevenue').textContent = rp(rev);
         $('statAvg').textContent     = rp(done.length ? rev / done.length : 0);
         $('statQty').textContent     = done.reduce((s, t) => s + trxQty(t), 0);
