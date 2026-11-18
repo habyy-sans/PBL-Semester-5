@@ -26,7 +26,7 @@ class MenuProdukController extends MasterDataController
         ],
         ['name' => 'nama_menu', 'label' => 'Nama menu', 'required' => true, 'max' => 150],
         ['name' => 'harga_jual', 'label' => 'Harga jual', 'type' => 'number', 'required' => true, 'min' => 0, 'step' => '0.01'],
-        ['name' => 'emoji', 'label' => 'Emoji', 'required' => false, 'max' => 16],
+        // ['name' => 'emoji', 'label' => 'Emoji', 'required' => false, 'max' => 16],
     ];
 
     protected array $columns = [

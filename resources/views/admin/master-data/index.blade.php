@@ -38,7 +38,7 @@
                     <option value="{{ $field }}" @selected($sort === $field)>{{ str($field)->replace('_', ' ')->title() }}</option>
                 @endforeach
             </select>            
-            <button type="submit" class="outline-button">Terapkan</button>
+            <button class="primary-button" type="submit" style="background: var(--pos-brown-dark, #4A2C11); color: #ffffff; border: none; padding: 7px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;">Terapkan</button>
             @if (request()->query())
                 <a class="admin-clear-filter" href="{{ route($routeName.'.index') }}">Reset</a>
             @endif

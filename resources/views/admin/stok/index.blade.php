@@ -51,9 +51,9 @@
                 <option value="asc" @selected($direction === 'asc')>Naik</option>
                 <option value="desc" @selected($direction === 'desc')>Turun</option>
             </select>
-            <button class="outline-button" type="submit">Terapkan</button>
+            <button class="primary-button" type="submit" style="background: var(--pos-brown-dark, #4A2C11); color: #ffffff; border: none; padding: 7px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;">Terapkan</button>
             @if (request()->query())
-                <a class="admin-clear-filter" href="{{ $type === 'cabang' ? route('admin.stok-cabang.index') : route('admin.stok-dc.index') }}">Reset</a>
+                <a class="admin-clear-filter" href="{{ $type === 'cabang' ? route('admin.stok-cabang.index') : route('admin.stok-dc.index') }}" style="display: inline-flex; align-items: center; margin-left: 10px; color: #8C6239; font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px;">Reset</a>
             @endif
             <span class="table-meta">{{ $stocks->total() }} baris</span>
         </form>
@@ -63,13 +63,17 @@
                 <thead><tr><th>{{ $type === 'cabang' ? 'Cabang' : 'Distribution Center' }}</th><th>Bahan baku</th><th>Jumlah stok</th><th>Stok minimum</th><th>Status</th><th>Aksi</th></tr></thead>
                 <tbody>
                     @forelse ($stocks as $stock)
-                        @php($low = (float) $stock->jumlah_stok < (float) $stock->stok_minimum)
+                        @php
+                            $qty = (float) $stock->jumlah_stok;
+                            $low = $qty < (float) $stock->stok_minimum;
+                            $empty = $qty <= 0;
+                        @endphp
                         <tr>
                             <td>{{ $type === 'cabang' ? $stock->cabang->nama_cabang : $stock->dc->nama_dc }}</td>
                             <td>{{ $stock->bahan->nama_bahan }} <small class="admin-secondary-line">{{ $stock->bahan->kategori }}</small></td>
                             <td>{{ number_format((float) $stock->jumlah_stok, fmod((float) $stock->jumlah_stok, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
                             <td>{{ number_format((float) $stock->stok_minimum, fmod((float) $stock->stok_minimum, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
-                            <td><span class="status {{ $low ? 'warning' : 'success' }}">{{ $low ? 'Menipis' : 'Aman' }}</span></td>
+                            <td><span class="status {{ $empty ? 'danger' : ($low ? 'warning' : 'success') }}">{{ $empty ? 'Habis' : ($low ? 'Menipis' : 'Aman') }}</span></td>
                             <td>
                                 <button
                                     class="outline-button admin-small-button"
