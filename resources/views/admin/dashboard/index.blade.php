@@ -59,7 +59,15 @@
                             <td>{{ $stock['bahan'] }}</td>
                             <td>{{ $stock['jumlah'] }} {{ $stock['satuan'] }}</td>
                             <td>{{ $stock['minimum'] }} {{ $stock['satuan'] }}</td>
-                            <td><span class="status warning">Menipis</span></td>
+                            @php
+                                $qty = (float) $stock['jumlah'];
+                                $isEmpty = $qty <= 0;
+                            @endphp
+                            <td>
+                                <span class="status {{ $isEmpty ? 'danger' : 'warning' }}">
+                                    {{ $isEmpty ? 'Habis' : 'Menipis' }}
+                                </span>
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="5"><div class="page-empty">Semua stok berada di atas batas minimum.</div></td></tr>
