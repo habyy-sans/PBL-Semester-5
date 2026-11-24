@@ -33,49 +33,80 @@ class PenggunaController extends Controller
             });
         }
 
-        foreach (['role', 'cabang_id', 'dc_id', 'status'] as $filter) {
-            $value = $request->query($filter);
+        $activeFilters = [];
 
-            if (is_string($value) && $value !== '') {
-                if ($filter === 'role' && isset(config('menu.roles')[$value])) {
-                    $value = config("menu.roles.{$value}.db");
-                }
+        $roleParam = $request->query('role');
+        if (is_string($roleParam) && $roleParam !== '' && isset(config('menu.roles')[$roleParam])) {
+            $query->where('role', config("menu.roles.{$roleParam}.db"));
+            $activeFilters['role'] = $roleParam;
+        }
 
-                $query->where($filter, $value);
+        foreach (['cabang_id', 'dc_id'] as $idFilter) {
+            $val = $request->query($idFilter);
+            if (is_string($val) && ctype_digit($val)) {
+                $query->where($idFilter, (int) $val);
+                $activeFilters[$idFilter] = $val;
             }
         }
 
+        $statusParam = $request->query('status');
+        if (is_string($statusParam) && in_array($statusParam, ['aktif', 'nonaktif'], true)) {
+            $query->where('status', $statusParam);
+            $activeFilters['status'] = $statusParam;
+        }
+
+        $branchesWithoutManager = Cabang::query()
+            ->whereDoesntHave('pengguna', function (Builder $builder): void {
+                $builder->where('role', config('menu.roles.manager.db'))
+                    ->where('status', 'aktif');
+            })
+            ->orderBy('nama_cabang')
+            ->get(['cabang_id', 'nama_cabang']);
+
         return view('admin.pengguna.index', [
-            'users' => $query->orderBy('nama_lengkap')->paginate(12)->withQueryString(),
+            'users' => $query->orderBy('nama_lengkap')->orderBy('user_id')->paginate(12)->withQueryString(),
             'branches' => Cabang::query()->orderBy('nama_cabang')->get(),
             'distributionCenters' => Dc::query()->orderBy('nama_dc')->get(),
             'roles' => config('menu.roles'),
             'keyword' => $keyword,
-            'filters' => $request->only(['role', 'cabang_id', 'dc_id', 'status']),
+            'filters' => $activeFilters,
+            'hasActiveFilters' => $keyword !== '' || $activeFilters !== [],
+            'branchesWithoutManager' => $branchesWithoutManager,
             'totals' => [
                 'all' => Pengguna::query()->count(),
                 'active' => Pengguna::query()->where('status', 'aktif')->count(),
                 'inactive' => Pengguna::query()->where('status', 'nonaktif')->count(),
+                'no_manager' => $branchesWithoutManager->count(),
             ],
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return $this->formView();
+        $roleKey = $request->query('role_key');
+        $cabangId = $request->query('cabang_id');
+        $dcId = $request->query('dc_id');
+
+        $prefill = [
+            'role_key' => is_string($roleKey) && isset(config('menu.roles')[$roleKey]) ? $roleKey : '',
+            'cabang_id' => is_string($cabangId) && ctype_digit($cabangId) ? $cabangId : '',
+            'dc_id' => is_string($dcId) && ctype_digit($dcId) ? $dcId : '',
+        ];
+
+        return $this->formView(null, $prefill);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedUser($request);
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data): void {
             $this->assertBusinessRules($data);
 
             Pengguna::query()->create([
-                'nama_lengkap' => trim($data['nama_lengkap']),
-                'username' => mb_strtolower(trim($data['username'])),
-                'email' => mb_strtolower(trim($data['email'])),
+                'nama_lengkap' => $data['nama_lengkap'],
+                'username' => $data['username'],
+                'email' => $data['email'],
                 'password_hash' => $data['password'],
                 'telepon' => $data['telepon'] ?? null,
                 'role' => config("menu.roles.{$data['role_key']}.db"),
@@ -97,13 +128,14 @@ class PenggunaController extends Controller
     {
         $data = $this->validatedUser($request, $pengguna);
 
-        DB::transaction(function () use ($data, $pengguna) {
-            $this->assertBusinessRules($data, $pengguna);
+        DB::transaction(function () use ($data, $pengguna): void {
+            $lockedUser = Pengguna::query()->whereKey($pengguna->user_id)->lockForUpdate()->firstOrFail();
+            $this->assertBusinessRules($data, $lockedUser);
 
-            $pengguna->fill([
-                'nama_lengkap' => trim($data['nama_lengkap']),
-                'username' => mb_strtolower(trim($data['username'])),
-                'email' => mb_strtolower(trim($data['email'])),
+            $lockedUser->fill([
+                'nama_lengkap' => $data['nama_lengkap'],
+                'username' => $data['username'],
+                'email' => $data['email'],
                 'telepon' => $data['telepon'] ?? null,
                 'role' => config("menu.roles.{$data['role_key']}.db"),
                 'cabang_id' => $data['cabang_id'] ?? null,
@@ -112,10 +144,10 @@ class PenggunaController extends Controller
             ]);
 
             if (! empty($data['password'])) {
-                $pengguna->password_hash = $data['password'];
+                $lockedUser->password_hash = $data['password'];
             }
 
-            $pengguna->save();
+            $lockedUser->save();
         });
 
         return redirect()->route('admin.pengguna.index')->with('success', 'Data pengguna berhasil diperbarui.');
@@ -127,15 +159,21 @@ class PenggunaController extends Controller
             'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
         ]);
 
-        DB::transaction(function () use ($data, $pengguna) {
-            $this->assertBusinessRules([
-                'role_key' => $pengguna->role_key,
-                'cabang_id' => $pengguna->cabang_id,
-                'dc_id' => $pengguna->dc_id,
-                'status' => $data['status'],
-            ], $pengguna);
+        DB::transaction(function () use ($data, $pengguna): void {
+            $lockedUser = Pengguna::query()->whereKey($pengguna->user_id)->lockForUpdate()->firstOrFail();
 
-            $pengguna->update(['status' => $data['status']]);
+            if ($data['status'] === 'aktif') {
+                $this->assertPlacementExists($lockedUser);
+            }
+
+            $this->assertBusinessRules([
+                'role_key' => $lockedUser->role_key,
+                'cabang_id' => $lockedUser->cabang_id,
+                'dc_id' => $lockedUser->dc_id,
+                'status' => $data['status'],
+            ], $lockedUser);
+
+            $lockedUser->update(['status' => $data['status']]);
         });
 
         return back()->with('success', 'Status pengguna berhasil diperbarui.');
@@ -152,10 +190,17 @@ class PenggunaController extends Controller
         return back()->with('success', 'Password pengguna berhasil direset.');
     }
 
-    public function destroy(Pengguna $pengguna): RedirectResponse
+    public function destroy(Request $request, Pengguna $pengguna): RedirectResponse
     {
-        return DB::transaction(function () use ($pengguna) {
-            $this->assertLastAdminRemains($pengguna, 'nonaktif', null);
+        if ($pengguna->user_id === $request->user()?->user_id) {
+            return back()->withErrors([
+                'delete' => 'Anda tidak dapat menghapus akun yang sedang digunakan untuk login.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($pengguna): RedirectResponse {
+            $lockedUser = Pengguna::query()->whereKey($pengguna->user_id)->lockForUpdate()->firstOrFail();
+            $this->assertLastAdminRemains($lockedUser, 'nonaktif', null);
 
             $references = [
                 'transaksi_penjualan' => ['kasir_id'],
@@ -168,7 +213,7 @@ class PenggunaController extends Controller
             foreach ($references as $table => $columns) {
                 foreach ($columns as $column) {
                     if (Schema::hasTable($table) && Schema::hasColumn($table, $column)
-                        && DB::table($table)->where($column, $pengguna->user_id)->exists()) {
+                        && DB::table($table)->where($column, $lockedUser->user_id)->exists()) {
                         return back()->withErrors([
                             'delete' => 'Pengguna memiliki riwayat transaksi atau operasional. Nonaktifkan akun sebagai gantinya.',
                         ]);
@@ -176,16 +221,20 @@ class PenggunaController extends Controller
                 }
             }
 
-            $pengguna->delete();
+            $lockedUser->delete();
 
             return redirect()->route('admin.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
         });
     }
 
-    private function formView(?Pengguna $pengguna = null): View
+    /**
+     * @param  array<string, string>  $prefill
+     */
+    private function formView(?Pengguna $pengguna = null, array $prefill = []): View
     {
         return view('admin.pengguna.form', [
             'pengguna' => $pengguna,
+            'prefill' => $prefill,
             'branches' => Cabang::query()->orderBy('nama_cabang')->get(),
             'distributionCenters' => Dc::query()->orderBy('nama_dc')->get(),
             'roles' => config('menu.roles'),
@@ -197,12 +246,16 @@ class PenggunaController extends Controller
      */
     private function validatedUser(Request $request, ?Pengguna $pengguna = null): array
     {
+        $nama = $request->input('nama_lengkap');
         $username = $request->input('username');
         $email = $request->input('email');
+        $telepon = $request->input('telepon');
 
         $request->merge([
+            'nama_lengkap' => is_string($nama) ? trim($nama) : $nama,
             'username' => is_string($username) ? mb_strtolower(trim($username)) : $username,
             'email' => is_string($email) ? mb_strtolower(trim($email)) : $email,
+            'telepon' => is_string($telepon) && trim($telepon) !== '' ? trim($telepon) : null,
         ]);
 
         $data = $request->validate([
@@ -210,7 +263,9 @@ class PenggunaController extends Controller
             'username' => [
                 'required',
                 'string',
+                'min:3',
                 'max:50',
+                'regex:/^[a-z0-9._-]+$/',
                 Rule::unique('pengguna', 'username')->ignore($pengguna?->user_id, 'user_id'),
             ],
             'email' => [
@@ -236,11 +291,9 @@ class PenggunaController extends Controller
             ],
             'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
             'password' => [$pengguna === null ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
+        ], [
+            'username.regex' => 'Username hanya boleh berisi huruf kecil, angka, titik (.), garis bawah (_), atau tanda hubung (-).',
         ]);
-
-        $data['nama_lengkap'] = trim($data['nama_lengkap']);
-        $data['username'] = mb_strtolower(trim($data['username']));
-        $data['email'] = mb_strtolower(trim($data['email']));
 
         if ($data['role_key'] === 'admin') {
             $data['cabang_id'] = null;
@@ -259,6 +312,32 @@ class PenggunaController extends Controller
      */
     private function assertBusinessRules(array $data, ?Pengguna $pengguna = null): void
     {
+        if (isset($data['username']) && is_string($data['username'])) {
+            $usernameExists = Pengguna::query()
+                ->whereRaw('LOWER(username) = ?', [mb_strtolower($data['username'])])
+                ->when($pengguna !== null, fn (Builder $query) => $query->where('user_id', '!=', $pengguna->user_id))
+                ->exists();
+
+            if ($usernameExists) {
+                throw ValidationException::withMessages([
+                    'username' => 'Username sudah digunakan pengguna lain.',
+                ]);
+            }
+        }
+
+        if (isset($data['email']) && is_string($data['email'])) {
+            $emailExists = Pengguna::query()
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($data['email'])])
+                ->when($pengguna !== null, fn (Builder $query) => $query->where('user_id', '!=', $pengguna->user_id))
+                ->exists();
+
+            if ($emailExists) {
+                throw ValidationException::withMessages([
+                    'email' => 'Email sudah digunakan pengguna lain.',
+                ]);
+            }
+        }
+
         $this->assertLastAdminRemains(
             $pengguna,
             $data['status'],
@@ -277,6 +356,31 @@ class PenggunaController extends Controller
             if ($anotherManagerExists) {
                 throw ValidationException::withMessages([
                     'cabang_id' => 'Cabang ini sudah memiliki manajer aktif.',
+                ]);
+            }
+        }
+    }
+
+    private function assertPlacementExists(Pengguna $pengguna): void
+    {
+        if (in_array($pengguna->role_key, ['manager', 'ic', 'kasir'], true)) {
+            $validBranch = $pengguna->cabang_id !== null
+                && Cabang::query()->whereKey($pengguna->cabang_id)->exists();
+
+            if (! $validBranch) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pengguna belum memiliki cabang penempatan yang valid. Edit pengguna terlebih dahulu.',
+                ]);
+            }
+        }
+
+        if ($pengguna->role_key === 'dc') {
+            $validDc = $pengguna->dc_id !== null
+                && Dc::query()->whereKey($pengguna->dc_id)->exists();
+
+            if (! $validDc) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pengguna belum memiliki Distribution Center yang valid. Edit pengguna terlebih dahulu.',
                 ]);
             }
         }

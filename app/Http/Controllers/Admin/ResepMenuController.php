@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Models\BahanBaku;
 use App\Models\ResepMenu;
 use App\Models\VarianMenu;
+use Illuminate\Database\Eloquent\Model;
 
 class ResepMenuController extends MasterDataController
 {
     protected string $modelClass = ResepMenu::class;
 
     protected string $title = 'Resep Menu';
+
+    protected string $description = 'Tentukan takaran bahan baku per varian menu sebagai dasar pemotongan stok POS dan hitung HPP.';
 
     protected string $routeName = 'admin.resep-menu';
 
@@ -37,14 +40,24 @@ class ResepMenuController extends MasterDataController
             'optionLabel' => 'nama_bahan',
             'exists' => ['table' => 'bahan_baku', 'column' => 'bahan_id'],
         ],
-        ['name' => 'jumlah_bahan', 'label' => 'Jumlah bahan', 'type' => 'number', 'required' => true, 'min' => '0.001', 'step' => '0.001'],
+        [
+            'name' => 'jumlah_bahan',
+            'label' => 'Jumlah takaran bahan',
+            'type' => 'number',
+            'required' => true,
+            'min' => '0.001',
+            'max' => '999999999.999',
+            'step' => 'any',
+            'help' => 'Masukkan jumlah dalam satuan dasar bahan baku yang dipilih.',
+        ],
     ];
 
-    protected array $columns = [
-        ['label' => 'Menu', 'field' => 'varian.menu.nama_menu'],
-        ['label' => 'Varian', 'field' => 'varian.nama_varian'],
-        ['label' => 'Bahan baku', 'field' => 'bahan.nama_bahan'],
-        ['label' => 'Jumlah', 'field' => 'jumlah_bahan'],
+    protected array $compositeUnique = [
+        [
+            'columns' => ['varian_id', 'bahan_id'],
+            'errorField' => 'bahan_id',
+            'message' => 'Bahan baku ini sudah ada di resep varian yang dipilih.',
+        ],
     ];
 
     protected array $filters = [
@@ -54,6 +67,8 @@ class ResepMenuController extends MasterDataController
             'model' => VarianMenu::class,
             'optionValue' => 'varian_id',
             'optionLabel' => 'nama_varian',
+            'optionLabelPrefix' => 'menu.nama_menu',
+            'optionsWith' => ['menu'],
         ],
         'bahan_id' => [
             'label' => 'Bahan baku',
@@ -74,49 +89,43 @@ class ResepMenuController extends MasterDataController
 
     protected array $with = ['varian.menu', 'bahan'];
 
-    public function store(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function __construct()
     {
-        $data = $this->validatedData($request);
+        $this->columns = [
+            ['label' => 'Menu Produk', 'field' => 'varian.menu.nama_menu'],
+            ['label' => 'Varian', 'field' => 'varian.nama_varian'],
+            ['label' => 'Bahan Baku', 'field' => 'bahan.nama_bahan'],
+            [
+                'label' => 'Takaran',
+                'field' => 'jumlah_bahan',
+                'format' => 'unit_amount',
+                'unitField' => 'bahan.satuan',
+                'align' => 'right',
+                'sort' => 'jumlah_bahan',
+            ],
+            [
+                'label' => 'Est. Biaya / Porsi',
+                'field' => 'estimated_cost',
+                'format' => 'currency',
+                'align' => 'right',
+                'computed' => function (ResepMenu $resep): float {
+                    $bahan = $resep->bahan;
+                    if ($bahan === null) {
+                        return 0.0;
+                    }
 
-        $exists = ResepMenu::query()
-            ->where('varian_id', $data['varian_id'])
-            ->where('bahan_id', $data['bahan_id'])
-            ->exists();
+                    $unitCost = (float) $bahan->harga_beli / max((float) $bahan->isi_per_kemasan, 1.0);
 
-        if ($exists) {
-            return back()->withInput()->withErrors([
-                'bahan_id' => 'Bahan baku ini sudah ada di resep varian yang dipilih.',
-            ]);
-        }
-
-        ResepMenu::query()->create($data);
-
-        return redirect()
-            ->route($this->routeName.'.index')
-            ->with('success', $this->title.' berhasil ditambahkan.');
+                    return (float) $resep->jumlah_bahan * $unitCost;
+                },
+            ],
+        ];
     }
 
-    public function update(\Illuminate\Http\Request $request, int $record): \Illuminate\Http\RedirectResponse
+    protected function extraFormData(?Model $record = null): array
     {
-        $model = $this->findRecord($record);
-        $data = $this->validatedData($request, $model);
-
-        $exists = ResepMenu::query()
-            ->where('varian_id', $data['varian_id'])
-            ->where('bahan_id', $data['bahan_id'])
-            ->where('resep_id', '!=', $record)
-            ->exists();
-
-        if ($exists) {
-            return back()->withInput()->withErrors([
-                'bahan_id' => 'Bahan baku ini sudah ada di resep varian yang dipilih.',
-            ]);
-        }
-
-        $model->update($data);
-
-        return redirect()
-            ->route($this->routeName.'.index')
-            ->with('success', $this->title.' berhasil diperbarui.');
+        return [
+            'bahanUnits' => BahanBaku::query()->pluck('satuan', 'bahan_id')->all(),
+        ];
     }
 }

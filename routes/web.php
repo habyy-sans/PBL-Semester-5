@@ -7,17 +7,17 @@ use App\Http\Controllers\Admin\DcController;
 use App\Http\Controllers\Admin\KategoriMenuController;
 use App\Http\Controllers\Admin\MenuProdukController;
 use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ResepMenuController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\StokCabangController;
 use App\Http\Controllers\Admin\StokDcController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VarianMenuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dc\InventoryController;
 use App\Http\Controllers\Dc\MutationController as DcMutationController;
 use App\Http\Controllers\Dc\OrderController;
 use App\Http\Controllers\Dc\ShipmentController;
-use App\Http\Controllers\Dc\BahanBakuController;
 use App\Http\Controllers\Dc\StokDcController as DcStokDcController;
 use App\Http\Controllers\Ic\MutationController;
 use App\Http\Controllers\Ic\ReceivingController;
@@ -26,17 +26,11 @@ use App\Http\Controllers\Ic\WasteController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\RiwayatController;
 use App\Http\Controllers\Manager\DashboardController;
-use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\Manager\ReportController;
+use App\Http\Controllers\Manager\RestockController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentWebhookController;
 use Illuminate\Support\Facades\Route;
-
-// Data untuk halaman "segera hadir"
-$soon = fn (string $title, string $description) => [
-    'title' => $title,
-    'description' => $description,
-];
 
 /* =========================================================
    LOGIN
@@ -78,7 +72,6 @@ Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->grou
 ========================================================= */
 Route::post('/midtrans/webhook', [PaymentWebhookController::class, 'handle'])->name('midtrans.webhook');
 
-
 /* =========================================================
    KEPALA SHIFT / IC
 ========================================================= */
@@ -112,25 +105,25 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
 
     Route::post('/alert/{alertId}/evaluate', [
         DashboardController::class,
-        'evaluateWaste'
+        'evaluateWaste',
     ])->name('alert.evaluate');
 
     Route::view('/restock', 'manager.restock.index')->name('restock');
 
     Route::post('/restock/generate-automatic', [RestockController::class, 'generateAutomatic'])
-    ->name('restock.generate-automatic');
+        ->name('restock.generate-automatic');
 
     Route::get('/restock/draft', [RestockController::class, 'index'])
-    ->name('restock.draft');
+        ->name('restock.draft');
 
     Route::post('/restock/approve', [RestockController::class, 'approve'])
-    ->name('restock.approve');
+        ->name('restock.approve');
 
     Route::post('/restock/draft/update', [RestockController::class, 'updateDraft'])
-    ->name('restock.update-draft');
+        ->name('restock.update-draft');
 
     Route::get('/report', [ReportController::class, 'index'])
-    ->name('report');
+        ->name('report');
 
 });
 
@@ -148,7 +141,7 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
     Route::post('/shipment', [ShipmentController::class, 'store'])->name('shipment.store');
     Route::post('/shipment/{id}/kirim', [ShipmentController::class, 'kirim'])->name('shipment.kirim');
     Route::post('/shipment/{id}/batalkan', [ShipmentController::class, 'batalkan'])
-    ->name('shipment.batalkan');
+        ->name('shipment.batalkan');
 
     // Stok Gudang DC dan Kelola Bahan Baku
     Route::get('/stok-dc', [DcStokDcController::class, 'index'])
@@ -188,12 +181,12 @@ Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(functio
    ADMIN SISTEM
 ========================================================= */
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () use ($soon) {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', fn () => redirect()->route('admin.dashboard'))->name('index');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    Route::view('/report', 'admin.laporan.index')->name('report');
+    Route::get('/report', [AdminReportController::class, 'index'])->name('report');
 
     Route::resource('pengguna', PenggunaController::class)->except('show');
     Route::patch('/pengguna/{pengguna}/status', [PenggunaController::class, 'updateStatus'])->name('pengguna.status');
@@ -211,34 +204,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/stok-dc', [StokDcController::class, 'index'])->name('stok-dc.index');
     Route::patch('/stok-dc/{stokDc}/minimum', [StokDcController::class, 'updateMinimum'])->name('stok-dc.minimum');
 
-    Route::get('/user', [UserController::class, 'index'])->name('user');
-    Route::get('/user/data', [UserController::class, 'users'])->name('user.data');
-    Route::post('/user', [UserController::class, 'store'])->name('user.store');
-    Route::put('/user/{user}', [UserController::class, 'update'])->name('user.update');
-    Route::patch('/user/{user}/status', [UserController::class, 'updateStatus'])->name('user.status');
+    // Backward-compatible redirect dari rute legacy kelola pengguna.
+    Route::get('/user', fn () => redirect()->route('admin.pengguna.index'))->name('user');
 
-    Route::view('/role', 'admin.roles.index')->name('role');
-
-    Route::view('/product', 'placeholder', $soon(
-        'Produk & Kategori',
-        'Kelola data produk dan kategori.'
-    ))->name('product');
-
-    Route::view('/price', 'placeholder', $soon(
-        'Kelola Harga',
-        'Atur harga produk.'
-    ))->name('price');
+    Route::get('/role', [RoleController::class, 'index'])->name('role');
 
 });
 /* =========================================================
    NOTIFIKASI (hanya DC, Manager, IC)
 ========================================================= */
- 
+
 Route::middleware(['auth', 'role:dc,manager,ic'])->prefix('notifications')->name('notifications.')->group(function () {
- 
+
     Route::get('/', [NotificationController::class, 'index'])->name('index');
     Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->whereNumber('id')->name('read');
- 
+
 });

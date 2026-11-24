@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\Models\BahanBaku;
+use App\Models\Cabang;
 use App\Models\MenuProduk;
-use App\Models\StokCabang;
 use App\Models\StockMovement;
+use App\Models\StokCabang;
 use App\Models\SuratJalan;
 use App\Models\TransaksiPenjualan;
 use App\Models\VarianMenu;
@@ -217,29 +218,33 @@ class ReportService
             return [];
         }
 
-        $names = BahanBaku::query()
+        $ingredients = BahanBaku::query()
             ->whereIn('bahan_id', $grouped->keys())
-            ->pluck('nama_bahan', 'bahan_id');
+            ->get(['bahan_id', 'nama_bahan', 'satuan'])
+            ->keyBy('bahan_id');
 
         $currentStocks = StokCabang::query()
-        ->when(
-            $cabangId !== null,
-            fn ($query) => $query->where('cabang_id', $cabangId)
-        )
-        ->whereIn('bahan_id', $grouped->keys())
-        ->get(['bahan_id', 'jumlah_stok'])
-        ->groupBy('bahan_id')
-        ->map(fn ($rows) => (float) $rows->sum('jumlah_stok'));
+            ->when(
+                $cabangId !== null,
+                fn ($query) => $query->where('cabang_id', $cabangId)
+            )
+            ->whereIn('bahan_id', $grouped->keys())
+            ->get(['bahan_id', 'jumlah_stok'])
+            ->groupBy('bahan_id')
+            ->map(fn ($rows) => (float) $rows->sum('jumlah_stok'));
 
         return $grouped
-            ->map(function ($group, $bahanId) use ($names, $currentStocks) {
+            ->map(function ($group, $bahanId) use ($ingredients, $currentStocks) {
                 $sum = fn (string $jenis) => (float) $group
                     ->where('jenis_mutasi', $jenis)
                     ->sum('jumlah');
 
+                $bahan = $ingredients->get($bahanId);
+
                 return [
                     'bahan_id' => (int) $bahanId,
-                    'name' => $names[$bahanId] ?? '-',
+                    'name' => $bahan?->nama_bahan ?? '-',
+                    'satuan' => $bahan?->satuan ?? '',
                     'masuk' => $sum('penerimaan_cabang'),
                     'keluar' => $sum('penjualan'),
                     'waste' => $sum('waste'),
@@ -247,6 +252,82 @@ class ReportService
                 ];
             })
             ->sortBy('name')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Perbandingan kinerja finansial seluruh cabang (omzet, HPP, waste, laba, margin).
+     *
+     * @return array<int, array{cabang_id: int, nama_cabang: string, count: int, omzet: float, hpp: float, waste: float, waste_count: int, laba: float, margin: float}>
+     */
+    public function branchComparison(?string $from = null, ?string $to = null): array
+    {
+        $branches = Cabang::query()
+            ->orderBy('nama_cabang')
+            ->get(['cabang_id', 'nama_cabang']);
+
+        if ($branches->isEmpty()) {
+            return [];
+        }
+
+        $portionCosts = $this->portionCosts();
+        $unitCosts = $this->unitCosts();
+        $trxStats = [];
+
+        TransaksiPenjualan::query()
+            ->select(['transaksi_id', 'cabang_id', 'tanggal'])
+            ->where('status', 'berhasil')
+            ->when($from !== null, fn ($query) => $query->whereDate('tanggal', '>=', $from))
+            ->when($to !== null, fn ($query) => $query->whereDate('tanggal', '<=', $to))
+            ->with(['detail'])
+            ->get()
+            ->each(function (TransaksiPenjualan $trx) use (&$trxStats, $portionCosts): void {
+                $cabangId = (int) $trx->cabang_id;
+                $row = $trxStats[$cabangId] ?? ['count' => 0, 'omzet' => 0.0, 'hpp' => 0.0];
+                $row['count'] += 1;
+
+                foreach ($trx->detail as $line) {
+                    $row['omzet'] += (float) $line->subtotal;
+                    $row['hpp'] += (int) $line->qty * ($portionCosts[$line->varian_id] ?? 0.0);
+                }
+
+                $trxStats[$cabangId] = $row;
+            });
+
+        $wasteStats = [];
+
+        WasteLog::query()
+            ->when($from !== null, fn ($query) => $query->whereDate('tanggal', '>=', $from))
+            ->when($to !== null, fn ($query) => $query->whereDate('tanggal', '<=', $to))
+            ->get(['cabang_id', 'bahan_id', 'qty'])
+            ->each(function (WasteLog $waste) use (&$wasteStats, $unitCosts): void {
+                $cabangId = (int) $waste->cabang_id;
+                $row = $wasteStats[$cabangId] ?? ['waste' => 0.0, 'waste_count' => 0];
+                $row['waste'] += (float) $waste->qty * ($unitCosts[$waste->bahan_id] ?? 0.0);
+                $row['waste_count'] += 1;
+                $wasteStats[$cabangId] = $row;
+            });
+
+        return $branches
+            ->map(function (Cabang $cabang) use ($trxStats, $wasteStats): array {
+                $t = $trxStats[$cabang->cabang_id] ?? ['count' => 0, 'omzet' => 0.0, 'hpp' => 0.0];
+                $w = $wasteStats[$cabang->cabang_id] ?? ['waste' => 0.0, 'waste_count' => 0];
+                $laba = $t['omzet'] - $t['hpp'] - $w['waste'];
+
+                return [
+                    'cabang_id' => (int) $cabang->cabang_id,
+                    'nama_cabang' => $cabang->nama_cabang,
+                    'count' => $t['count'],
+                    'omzet' => $t['omzet'],
+                    'hpp' => $t['hpp'],
+                    'waste' => $w['waste'],
+                    'waste_count' => $w['waste_count'],
+                    'laba' => $laba,
+                    'margin' => $t['omzet'] > 0 ? ($laba / $t['omzet']) * 100 : 0.0,
+                ];
+            })
+            ->sort(fn (array $a, array $b): int => [$b['omzet'], $a['nama_cabang']] <=> [$a['omzet'], $b['nama_cabang']])
             ->values()
             ->all();
     }
