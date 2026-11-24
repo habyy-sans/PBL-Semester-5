@@ -12,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>KopSync - POS Management</title>
+    <title>@yield('title', 'KopSync') - KopSync</title>
 
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,11 +29,20 @@
     <x-icon-runtime />
 </head>
 
-<body x-data="{ sidebarOpen: false }">
+<body x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false" @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false">
+
+    <a href="#main-content" class="skip-link">Langsung ke konten utama</a>
+
+    <div
+        class="sidebar-backdrop"
+        :class="{ 'show': sidebarOpen }"
+        @click="sidebarOpen = false"
+        aria-hidden="true"
+    ></div>
 
     <x-sidebar :role="$role" />
 
-    <main class="main-content">
+    <main id="main-content" class="main-content">
 
         <x-header :role="$role" />
 

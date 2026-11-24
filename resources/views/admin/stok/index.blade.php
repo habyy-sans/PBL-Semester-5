@@ -1,110 +1,243 @@
 @extends('layouts.app')
 
 @section('title', $title)
-@section('description', 'Monitoring jumlah stok dan batas minimum.')
+@section('description', $description)
+
+@push('header_custom')
+    @if ($lowCount > 0)
+        <x-admin.status-badge variant="warning" icon="triangle-alert">
+            {{ number_format($counts['habis'], 0, ',', '.') }} habis, {{ number_format($counts['menipis'], 0, ',', '.') }} menipis
+        </x-admin.status-badge>
+    @else
+        <x-admin.status-badge variant="success" icon="circle-check">Semua stok aman</x-admin.status-badge>
+    @endif
+@endpush
 
 @section('content')
-<section class="page active admin-panel">
-    <div class="admin-page-heading">    
-        <span class="status {{ $lowCount > 0 ? 'warning' : 'success' }}">{{ number_format($lowCount) }} menipis</span>
-    </div>
-    @if (session('success'))
-        <div class="admin-notice success" role="status">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="admin-notice error" role="alert">
-            @foreach ($errors->all() as $error)<div>{{ $error }}</div>@endforeach
-        </div>
-    @endif
+@php
+    $fmtNum = static function (float|int $value): string {
+        $float = (float) $value;
+        $decimals = fmod($float, 1.0) !== 0.0 ? 2 : 0;
+        $formatted = number_format($float, $decimals, ',', '.');
 
-    <div class="page-card admin-data-card">
-        <form class="table-toolbar admin-toolbar" method="GET" action="{{ $type === 'cabang' ? route('admin.stok-cabang.index') : route('admin.stok-dc.index') }}">
-            <label class="admin-search-field">
-                <span class="sr-only">Cari bahan baku</span>
-                <input class="search-input" type="search" name="q" value="{{ $keyword }}" placeholder="Cari bahan baku...">
-            </label>
-            <select class="select admin-filter" name="{{ $type === 'cabang' ? 'cabang_id' : 'dc_id' }}" aria-label="Filter lokasi">
+        return $decimals > 0 ? rtrim(rtrim($formatted, '0'), ',') : $formatted;
+    };
+
+    $locationKey = $type === 'cabang' ? 'cabang_id' : 'dc_id';
+    $activeStatus = $filters['status'] ?? '';
+    $baseFilterQuery = array_filter([
+        'q' => $keyword,
+        $locationKey => $filters[$locationKey] ?? null,
+        'bahan_id' => $filters['bahan_id'] ?? null,
+        'sort' => $sort,
+        'direction' => $sort ? $direction : null,
+    ], static fn (mixed $v): bool => $v !== null && $v !== '');
+@endphp
+
+<section class="page active admin-panel">
+    <x-admin.flash />
+
+    <div class="admin-card">
+        <div class="admin-status-pills" role="navigation" aria-label="Filter status stok">
+            <a
+                class="admin-pill {{ $activeStatus === '' ? 'is-active' : '' }}"
+                href="{{ route($indexRoute, $baseFilterQuery) }}"
+            >
+                <span>Semua</span>
+                <span class="admin-pill-count tabular-nums">{{ number_format($counts['all'], 0, ',', '.') }}</span>
+            </a>
+
+            <a
+                class="admin-pill {{ $activeStatus === 'habis' ? 'is-active' : '' }}"
+                href="{{ route($indexRoute, array_merge($baseFilterQuery, ['status' => 'habis'])) }}"
+            >
+                <span>Habis</span>
+                <span class="admin-pill-count tabular-nums">{{ number_format($counts['habis'], 0, ',', '.') }}</span>
+            </a>
+
+            <a
+                class="admin-pill {{ $activeStatus === 'menipis' ? 'is-active' : '' }}"
+                href="{{ route($indexRoute, array_merge($baseFilterQuery, ['status' => 'menipis'])) }}"
+            >
+                <span>Menipis</span>
+                <span class="admin-pill-count tabular-nums">{{ number_format($counts['menipis'], 0, ',', '.') }}</span>
+            </a>
+
+            <a
+                class="admin-pill {{ $activeStatus === 'aman' ? 'is-active' : '' }}"
+                href="{{ route($indexRoute, array_merge($baseFilterQuery, ['status' => 'aman'])) }}"
+            >
+                <span>Aman</span>
+                <span class="admin-pill-count tabular-nums">{{ number_format($counts['aman'], 0, ',', '.') }}</span>
+            </a>
+        </div>
+
+        <form class="admin-toolbar" method="GET" action="{{ route($indexRoute) }}">
+            @if ($activeStatus !== '')
+                <input type="hidden" name="status" value="{{ $activeStatus }}">
+            @endif
+            @if ($sort)
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="direction" value="{{ $direction }}">
+            @endif
+
+            <div class="admin-search-box">
+                <x-icon name="search" size="1em" class="admin-search-icon" />
+                <label class="sr-only" for="stock-search">Cari bahan baku</label>
+                <input
+                    id="stock-search"
+                    class="admin-input"
+                    type="search"
+                    name="q"
+                    value="{{ $keyword }}"
+                    placeholder="Cari nama bahan baku..."
+                >
+            </div>
+
+            <select class="admin-select" name="{{ $locationKey }}" aria-label="Filter lokasi" data-auto-submit>
                 <option value="">Semua {{ $type === 'cabang' ? 'Cabang' : 'DC' }}</option>
                 @foreach ($locations as $location)
-                    <option value="{{ $type === 'cabang' ? $location->cabang_id : $location->dc_id }}" @selected(($filters[$type === 'cabang' ? 'cabang_id' : 'dc_id'] ?? '') == ($type === 'cabang' ? $location->cabang_id : $location->dc_id))>
+                    @php $locId = $type === 'cabang' ? $location->cabang_id : $location->dc_id; @endphp
+                    <option value="{{ $locId }}" @selected((string) ($filters[$locationKey] ?? '') === (string) $locId)>
                         {{ $type === 'cabang' ? $location->nama_cabang : $location->nama_dc }}
                     </option>
                 @endforeach
             </select>
-            <select class="select admin-filter" name="bahan_id" aria-label="Filter bahan baku">
-                <option value="">Semua Bahan</option>
+
+            <select class="admin-select" name="bahan_id" aria-label="Filter bahan baku" data-auto-submit>
+                <option value="">Semua Bahan Baku</option>
                 @foreach ($ingredients as $ingredient)
-                    <option value="{{ $ingredient->bahan_id }}" @selected(($filters['bahan_id'] ?? '') == $ingredient->bahan_id)>{{ $ingredient->nama_bahan }}</option>
+                    <option value="{{ $ingredient->bahan_id }}" @selected((string) ($filters['bahan_id'] ?? '') === (string) $ingredient->bahan_id)>
+                        {{ $ingredient->nama_bahan }}
+                    </option>
                 @endforeach
             </select>
-            <select class="select admin-filter" name="status" aria-label="Filter status stok">
-                <option value="">Semua Status</option>
-                <option value="aman" @selected(($filters['status'] ?? '') === 'aman')>Aman</option>
-                <option value="menipis" @selected(($filters['status'] ?? '') === 'menipis')>Menipis</option>
-            </select>
-            <select class="select admin-filter" name="sort" aria-label="Urutkan stok">
-                <option value="">Urutan lokasi</option>
-                <option value="jumlah_stok" @selected($sort === 'jumlah_stok')>Jumlah stok</option>
-                <option value="stok_minimum" @selected($sort === 'stok_minimum')>Stok minimum</option>
-            </select>
-            <select class="select admin-filter" name="direction" aria-label="Arah urutan">
-                <option value="asc" @selected($direction === 'asc')>Naik</option>
-                <option value="desc" @selected($direction === 'desc')>Turun</option>
-            </select>
-            <button class="primary-button" type="submit" style="background: var(--pos-brown-dark, #4A2C11); color: #ffffff; border: none; padding: 7px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;">Terapkan</button>
-            @if (request()->query())
-                <a class="admin-clear-filter" href="{{ $type === 'cabang' ? route('admin.stok-cabang.index') : route('admin.stok-dc.index') }}" style="display: inline-flex; align-items: center; margin-left: 10px; color: #8C6239; font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px;">Reset</a>
+
+            <button class="admin-btn-outline" type="submit">Cari</button>
+
+            @if ($hasActiveFilters)
+                <a class="admin-btn-ghost" href="{{ route($indexRoute) }}">Reset</a>
             @endif
-            <span class="table-meta">{{ $stocks->total() }} baris</span>
+
+            <span class="admin-toolbar-meta tabular-nums">{{ number_format($stocks->total(), 0, ',', '.') }} baris</span>
         </form>
 
         <div class="table-wrapper">
             <table class="admin-table">
-                <thead><tr><th>{{ $type === 'cabang' ? 'Cabang' : 'Distribution Center' }}</th><th>Bahan baku</th><th>Jumlah stok</th><th>Stok minimum</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th scope="col">{{ $type === 'cabang' ? 'Cabang' : 'Distribution Center' }}</th>
+                        <th scope="col">Bahan Baku</th>
+                        <th scope="col" class="is-right">
+                            @php $nextQtyDir = ($sort === 'jumlah_stok' && $direction === 'asc') ? 'desc' : 'asc'; @endphp
+                            <a class="admin-sort-link" href="{{ request()->fullUrlWithQuery(['sort' => 'jumlah_stok', 'direction' => $nextQtyDir, 'page' => 1]) }}">
+                                <span>Jumlah Stok</span>
+                                <x-icon :name="$sort === 'jumlah_stok' ? ($direction === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrow-up-down'" size="0.9em" />
+                            </a>
+                        </th>
+                        <th scope="col" class="is-right">
+                            @php $nextMinDir = ($sort === 'stok_minimum' && $direction === 'asc') ? 'desc' : 'asc'; @endphp
+                            <a class="admin-sort-link" href="{{ request()->fullUrlWithQuery(['sort' => 'stok_minimum', 'direction' => $nextMinDir, 'page' => 1]) }}">
+                                <span>Stok Minimum</span>
+                                <x-icon :name="$sort === 'stok_minimum' ? ($direction === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrow-up-down'" size="0.9em" />
+                            </a>
+                        </th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Aksi</th>
+                    </tr>
+                </thead>
                 <tbody>
                     @forelse ($stocks as $stock)
                         @php
                             $qty = (float) $stock->jumlah_stok;
-                            $low = $qty < (float) $stock->stok_minimum;
+                            $min = (float) $stock->stok_minimum;
                             $empty = $qty <= 0;
+                            $low = ! $empty && $qty < $min;
+                            $locName = $type === 'cabang' ? ($stock->cabang?->nama_cabang ?? '-') : ($stock->dc?->nama_dc ?? '-');
                         @endphp
                         <tr>
-                            <td>{{ $type === 'cabang' ? $stock->cabang->nama_cabang : $stock->dc->nama_dc }}</td>
-                            <td>{{ $stock->bahan->nama_bahan }} <small class="admin-secondary-line">{{ $stock->bahan->kategori }}</small></td>
-                            <td>{{ number_format((float) $stock->jumlah_stok, fmod((float) $stock->jumlah_stok, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
-                            <td>{{ number_format((float) $stock->stok_minimum, fmod((float) $stock->stok_minimum, 1) !== 0.0 ? 2 : 0, ',', '.') }} {{ $stock->bahan->satuan }}</td>
-                            <td><span class="status {{ $empty ? 'danger' : ($low ? 'warning' : 'success') }}">{{ $empty ? 'Habis' : ($low ? 'Menipis' : 'Aman') }}</span></td>
+                            <td>{{ $locName }}</td>
+                            <td>
+                                <span class="admin-cell-primary">{{ $stock->bahan?->nama_bahan ?? '-' }}</span>
+                                <span class="admin-cell-sub">{{ $stock->bahan?->kategori ?? '-' }}</span>
+                            </td>
+                            <td class="is-right tabular-nums">{{ $fmtNum($qty) }} {{ $stock->bahan?->satuan }}</td>
+                            <td class="is-right tabular-nums">{{ $fmtNum($min) }} {{ $stock->bahan?->satuan }}</td>
+                            <td>
+                                @if ($empty)
+                                    <x-admin.status-badge variant="danger" icon="circle-alert">Habis</x-admin.status-badge>
+                                @elseif ($low)
+                                    <x-admin.status-badge variant="warning" icon="triangle-alert">Menipis</x-admin.status-badge>
+                                @else
+                                    <x-admin.status-badge variant="success" icon="circle-check">Aman</x-admin.status-badge>
+                                @endif
+                            </td>
                             <td>
                                 <button
-                                    class="outline-button admin-small-button"
+                                    class="admin-btn-outline admin-btn-sm"
                                     type="button"
                                     data-minimum-url="{{ $type === 'cabang' ? route('admin.stok-cabang.minimum', $stock) : route('admin.stok-dc.minimum', $stock) }}"
                                     data-minimum="{{ $stock->stok_minimum }}"
-                                    data-minimum-item="{{ $stock->bahan->nama_bahan }}"
+                                    data-current="{{ $stock->jumlah_stok }}"
+                                    data-unit="{{ $stock->bahan?->satuan }}"
+                                    data-location="{{ $locName }}"
+                                    data-item="{{ $stock->bahan?->nama_bahan }}"
                                 >Atur minimum</button>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><div class="page-empty">Data stok tidak ditemukan.</div></td></tr>
+                        <tr>
+                            <td colspan="6">
+                                @if ($hasActiveFilters)
+                                    <x-admin.empty-state
+                                        icon="search"
+                                        title="Data stok tidak ditemukan"
+                                        description="Ubah filter status, lokasi, atau nama bahan untuk melihat data stok lainnya."
+                                        :actionUrl="route($indexRoute)"
+                                        actionLabel="Reset filter"
+                                    />
+                                @else
+                                    <x-admin.empty-state
+                                        icon="boxes"
+                                        title="Belum ada baris stok tercatat"
+                                        description="Baris stok akan dibuat otomatis saat cabang, DC, atau bahan baku ditambahkan."
+                                    />
+                                @endif
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="admin-pagination">{{ $stocks->links() }}</div>
+
+        {{ $stocks->links('components.admin.pagination') }}
     </div>
 </section>
 
-<dialog class="admin-confirm-dialog" id="minimum-dialog">
+<dialog class="admin-confirm-dialog" id="minimum-dialog" aria-labelledby="minimum-title" aria-describedby="minimum-desc">
     <form method="POST" id="minimum-form">
         @csrf
         @method('PATCH')
-        <h2>Atur stok minimum</h2>
-        <p id="minimum-item"></p>
-        <label class="admin-modal-label" for="minimum-value">Batas minimum</label>
-        <input id="minimum-value" name="stok_minimum" type="number" min="0" step="0.001" required>
+
+        <h3 id="minimum-title">Atur batas stok minimum</h3>
+        <p id="minimum-desc">
+            <strong id="minimum-item"></strong> di <span id="minimum-location"></span>.
+            Stok saat ini: <strong class="tabular-nums" id="minimum-current"></strong>.
+        </p>
+
+        <div class="admin-dialog-field">
+            <label for="minimum-value">Batas minimum (<span id="minimum-unit-label"></span>)</label>
+            <input id="minimum-value" name="stok_minimum" type="number" min="0" max="999999999" step="any" required>
+        </div>
+
+        <div class="admin-dialog-preview">
+            <span>Pratinjau status dengan batas baru:</span>
+            <strong id="minimum-preview-status">-</strong>
+        </div>
+
         <div class="admin-dialog-actions">
-            <button class="outline-button" type="button" data-minimum-close>Batal</button>
-            <button class="primary-button" type="submit">Simpan Batas</button>
+            <button class="admin-btn-outline" type="button" data-dialog-close="minimum-dialog">Batal</button>
+            <button class="admin-btn-primary" type="submit" id="minimum-submit">Simpan Batas</button>
         </div>
     </form>
 </dialog>
@@ -112,15 +245,51 @@
 
 @push('scripts')
 <script>
+    document.querySelectorAll('[data-auto-submit]').forEach((select) => {
+        select.addEventListener('change', () => select.form?.submit());
+    });
+
     const minimumDialog = document.getElementById('minimum-dialog');
+    const minimumForm = document.getElementById('minimum-form');
+    const minimumValue = document.getElementById('minimum-value');
+    const minimumItem = document.getElementById('minimum-item');
+    const minimumLocation = document.getElementById('minimum-location');
+    const minimumCurrent = document.getElementById('minimum-current');
+    const minimumUnitLabel = document.getElementById('minimum-unit-label');
+    const minimumPreview = document.getElementById('minimum-preview-status');
+    const minimumSubmit = document.getElementById('minimum-submit');
+
+    let currentQty = 0;
+
+    const updateStatusPreview = () => {
+        const minVal = parseFloat(minimumValue.value);
+        if (currentQty <= 0) {
+            minimumPreview.textContent = 'Habis';
+            return;
+        }
+        if (Number.isFinite(minVal) && currentQty < minVal) {
+            minimumPreview.textContent = 'Menipis (alert restock aktif)';
+            return;
+        }
+        minimumPreview.textContent = 'Aman';
+    };
+
     document.querySelectorAll('[data-minimum-url]').forEach((button) => {
         button.addEventListener('click', () => {
-            document.getElementById('minimum-form').action = button.dataset.minimumUrl;
-            document.getElementById('minimum-value').value = button.dataset.minimum;
-            document.getElementById('minimum-item').textContent = button.dataset.minimumItem;
+            currentQty = parseFloat(button.dataset.current || '0');
+            const unit = button.dataset.unit || '';
+            minimumForm.action = button.dataset.minimumUrl;
+            minimumValue.value = button.dataset.minimum;
+            minimumItem.textContent = button.dataset.item;
+            minimumLocation.textContent = button.dataset.location;
+            minimumCurrent.textContent = `${currentQty} ${unit}`.trim();
+            minimumUnitLabel.textContent = unit || 'unit';
+            minimumSubmit.disabled = false;
+            updateStatusPreview();
             minimumDialog.showModal();
         });
     });
-    document.querySelector('[data-minimum-close]')?.addEventListener('click', () => minimumDialog.close());
+
+    minimumValue?.addEventListener('input', updateStatusPreview);
 </script>
 @endpush

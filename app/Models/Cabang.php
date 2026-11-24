@@ -44,4 +44,9 @@ class Cabang extends Model
     {
         return $this->hasMany(WasteLog::class, 'cabang_id');
     }
+
+    public function notifikasiAlert(): HasMany
+    {
+        return $this->hasMany(NotifikasiAlert::class, 'cabang_id');
+    }
 }

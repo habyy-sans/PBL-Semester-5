@@ -95,21 +95,26 @@ return [
         ],
 
         'admin' => [
-            'MONITORING' => [
-                ['route' => 'admin.dashboard', 'icon' => '⌂', 'label' => 'Dashboard'],
-                ['route' => 'admin.stok-cabang.index', 'icon' => '▤', 'label' => 'Stok Cabang'],
-                ['route' => 'admin.stok-dc.index', 'icon' => '▤', 'label' => 'Stok DC'],
+            'RINGKASAN' => [
+                ['route' => 'admin.dashboard', 'icon' => '⌂', 'lucide' => 'chart-column', 'label' => 'Dashboard'],
+                ['route' => 'admin.report', 'icon' => '▥', 'lucide' => 'file-text', 'label' => 'Laporan Cabang'],
             ],
-            'SYSTEM' => [
-                ['route' => 'admin.pengguna.index', 'icon' => '▣', 'label' => 'Kelola Pengguna'],
-                ['route' => 'admin.role',    'icon' => '⚙', 'label' => 'Role & Hak Akses'],
-                ['route' => 'admin.cabang.index', 'icon' => '⌂', 'label' => 'Cabang'],
-                ['route' => 'admin.dc.index', 'icon' => '▦', 'label' => 'Distribution Center'],
-                ['route' => 'admin.bahan-baku.index', 'icon' => '▦', 'label' => 'Bahan Baku'],
-                ['route' => 'admin.kategori-menu.index', 'icon' => '▤', 'label' => 'Kategori Menu'],
-                ['route' => 'admin.menu-produk.index', 'icon' => '▤', 'label' => 'Menu Produk'],
-                ['route' => 'admin.varian-menu.index', 'icon' => '≡', 'label' => 'Varian Menu'],
-                ['route' => 'admin.resep-menu.index', 'icon' => '≡', 'label' => 'Resep Menu'],
+            'AKSES & ORGANISASI' => [
+                ['route' => 'admin.pengguna.index', 'icon' => '▣', 'lucide' => 'users', 'label' => 'Kelola Pengguna'],
+                ['route' => 'admin.role', 'icon' => '⚙', 'lucide' => 'shield-check', 'label' => 'Role & Hak Akses'],
+                ['route' => 'admin.cabang.index', 'icon' => '⌂', 'lucide' => 'store', 'label' => 'Cabang'],
+                ['route' => 'admin.dc.index', 'icon' => '▦', 'lucide' => 'warehouse', 'label' => 'Distribution Center'],
+            ],
+            'KATALOG & RESEP' => [
+                ['route' => 'admin.bahan-baku.index', 'icon' => '▦', 'lucide' => 'package', 'label' => 'Bahan Baku'],
+                ['route' => 'admin.kategori-menu.index', 'icon' => '▤', 'lucide' => 'tags', 'label' => 'Kategori Menu'],
+                ['route' => 'admin.menu-produk.index', 'icon' => '▤', 'lucide' => 'coffee', 'label' => 'Menu Produk'],
+                ['route' => 'admin.varian-menu.index', 'icon' => '≡', 'lucide' => 'layers', 'label' => 'Varian Menu'],
+                ['route' => 'admin.resep-menu.index', 'icon' => '≡', 'lucide' => 'clipboard-list', 'label' => 'Resep Menu'],
+            ],
+            'MONITORING STOK' => [
+                ['route' => 'admin.stok-cabang.index', 'icon' => '▤', 'lucide' => 'boxes', 'label' => 'Stok Cabang'],
+                ['route' => 'admin.stok-dc.index', 'icon' => '▤', 'lucide' => 'warehouse', 'label' => 'Stok Gudang DC'],
             ],
         ],
 

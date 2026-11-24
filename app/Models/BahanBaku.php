@@ -66,4 +66,9 @@ class BahanBaku extends Model
     {
         return $this->hasMany(DetailSuratJalan::class, 'bahan_id');
     }
+
+    public function notifikasiAlert(): HasMany
+    {
+        return $this->hasMany(NotifikasiAlert::class, 'bahan_id');
+    }
 }
