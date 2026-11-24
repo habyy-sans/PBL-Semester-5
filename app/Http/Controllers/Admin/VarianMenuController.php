@@ -100,8 +100,8 @@ class VarianMenuController extends MasterDataController
                 'field' => 'resep_count',
                 'format' => 'count',
                 'align' => 'right',
-                'linkRoute' => 'admin.resep-menu.index',
-                'linkParam' => 'varian_id',
+                'linkRoute' => 'admin.resep-menu.builder',
+                'linkParam' => 'varian',
                 'warnZero' => 'Perlu resep',
             ],
         ];

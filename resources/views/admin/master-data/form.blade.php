@@ -4,6 +4,29 @@
 @section('description', 'Lengkapi data '.$title.' sesuai aturan operasional sistem.')
 
 @section('content')
+@php
+    $hasOptionalRecipe = isset($recipeIngredients);
+    $oldRecipeItems = old('recipe_items');
+    $initialRecipeRows = [];
+
+    if (is_array($oldRecipeItems)) {
+        foreach ($oldRecipeItems as $row) {
+            if (is_array($row)) {
+                $initialRecipeRows[] = [
+                    'bahan_id' => (string) ($row['bahan_id'] ?? ''),
+                    'jumlah_bahan' => (string) ($row['jumlah_bahan'] ?? ''),
+                ];
+            }
+        }
+    } elseif ($hasOptionalRecipe) {
+        $initialRecipeRows = [['bahan_id' => '', 'jumlah_bahan' => '']];
+    }
+
+    $initialDefaultVariant = $errors->any()
+        ? (bool) old('buat_varian_default')
+        : (bool) old('buat_varian_default', true);
+    $initialSellingPrice = (float) old('harga_jual', $record?->harga_jual ?? 0);
+@endphp
 <section class="page active admin-panel">
     <div class="admin-subnav">
         <nav class="admin-breadcrumb" aria-label="Breadcrumb">
@@ -26,7 +49,24 @@
             <p>Kolom bertanda <span class="required-mark">*</span> wajib diisi.</p>
         </div>
 
-        <form method="POST" action="{{ $record ? route($routeName.'.update', $record->getKey()) : route($routeName.'.store') }}" data-prevent-double-submit>
+        <form
+            method="POST"
+            action="{{ $record ? route($routeName.'.update', $record->getKey()) : route($routeName.'.store') }}"
+            data-prevent-double-submit
+            @if ($hasOptionalRecipe)
+                x-data="{
+                    ...createRecipeState({
+                        inputName: 'recipe_items',
+                        ingredients: @js($recipeIngredients),
+                        required: false,
+                        isEnabled: @js($initialDefaultVariant),
+                        sellingPrice: @js($initialSellingPrice),
+                        initialRows: @js($initialRecipeRows),
+                        serverErrors: @js($errors->getMessages()),
+                    }),
+                }"
+            @endif
+        >
             @csrf
             @if ($record)
                 @method('PUT')
@@ -40,6 +80,9 @@
                         $defaultVal = $prefill[$name] ?? ($field['default'] ?? '');
                         $value = old($name, $record?->{$name} ?? $defaultVal);
                         $hasError = $errors->has($name);
+                        $checkedState = $errors->any()
+                            ? (bool) old($name)
+                            : (bool) old($name, $field['default'] ?? false);
                     @endphp
 
                     <div class="admin-form-field {{ in_array($type, ['textarea', 'checkbox'], true) ? 'full-width' : '' }}">
@@ -50,7 +93,10 @@
                                     type="checkbox"
                                     name="{{ $name }}"
                                     value="1"
-                                    @checked((bool) old($name, $field['default'] ?? false))
+                                    @if ($hasOptionalRecipe && $name === 'buat_varian_default')
+                                        x-model="isEnabled"
+                                    @endif
+                                    @checked($checkedState)
                                 >
                                 <div>
                                     <label class="admin-checkbox-label" for="field-{{ $name }}">{{ $field['label'] }}</label>
@@ -124,6 +170,9 @@
                                     @else
                                         maxlength="{{ $field['max'] ?? 255 }}"
                                     @endif
+                                    @if ($hasOptionalRecipe && $name === 'harga_jual')
+                                        @input="sellingPrice = parseFloat($event.target.value) || 0"
+                                    @endif
                                     @if (! empty($field['placeholder'])) placeholder="{{ $field['placeholder'] }}" @endif
                                     aria-invalid="{{ $hasError ? 'true' : 'false' }}"
                                     @required($field['required'] ?? false)
@@ -139,6 +188,36 @@
                     </div>
                 @endforeach
             </div>
+
+            @if ($hasOptionalRecipe)
+                <div class="admin-optional-recipe" x-show="isEnabled" x-cloak>
+                    <div class="admin-optional-recipe-head">
+                        <div>
+                            <h4>Resep Awal Varian "Regular" (Opsional)</h4>
+                            <p>Langsung tentukan seluruh bahan baku per porsi di sini, atau kosongkan bila ingin diisi nanti melalui halaman Resep Menu.</p>
+                        </div>
+
+                        <div class="admin-optional-recipe-summary tabular-nums" x-show="validRows().length > 0">
+                            <span>Est. HPP: <strong x-text="formatRupiah(totalHpp())">Rp0</strong></span>
+                            <span x-show="sellingPrice > 0">
+                                · Margin: <strong x-text="Math.round(estimatedMargin()) + '%'">0%</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    @if ($recipeIngredients === [])
+                        <p class="admin-field-help">Belum ada katalog bahan baku. Anda tetap dapat menyimpan menu sekarang dan mengatur resep nanti.</p>
+                    @else
+                        <x-admin.recipe-repeater
+                            inputName="recipe_items"
+                            :ingredients="$recipeIngredients"
+                            :required="false"
+                            addButtonLabel="Tambah Bahan Baku"
+                            emptyText="Belum ada bahan baku dipilih (menu akan disimpan tanpa resep)."
+                        />
+                    @endif
+                </div>
+            @endif
 
             <div class="admin-form-actions">
                 <a class="admin-btn-outline" href="{{ route($routeName.'.index') }}">Batal</a>
@@ -159,22 +238,5 @@
             }
         });
     });
-
-    @if (isset($bahanUnits))
-        const bahanUnits = @json($bahanUnits);
-        const bahanSelect = document.getElementById('field-bahan_id');
-        const unitPreview = document.getElementById('resep-unit-preview');
-
-        const syncUnitPreview = () => {
-            if (!bahanSelect || !unitPreview) {
-                return;
-            }
-            const unit = bahanUnits[bahanSelect.value];
-            unitPreview.textContent = unit ? unit : 'satuan';
-        };
-
-        bahanSelect?.addEventListener('change', syncUnitPreview);
-        syncUnitPreview();
-    @endif
 </script>
 @endpush

@@ -8,6 +8,8 @@ use App\Services\AdminMasterSyncService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class MenuProdukController extends MasterDataController
 {
@@ -102,6 +104,74 @@ class MenuProdukController extends MasterDataController
         'varian' => 'varian menu',
     ];
 
+    protected function extraFormData(?Model $record = null): array
+    {
+        if ($record !== null) {
+            return [];
+        }
+
+        return [
+            'recipeIngredients' => $this->sync->ingredientCatalogPayload(),
+        ];
+    }
+
+    protected function validatedData(Request $request, ?Model $record = null): array
+    {
+        $validated = parent::validatedData($request, $record);
+
+        if ($record !== null || ! ($validated['buat_varian_default'] ?? false)) {
+            $validated['recipe_items'] = [];
+
+            return $validated;
+        }
+
+        $rawItems = $request->input('recipe_items', []);
+        $nonEmptyRows = [];
+
+        if (is_array($rawItems)) {
+            foreach ($rawItems as $index => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+
+                $bahanId = trim((string) ($row['bahan_id'] ?? ''));
+                $jumlah = trim((string) ($row['jumlah_bahan'] ?? ''));
+
+                if ($bahanId !== '' || $jumlah !== '') {
+                    $nonEmptyRows[$index] = [
+                        'bahan_id' => $bahanId,
+                        'jumlah_bahan' => $jumlah,
+                    ];
+                }
+            }
+        }
+
+        if ($nonEmptyRows === []) {
+            $validated['recipe_items'] = [];
+
+            return $validated;
+        }
+
+        $recipeData = Validator::make(
+            ['recipe_items' => $nonEmptyRows],
+            [
+                'recipe_items.*.bahan_id' => ['required', 'integer', 'distinct', Rule::exists('bahan_baku', 'bahan_id')],
+                'recipe_items.*.jumlah_bahan' => ['required', 'numeric', 'gt:0', 'max:999999999.999'],
+            ],
+            [
+                'recipe_items.*.bahan_id.required' => 'Pilih bahan baku pada baris resep yang diisi.',
+                'recipe_items.*.bahan_id.distinct' => 'Bahan baku tidak boleh sama pada dua baris resep.',
+                'recipe_items.*.jumlah_bahan.required' => 'Masukkan jumlah takaran bahan baku.',
+                'recipe_items.*.jumlah_bahan.numeric' => 'Jumlah takaran bahan baku harus berupa angka.',
+                'recipe_items.*.jumlah_bahan.gt' => 'Takaran bahan baku harus lebih dari 0.',
+            ],
+        )->validate();
+
+        $validated['recipe_items'] = array_values($recipeData['recipe_items']);
+
+        return $validated;
+    }
+
     protected function afterStore(Model $record, Request $request, array $validated): ?RedirectResponse
     {
         if (! ($validated['buat_varian_default'] ?? false)) {
@@ -110,11 +180,22 @@ class MenuProdukController extends MasterDataController
 
         /** @var MenuProduk $record */
         $varian = $this->sync->createDefaultVariantForMenu($record);
+        $recipeItems = $validated['recipe_items'] ?? [];
+
+        if ($recipeItems !== []) {
+            $count = $this->sync->syncRecipeForVariant($varian, $recipeItems);
+
+            return redirect()
+                ->route($this->routeName.'.index')
+                ->with('success', "Menu {$record->nama_menu}, varian \"Regular\", dan {$count} bahan resep berhasil disimpan.")
+                ->with('success_action_label', 'Ubah Resep')
+                ->with('success_action_url', route('admin.resep-menu.builder', $varian));
+        }
 
         return redirect()
             ->route($this->routeName.'.index')
             ->with('success', "Menu {$record->nama_menu} beserta varian default \"Regular\" berhasil ditambahkan.")
             ->with('success_action_label', 'Atur Resep Menu')
-            ->with('success_action_url', route('admin.resep-menu.create', ['varian_id' => $varian->varian_id]));
+            ->with('success_action_url', route('admin.resep-menu.builder', $varian));
     }
 }

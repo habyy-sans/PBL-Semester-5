@@ -198,6 +198,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('kategori-menu', KategoriMenuController::class)->except('show');
     Route::resource('menu-produk', MenuProdukController::class)->except('show');
     Route::resource('varian-menu', VarianMenuController::class)->except('show');
+    Route::get('/resep-menu/varian/{varian}', [ResepMenuController::class, 'builder'])->name('resep-menu.builder');
+    Route::put('/resep-menu/varian/{varian}', [ResepMenuController::class, 'sync'])->name('resep-menu.sync');
+    Route::delete('/resep-menu/varian/{varian}', [ResepMenuController::class, 'clear'])->name('resep-menu.clear');
     Route::resource('resep-menu', ResepMenuController::class)->except('show');
     Route::get('/stok-cabang', [StokCabangController::class, 'index'])->name('stok-cabang.index');
     Route::patch('/stok-cabang/{stokCabang}/minimum', [StokCabangController::class, 'updateMinimum'])->name('stok-cabang.minimum');

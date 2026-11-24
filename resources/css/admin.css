@@ -994,16 +994,29 @@ a.admin-stat-card:hover {
     display: flex;
     align-items: stretch;
     gap: 8px;
+    width: 100%;
+    min-width: 0;
 }
 
 .admin-input-with-unit input {
-    flex: 1;
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 10px;
 }
 
 .admin-unit-chip {
     display: inline-flex;
     align-items: center;
-    padding: 0 12px;
+    flex-shrink: 0;
+    padding: 0 10px;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--admin-surface-subtle);
@@ -1248,9 +1261,336 @@ a.admin-stat-card:hover {
     gap: 16px;
 }
 
+/* ---------- RECIPE BUILDER & SOP PREVIEW ---------- */
+
+.admin-recipe-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 16px;
+    align-items: start;
+}
+
+.admin-recipe-variant-box {
+    margin-bottom: 16px;
+}
+
+.admin-recipe-variant-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--admin-surface-subtle);
+}
+
+.admin-recipe-variant-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2px 0;
+}
+
+.admin-recipe-variant-price {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.admin-recipe-variant-price strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown-dark);
+}
+
+.admin-recipe-repeater {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-recipe-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-recipe-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(175px, 1.1fr) minmax(88px, auto) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--admin-surface-subtle);
+}
+
+.admin-recipe-row .admin-unit-chip {
+    background: #fff;
+}
+
+.admin-recipe-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.admin-recipe-cell select {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+}
+
+.admin-recipe-cell.is-cost {
+    padding-top: 2px;
+}
+
+.admin-recipe-row-cost {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.admin-recipe-cell.is-remove {
+    padding-top: 22px;
+}
+
+.admin-recipe-remove-label {
+    display: none;
+}
+
+.admin-recipe-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.admin-recipe-empty-hint {
+    padding: 12px 14px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--admin-surface-subtle);
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.admin-recipe-repeater-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-recipe-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.admin-recipe-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--admin-surface-subtle);
+    color: var(--text);
+    font-size: 12px;
+}
+
+.admin-recipe-chip strong {
+    color: var(--brown-dark);
+    font-weight: 700;
+}
+
+.admin-cell-sub.is-danger-text {
+    color: var(--admin-danger);
+    font-weight: 600;
+}
+
+.admin-sop-preview {
+    position: sticky;
+    top: 94px;
+}
+
+.admin-sop-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-sop-head h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.admin-sop-desc {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+.admin-sop-box {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--admin-surface-subtle);
+}
+
+.admin-sop-box-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--admin-info);
+    margin-bottom: 10px;
+}
+
+.admin-sop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-sop-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.admin-sop-row strong {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.admin-sop-empty {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.admin-sop-metrics {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.admin-sop-metrics > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.admin-sop-metrics dt {
+    color: var(--muted);
+}
+
+.admin-sop-metrics dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.admin-sop-metrics > div.is-success dd {
+    color: var(--admin-success);
+}
+
+.admin-sop-metrics > div.is-danger dd {
+    color: var(--admin-danger);
+}
+
+.admin-sop-warning {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--admin-warning-border);
+    border-radius: 10px;
+    background: var(--admin-warning-bg);
+    color: var(--admin-warning);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.admin-optional-recipe {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-optional-recipe-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-optional-recipe-head h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.admin-optional-recipe-head p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.admin-optional-recipe-summary {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--admin-surface-subtle);
+    font-size: 12px;
+    color: var(--text);
+}
+
 /* ---------- RESPONSIVE BREAKPOINTS (3 STATES) ---------- */
 
 @media (max-width: 1024px) {
+    .admin-recipe-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-sop-preview {
+        position: static;
+    }
+
     .admin-priority-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1305,8 +1645,30 @@ a.admin-stat-card:hover {
     .admin-kpi-grid,
     .admin-kpi-grid.cols-4,
     .admin-form-grid,
-    .admin-role-grid {
+    .admin-role-grid,
+    .admin-recipe-row {
         grid-template-columns: 1fr;
+    }
+
+    .admin-recipe-cell.is-remove {
+        padding-top: 4px;
+    }
+
+    .admin-recipe-remove {
+        width: 100%;
+    }
+
+    .admin-recipe-remove-label {
+        display: inline;
+    }
+
+    .admin-recipe-variant-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-recipe-variant-price {
+        text-align: left;
     }
 
     .admin-form-field.full-width {

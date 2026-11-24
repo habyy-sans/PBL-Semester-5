@@ -6,6 +6,7 @@ use App\Models\BahanBaku;
 use App\Models\Cabang;
 use App\Models\Dc;
 use App\Models\MenuProduk;
+use App\Models\ResepMenu;
 use App\Models\StokCabang;
 use App\Models\StokDc;
 use App\Models\VarianMenu;
@@ -188,5 +189,99 @@ class AdminMasterSyncService
             ->where('jumlah_stok', '<=', 0)
             ->where('stok_minimum', '<=', 0)
             ->delete();
+    }
+
+    /**
+     * Sinkronkan seluruh komposisi bahan baku untuk satu varian menu secara atomik.
+     *
+     * @param  array<int, array{bahan_id: int|string, jumlah_bahan: float|int|string}>  $items
+     */
+    public function syncRecipeForVariant(VarianMenu $varian, array $items): int
+    {
+        $normalized = [];
+
+        foreach ($items as $item) {
+            $bahanId = (int) $item['bahan_id'];
+            $normalized[$bahanId] = (float) $item['jumlah_bahan'];
+        }
+
+        return DB::transaction(function () use ($varian, $normalized): int {
+            $existingIds = ResepMenu::query()
+                ->where('varian_id', $varian->varian_id)
+                ->lockForUpdate()
+                ->pluck('bahan_id')
+                ->map(fn (mixed $id): int => (int) $id)
+                ->all();
+
+            $toDelete = array_diff($existingIds, array_keys($normalized));
+
+            if ($toDelete !== []) {
+                ResepMenu::query()
+                    ->where('varian_id', $varian->varian_id)
+                    ->whereIn('bahan_id', $toDelete)
+                    ->delete();
+            }
+
+            foreach ($normalized as $bahanId => $qty) {
+                ResepMenu::query()->updateOrCreate(
+                    [
+                        'varian_id' => $varian->varian_id,
+                        'bahan_id' => $bahanId,
+                    ],
+                    [
+                        'jumlah_bahan' => $qty,
+                    ],
+                );
+            }
+
+            return count($normalized);
+        });
+    }
+
+    public function clearRecipeForVariant(VarianMenu $varian): int
+    {
+        return DB::transaction(function () use ($varian): int {
+            return ResepMenu::query()
+                ->where('varian_id', $varian->varian_id)
+                ->delete();
+        });
+    }
+
+    public function calculateVariantHpp(VarianMenu $varian): float
+    {
+        $total = 0.0;
+
+        foreach ($varian->resep as $resep) {
+            $bahan = $resep->bahan;
+            if ($bahan === null) {
+                continue;
+            }
+
+            $unitCost = (float) $bahan->harga_beli / max((float) $bahan->isi_per_kemasan, 1.0);
+            $total += (float) $resep->jumlah_bahan * $unitCost;
+        }
+
+        return $total;
+    }
+
+    /**
+     * Katalog bahan baku terurut beserta biaya per satuan dasar untuk komponen Recipe Builder.
+     *
+     * @return array<int, array{bahan_id: int, nama_bahan: string, kategori: string, satuan: string, unit_cost: float}>
+     */
+    public function ingredientCatalogPayload(): array
+    {
+        return BahanBaku::query()
+            ->orderBy('nama_bahan')
+            ->get(['bahan_id', 'nama_bahan', 'kategori', 'satuan', 'harga_beli', 'isi_per_kemasan'])
+            ->map(fn (BahanBaku $bahan): array => [
+                'bahan_id' => (int) $bahan->bahan_id,
+                'nama_bahan' => $bahan->nama_bahan,
+                'kategori' => $bahan->kategori ?? '',
+                'satuan' => $bahan->satuan,
+                'unit_cost' => (float) $bahan->harga_beli / max((float) $bahan->isi_per_kemasan, 1.0),
+            ])
+            ->values()
+            ->all();
     }
 }

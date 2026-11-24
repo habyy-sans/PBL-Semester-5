@@ -76,7 +76,7 @@
                             <strong>{{ $variantsNoRecipe->count() }} varian belum memiliki resep</strong>
                             <p>Contoh: {{ ($firstVariant->menu?->nama_menu ?? 'Menu').' - '.$firstVariant->nama_varian }}. Resep menentukan potong stok otomatis.</p>
                         </div>
-                        <a class="admin-priority-link" href="{{ route('admin.resep-menu.create', ['varian_id' => $firstVariant->varian_id]) }}">
+                        <a class="admin-priority-link" href="{{ route('admin.resep-menu.builder', $firstVariant) }}">
                             <span>Lengkapi Resep</span>
                             <x-icon name="chevron-right" size="0.95em" />
                         </a>
