@@ -15,6 +15,7 @@
 .login-page {
 
     min-height: 100vh;
+    min-height: 100dvh;
 
     display: grid;
 
@@ -45,8 +46,10 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 24px;
 }
 
+/* lingkaran dekorasi: bergeser halus mengikuti kursor */
 .login-brand::before,
 .login-brand::after {
 
@@ -57,6 +60,8 @@
     border-radius: 50%;
 
     background: rgba(255, 255, 255, 0.06);
+
+    transition: transform 0.4s ease-out;
 }
 
 .login-brand::before {
@@ -66,6 +71,11 @@
 
     top: -110px;
     right: -90px;
+
+    transform: translate(
+        calc(var(--px, 0) * -16px),
+        calc(var(--py, 0) * -16px)
+    );
 }
 
 .login-brand::after {
@@ -75,13 +85,20 @@
 
     bottom: -80px;
     left: -60px;
+
+    transform: translate(
+        calc(var(--px, 0) * 22px),
+        calc(var(--py, 0) * 22px)
+    );
 }
 
-.login-brand > * {
+.login-brand-top,
+.login-brand-body,
+.login-brand small {
 
     position: relative;
 
-    z-index: 1;
+    z-index: 2;
 }
 
 .login-brand-top {
@@ -121,7 +138,7 @@
     max-width: 380px;
 }
 
-.login-brand-body p {
+.login-brand-body > p {
 
     margin-top: 14px;
 
@@ -141,12 +158,288 @@
     color: #e0c4a5;
 }
 
+.login-brand-body > .login-caption {
+
+    margin-top: 10px;
+
+    font-size: 8px;
+
+    color: #e0c4a5;
+}
+
+
+/* =========================================================
+   ALUR OPERASIONAL (kiri)
+========================================================= */
+
+.login-flow {
+
+    margin-top: 26px;
+
+    max-width: 400px;
+
+    transform: perspective(900px)
+        rotateX(calc(var(--py, 0) * -2deg))
+        rotateY(calc(var(--px, 0) * 3deg));
+
+    transition: transform 0.35s ease-out;
+
+    animation: flow-in 0.6s ease 0.2s backwards;
+}
+
+@keyframes flow-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-flow-nodes {
+
+    position: relative;
+
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+}
+
+/* garis penghubung: terisi sampai langkah yang aktif */
+.login-flow-line {
+
+    position: absolute;
+
+    top: 19px;
+    left: 10%;
+    right: 10%;
+
+    height: 2px;
+
+    border-radius: 2px;
+
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.login-flow-fill {
+
+    height: 100%;
+
+    border-radius: 2px;
+
+    background: #ffe3b8;
+
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.login-node {
+
+    position: relative;
+
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: none;
+
+    font-family: inherit;
+    font-size: 8px;
+
+    color: rgba(241, 220, 195, 0.75);
+
+    cursor: pointer;
+
+    transition: color 0.3s ease;
+}
+
+.login-node-dot {
+
+    position: relative;
+
+    display: grid;
+    place-items: center;
+
+    width: 38px;
+    height: 38px;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    border-radius: 50%;
+
+    background: var(--brown);
+
+    box-shadow: inset 0 0 0 40px rgba(255, 255, 255, 0.1);
+
+    color: #f1dcc3;
+
+    transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.2s ease;
+}
+
+.login-node:hover .login-node-dot {
+
+    transform: translateY(-2px);
+}
+
+.login-node:focus-visible {
+
+    outline: none;
+}
+
+.login-node:focus-visible .login-node-dot {
+
+    box-shadow:
+        inset 0 0 0 40px rgba(255, 255, 255, 0.1),
+        0 0 0 3px #ffe3c2;
+}
+
+.login-node.is-done .login-node-dot {
+
+    border-color: #ffe3b8;
+
+    box-shadow: inset 0 0 0 40px rgba(255, 227, 184, 0.28);
+
+    color: white;
+}
+
+.login-node.is-now .login-node-dot {
+
+    border-color: white;
+
+    background: white;
+
+    box-shadow: none;
+
+    color: var(--brown);
+}
+
+/* cincin yang berdenyut di langkah aktif */
+.login-node.is-now .login-node-dot::after {
+
+    content: "";
+
+    position: absolute;
+    inset: -1px;
+
+    border: 2px solid rgba(255, 255, 255, 0.6);
+
+    border-radius: 50%;
+
+    animation: node-pulse 2s ease-out infinite;
+}
+
+@keyframes node-pulse {
+
+    from {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.55);
+    }
+}
+
+.login-node.is-done,
+.login-node.is-now {
+
+    color: white;
+}
+
+.login-node.is-now .login-node-label {
+
+    font-weight: 600;
+}
+
+/* penjelasan langkah */
+.login-flow-card {
+
+    display: grid;
+
+    margin-top: 18px;
+
+    padding: 12px 14px;
+
+    border: 1px solid rgba(255, 255, 255, 0.16);
+
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+}
+
+/* semua teks ditumpuk di satu sel supaya tinggi kartu tidak melompat */
+.login-flow-text {
+
+    grid-area: 1 / 1;
+
+    opacity: 0;
+
+    transform: translateY(4px);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+.login-flow-text.is-active {
+
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+.login-flow-text strong {
+
+    display: block;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: white;
+}
+
+.login-flow-text p {
+
+    margin-top: 3px;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+
+    color: #f1dcc3;
+}
+
 
 /* =========================================================
    FORM PANEL (kanan)
 ========================================================= */
 
 .login-panel {
+
+    position: relative;
+
+    overflow: hidden;
+
+    isolation: isolate;
 
     display: flex;
     align-items: center;
@@ -155,7 +448,108 @@
     padding: 32px 24px;
 }
 
+/* titik halus di latar */
+.login-dots {
+
+    position: absolute;
+    inset: 0;
+
+    z-index: -1;
+
+    background-image: radial-gradient(rgba(143, 71, 19, 0.18) 1px, transparent 1.3px);
+    background-size: 20px 20px;
+
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 72%);
+            mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 72%);
+}
+
+/* bercak warna yang bergerak pelan */
+.login-blobs {
+
+    position: absolute;
+    inset: 0;
+
+    z-index: -1;
+
+    pointer-events: none;
+}
+
+.login-blob {
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: rgba(143, 71, 19, 0.2);
+
+    filter: blur(54px);
+
+    animation: blob-drift 16s ease-in-out infinite alternate;
+}
+
+.login-blob--a {
+
+    width: 280px;
+    height: 280px;
+
+    top: -60px;
+    right: -40px;
+}
+
+.login-blob--b {
+
+    width: 240px;
+    height: 240px;
+
+    bottom: -70px;
+    left: -50px;
+
+    background: rgba(214, 160, 100, 0.28);
+
+    animation-duration: 20s;
+    animation-direction: alternate-reverse;
+}
+
+@keyframes blob-drift {
+
+    from { translate: 0 0; }
+    to   { translate: 30px 22px; }
+}
+
+/* sapaan + jam */
+.login-clock {
+
+    position: absolute;
+
+    top: 26px;
+    right: 32px;
+
+    text-align: right;
+}
+
+.login-clock strong {
+
+    display: block;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: var(--text);
+}
+
+.login-clock span {
+
+    font-size: 9px;
+
+    color: var(--muted);
+}
+
+
+/* ---------- kartu ---------- */
+
 .login-card {
+
+    position: relative;
 
     width: 100%;
     max-width: 400px;
@@ -168,7 +562,56 @@
 
     padding: 32px 30px;
 
-    box-shadow: 0 5px 20px rgba(86, 54, 25, 0.05);
+    box-shadow: 0 5px 20px rgba(86, 54, 25, 0.06);
+
+    animation: card-in 0.7s ease 0.25s backwards;
+}
+
+/* login gagal dari server: kartu bergetar sekali setelah muncul */
+.login-card--error {
+
+    animation:
+        card-in 0.7s ease 0.25s backwards,
+        card-shake 0.45s ease 0.95s;
+}
+
+/* isian kosong (cek di browser): kartu bergetar */
+.login-card.is-shaking {
+
+    animation:
+        card-in 0.7s ease 0.25s backwards,
+        card-shake-live 0.45s ease;
+}
+
+@keyframes card-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes card-shake {
+
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-7px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(3px); }
+}
+
+@keyframes card-shake-live {
+
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-7px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(3px); }
 }
 
 .login-card-brand {
@@ -200,6 +643,15 @@
     color: var(--muted);
 }
 
+.login-head {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
 .login-title {
 
     font-size: 19px;
@@ -215,6 +667,74 @@
     font-size: 10px;
 
     color: var(--muted);
+}
+
+
+/* ---------- cangkir yang terisi ---------- */
+
+.login-cup {
+
+    flex: none;
+
+    transform-box: fill-box;
+    transform-origin: 50% 85%;
+}
+
+.login-cup-line {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-cup-bg {
+
+    fill: rgba(143, 71, 19, 0.07);
+}
+
+.login-coffee {
+
+    fill: var(--brown);
+
+    transform: translateY(calc((1 - var(--p, 0)) * 28px));
+
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.login-steam path {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2;
+    stroke-linecap: round;
+
+    opacity: 0;
+}
+
+.is-full .login-steam path {
+
+    animation: steam-rise 2.4s ease-in-out infinite;
+}
+
+.is-full .login-steam path:nth-child(2) {
+
+    animation-delay: 0.4s;
+}
+
+.is-full .login-steam path:nth-child(3) {
+
+    animation-delay: 0.8s;
+}
+
+@keyframes steam-rise {
+
+    0%   { opacity: 0;   transform: translateY(3px); }
+    40%  { opacity: 0.7; }
+    100% { opacity: 0;   transform: translateY(-5px); }
 }
 
 
@@ -248,31 +768,49 @@
 
 .login-form {
 
-    margin-top: 20px;
+    margin-top: 22px;
 }
 
 .login-field {
 
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
-.login-label {
+.login-control {
 
-    display: block;
+    position: relative;
+}
 
-    margin-bottom: 6px;
+.login-icon {
 
-    font-size: 10px;
-    font-weight: 500;
+    position: absolute;
 
-    color: #775b46;
+    top: 50%;
+    left: 13px;
+
+    transform: translateY(-50%);
+
+    color: #b9a493;
+
+    pointer-events: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.login-control:focus-within .login-icon {
+
+    color: var(--brown);
+
+    transform: translateY(-50%) scale(1.1);
 }
 
 .login-input {
 
     width: 100%;
 
-    height: 40px;
+    height: 42px;
 
     border: 1px solid var(--border);
 
@@ -285,18 +823,13 @@
     font-family: inherit;
     font-size: 11px;
 
-    padding: 0 13px;
+    padding: 0 13px 0 38px;
 
     outline: none;
 
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease;
-}
-
-.login-input::placeholder {
-
-    color: #b9a493;
 }
 
 .login-input:focus {
@@ -316,6 +849,72 @@
     box-shadow: 0 0 0 3px rgba(201, 76, 76, 0.15);
 }
 
+/* label yang naik ke garis tepi saat fokus / terisi */
+.login-float {
+
+    position: absolute;
+
+    top: 50%;
+    left: 38px;
+
+    transform: translateY(-50%);
+
+    font-size: 11px;
+    line-height: 1;
+
+    color: #b9a493;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+
+    transition:
+        top 0.18s ease,
+        left 0.18s ease,
+        font-size 0.18s ease,
+        color 0.18s ease,
+        padding 0.18s ease;
+}
+
+.login-input:focus ~ .login-float,
+.login-input:not(:placeholder-shown) ~ .login-float,
+.login-input:-webkit-autofill ~ .login-float {
+
+    top: 0;
+    left: 30px;
+
+    padding: 0 5px;
+
+    font-size: 9px;
+    font-weight: 500;
+
+    color: var(--brown);
+
+    background: white;
+}
+
+.login-input.has-error ~ .login-float {
+
+    color: var(--red);
+}
+
+/* isian otomatis browser: jangan jadi biru, tetap putih */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover {
+
+    -webkit-box-shadow: 0 0 0 40px white inset;
+    -webkit-text-fill-color: var(--text);
+
+    caret-color: var(--text);
+}
+
+.login-input:-webkit-autofill:focus {
+
+    -webkit-box-shadow:
+        0 0 0 40px white inset,
+        0 0 0 3px rgba(143, 71, 19, 0.15);
+}
+
 .login-error {
 
     margin-top: 5px;
@@ -325,45 +924,64 @@
     color: var(--red);
 }
 
+.login-note {
+
+    margin-top: 5px;
+
+    font-size: 9px;
+
+    color: var(--brown);
+}
+
 
 /* PASSWORD */
 
-.login-password {
-
-    position: relative;
-}
-
 .login-password .login-input {
 
-    padding-right: 82px;
+    padding-right: 44px;
 }
 
-.login-toggle {
+.login-eye {
 
     position: absolute;
 
     top: 50%;
-    right: 8px;
+    right: 6px;
 
     transform: translateY(-50%);
 
+    display: grid;
+    place-items: center;
+
+    width: 30px;
+    height: 30px;
+
     border: none;
+    border-radius: 7px;
 
     background: transparent;
 
-    color: var(--brown);
-
-    font-family: inherit;
-    font-size: 9px;
-
-    padding: 6px;
+    color: #b9a493;
 
     cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
-.login-toggle:hover {
+.login-eye:hover {
 
-    color: var(--brown-dark);
+    background: var(--cream-dark);
+
+    color: var(--brown);
+}
+
+.login-eye:focus-visible {
+
+    outline: none;
+
+    box-shadow: 0 0 0 3px rgba(143, 71, 19, 0.25);
 }
 
 
@@ -382,10 +1000,12 @@
 
 .login-check {
 
+    position: relative;
+
     display: flex;
     align-items: center;
 
-    gap: 7px;
+    gap: 8px;
 
     font-size: 10px;
 
@@ -396,12 +1016,68 @@
 
 .login-check input {
 
-    accent-color: var(--brown);
+    position: absolute;
 
-    cursor: pointer;
+    width: 0;
+    height: 0;
+
+    opacity: 0;
 }
 
-.login-options span {
+/* saklar "Ingat saya" */
+.login-switch {
+
+    position: relative;
+
+    flex: none;
+
+    width: 26px;
+    height: 15px;
+
+    border-radius: 99px;
+
+    background: #dccdbd;
+
+    transition: background 0.2s ease;
+}
+
+.login-switch::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 2px;
+    left: 2px;
+
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+
+    transition: transform 0.2s ease;
+}
+
+.login-check input:checked + .login-switch {
+
+    background: var(--brown);
+}
+
+.login-check input:checked + .login-switch::after {
+
+    transform: translateX(11px);
+}
+
+.login-check input:focus-visible + .login-switch {
+
+    box-shadow: 0 0 0 3px rgba(143, 71, 19, 0.25);
+}
+
+.login-options > span {
 
     font-size: 9px;
 
@@ -412,6 +1088,10 @@
 /* SUBMIT */
 
 .login-submit {
+
+    position: relative;
+
+    overflow: hidden;
 
     width: 100%;
 
@@ -431,12 +1111,46 @@
 
     cursor: pointer;
 
-    transition: background 0.2s ease;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* kilau cahaya yang lewat saat di-hover */
+.login-submit::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 45%;
+    height: 100%;
+
+    background: linear-gradient(
+        100deg,
+        transparent,
+        rgba(255, 235, 200, 0.28),
+        transparent
+    );
+
+    transform: translateX(-130%);
 }
 
 .login-submit:hover {
 
     background: var(--brown-dark);
+
+    box-shadow: 0 6px 16px rgba(143, 71, 19, 0.28);
+}
+
+.login-submit:hover::after {
+
+    transform: translateX(300%);
+
+    transition: transform 0.7s ease;
 }
 
 .login-submit:focus-visible {
@@ -448,9 +1162,38 @@
 
 .login-submit:disabled {
 
-    opacity: 0.6;
+    opacity: 0.75;
 
     cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+.login-busy {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+}
+
+.login-spinner {
+
+    width: 12px;
+    height: 12px;
+
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: login-spin 0.7s linear infinite;
+}
+
+@keyframes login-spin {
+
+    to { transform: rotate(360deg); }
 }
 
 .login-footer {
@@ -469,66 +1212,6 @@
     color: var(--brown);
 
     font-weight: 600;
-}
-
-
-/* =========================================================
-   AKUN DEMO (hapus saat backend jadi)
-========================================================= */
-
-.login-demo {
-
-    margin-top: 22px;
-
-    padding: 12px;
-
-    border: 1px dashed var(--border);
-
-    border-radius: 10px;
-
-    background: var(--cream-dark);
-}
-
-.login-demo p {
-
-    font-size: 9px;
-
-    color: #775b46;
-
-    line-height: 1.5;
-}
-
-.login-demo-list {
-
-    display: flex;
-    flex-wrap: wrap;
-
-    gap: 6px;
-
-    margin-top: 9px;
-}
-
-.login-demo-btn {
-
-    border: 1px solid var(--border);
-
-    background: white;
-
-    color: var(--brown);
-
-    border-radius: 7px;
-
-    padding: 5px 9px;
-
-    font-family: inherit;
-    font-size: 8px;
-
-    cursor: pointer;
-}
-
-.login-demo-btn:hover {
-
-    background: #fff5e7;
 }
 
 
@@ -552,6 +1235,11 @@
 
         display: flex;
     }
+
+    .login-clock {
+
+        display: none;
+    }
 }
 
 @media (max-width: 480px) {
@@ -564,5 +1252,44 @@
     .login-card {
 
         padding: 26px 20px;
+    }
+}
+
+
+/* =========================================================
+   HORMATI PENGGUNA YANG MEMATIKAN ANIMASI
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .login-card,
+    .login-card--error,
+    .login-card.is-shaking,
+    .login-flow,
+    .login-node.is-now .login-node-dot::after,
+    .login-blob {
+
+        animation: none;
+    }
+
+    .login-brand::before,
+    .login-brand::after,
+    .login-flow {
+
+        transform: none;
+    }
+
+    .is-full .login-steam path {
+
+        animation: none;
+
+        opacity: 0.6;
+    }
+
+    .login-coffee,
+    .login-flow-fill,
+    .login-flow-text {
+
+        transition: none;
     }
 }
