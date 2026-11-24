@@ -1,37 +1,52 @@
 @extends('layouts.app')
 
 @section('title', 'Role & Hak Akses')
-@section('description', 'Role sistem yang dapat diberikan kepada pengguna.')
+@section('description', 'Ringkasan pembagian wewenang, cakupan akses, dan modul tiap role di KopSync.')
+
+@push('header_custom')
+    <a class="admin-btn-primary" href="{{ route('admin.pengguna.create') }}">
+        <x-icon name="plus" size="1em" />
+        <span>Tetapkan Role</span>
+    </a>
+@endpush
 
 @section('content')
 <section class="page active admin-panel">
-    <div class="admin-page-heading">
-        <a class="primary-button" href="{{ route('admin.pengguna.create') }}">+ Tetapkan Role</a>
-    </div>
-    <div class="admin-role-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
-        @foreach (config('menu.roles') as $key => $role)
-        @php
-                // Mapping deskripsi fungsi role
-                $descriptions = [
-                    'kasir'   => 'Akses transaksi kasir POS dan cetak struk penjualan.',
-                    'ic'      => 'Manajemen stok bahan baku & operasional shift cabang.',
-                    'manager' => 'Monitoring laporan transaksi & analisis kinerja cabang.',
-                    'dc'      => 'Kelola stok gudang pusat & pengiriman antar cabang.',
-                    'admin'   => 'Akses penuh ke seluruh konfigurasi & pengaturan sistem.',
-                ];
-            @endphp
-            <article class="page-card admin-role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 20px; height: 100%;">
+    <div class="admin-role-grid">
+        @foreach ($roles as $role)
+            <article class="admin-role-card">
+                <div class="admin-role-top">
+                    <x-admin.status-badge variant="info">{{ $role['key'] }}</x-admin.status-badge>
+                    <x-admin.status-badge variant="{{ $role['active_count'] > 0 ? 'success' : 'muted' }}">
+                        {{ number_format($role['active_count'], 0, ',', '.') }} aktif
+                    </x-admin.status-badge>
+                </div>
+
                 <div>
-                <span class="status info" style="display: inline-block; margin-bottom: 10px; text-transform: lowercase;">{{ $key }}</span>
-                <h2 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 700; color: var(--pos-brown-dark, #4A2C11);">{{ $role['label'] }}</h2>
-                <p style="margin: 0 0 16px 0; font-size: 13px; color: var(--pos-muted, #6B7280); line-height: 1.4;">
-                        {{ $descriptions[$key] ?? 'Hak akses operasional sistem KopSync.' }}
-                    </p>
-            </div>
-                <div style="border-top: 1px dashed var(--pos-border, #E5E7EB); padding-top: 12px; margin-top: auto;">
-                    <a href="{{ route('admin.pengguna.index', ['role' => $key]) }}" style="font-size: 13px; font-weight: 600; color: var(--pos-brown-dark, #4A2C11); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                        Lihat pengguna dengan role ini →
+                    <h3>{{ $role['label'] }}</h3>
+                    <p class="admin-role-desc">{{ $role['description'] }}</p>
+                </div>
+
+                <div class="admin-role-meta">
+                    <span><strong>Cakupan:</strong> {{ $role['scope'] }}</span>
+                    <span><strong>Total akun:</strong> {{ number_format($role['total_count'], 0, ',', '.') }}</span>
+                </div>
+
+                <div>
+                    <p class="admin-stat-label">Modul yang dapat diakses:</p>
+                    <div class="admin-module-list">
+                        @foreach ($role['modules'] as $module)
+                            <span class="admin-module-chip">{{ $module }}</span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="admin-role-footer">
+                    <a class="admin-relation-link" href="{{ $role['users_url'] }}">
+                        <span>Lihat pengguna ({{ number_format($role['total_count'], 0, ',', '.') }})</span>
+                        <x-icon name="chevron-right" size="0.95em" />
                     </a>
+                    <a class="admin-btn-outline admin-btn-sm" href="{{ $role['create_url'] }}">Tambah akun</a>
                 </div>
             </article>
         @endforeach
