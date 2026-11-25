@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\Admin\BahanBakuController as AdminBahanBakuController;
 use App\Http\Controllers\Admin\CabangController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;

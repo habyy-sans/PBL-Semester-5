@@ -14,15 +14,32 @@
 
 .login-page {
 
+    /* lebar panel coklat setelah layar awal dibuka (desktop) */
+    --cr: 0.5122;
+
+    /* lebar area isi di panel coklat */
+    --ir: 0.5122;
+
+    /* jarak isi panel coklat dari tepi kiri */
+    --pad: 48px;
+
+    position: relative;
+
     min-height: 100vh;
+    min-height: 100dvh;
 
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1.05fr)
-        minmax(0, 1fr);
+    overflow-x: clip;
 
     background: var(--cream);
+}
+
+/* layar awal selalu setinggi layar, supaya tombol tidak turun ke luar layar di HP */
+.login-page:not(.is-form) {
+
+    max-height: 100vh;
+    max-height: 100dvh;
+
+    overflow: hidden;
 }
 
 
@@ -30,9 +47,13 @@
    BRAND PANEL (kiri)
 ========================================================= */
 
+/* lapisan coklat menutupi seluruh layar; setelah tombol ditekan, tepi kanannya bergeser ke kiri */
 .login-brand {
 
-    position: relative;
+    position: absolute;
+    inset: 0;
+
+    z-index: 2;
 
     overflow: hidden;
 
@@ -40,13 +61,47 @@
 
     color: white;
 
-    padding: 40px 48px;
+    clip-path: inset(0 0 0 0);
+}
+
+/* isi panel coklat: tata letak yang sama seperti saat form tampil */
+.login-brand-inner {
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+    left: 0;
+
+    z-index: 2;
+
+    box-sizing: border-box;
+
+    width: calc(var(--ir) * 100%);
+
+    padding: calc(var(--pad) * 0.8333) var(--pad);
 
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 24px;
 }
 
+/* form sudah tampil: panel coklat tinggal di sisi kiri */
+.login-page.is-form .login-brand {
+
+    clip-path: inset(0 calc((1 - var(--cr)) * 100%) 0 0);
+}
+
+/* layar awal: isi di tengah layar */
+.login-page:not(.is-form) .login-brand-body {
+
+    transform: translateX(
+        calc(50vw - var(--pad) - min(400px, calc(var(--ir) * 100vw - 2 * var(--pad))) / 2)
+    );
+}
+
+/* lingkaran dekorasi: bergeser halus mengikuti kursor */
 .login-brand::before,
 .login-brand::after {
 
@@ -57,6 +112,8 @@
     border-radius: 50%;
 
     background: rgba(255, 255, 255, 0.06);
+
+    transition: transform 0.4s ease-out;
 }
 
 .login-brand::before {
@@ -65,7 +122,26 @@
     height: 320px;
 
     top: -110px;
-    right: -90px;
+
+    /* layar awal: di pojok kanan atas layar */
+    left: calc(100% - 230px);
+
+    transform: translate(
+        calc(var(--px, 0) * -16px),
+        calc(var(--py, 0) * -16px)
+    );
+
+    /* bergeser dengan durasi dan kurva yang sama seperti tepi panel coklat */
+    transition:
+        transform 0.4s ease-out,
+        left 1s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* setelah tombol ditekan: ikut ke pojok kanan atas panel coklat */
+.login-page.is-revealing .login-brand::before,
+.login-page.is-form .login-brand::before {
+
+    left: calc(var(--ir) * 100% - 230px);
 }
 
 .login-brand::after {
@@ -75,13 +151,20 @@
 
     bottom: -80px;
     left: -60px;
+
+    transform: translate(
+        calc(var(--px, 0) * 22px),
+        calc(var(--py, 0) * 22px)
+    );
 }
 
-.login-brand > * {
+.login-brand-top,
+.login-brand-body,
+.login-brand small {
 
     position: relative;
 
-    z-index: 1;
+    z-index: 2;
 }
 
 .login-brand-top {
@@ -111,6 +194,11 @@
     margin-top: 2px;
 }
 
+.login-brand-body {
+
+    width: min(400px, 100%);
+}
+
 .login-brand-body h2 {
 
     font-size: 24px;
@@ -121,7 +209,7 @@
     max-width: 380px;
 }
 
-.login-brand-body p {
+.login-brand-body > p {
 
     margin-top: 14px;
 
@@ -141,6 +229,348 @@
     color: #e0c4a5;
 }
 
+.login-brand-body > .login-caption {
+
+    margin-top: 10px;
+
+    font-size: 8px;
+
+    color: #e0c4a5;
+}
+
+
+/* =========================================================
+   TOMBOL LAYAR AWAL
+========================================================= */
+
+.login-enter {
+
+    position: absolute;
+
+    z-index: 3;
+
+    left: 0;
+    right: 0;
+    bottom: 88px;
+
+    width: 220px;
+    height: 44px;
+
+    margin: 0 auto;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: white;
+
+    color: var(--brown);
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+
+    animation: enter-in 0.7s ease 0.9s backwards;
+}
+
+.login-enter:hover {
+
+    background: #fff5e7;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.login-enter:focus-visible {
+
+    outline: 2px solid #ffe3c2;
+    outline-offset: 3px;
+}
+
+.login-page.is-form .login-enter {
+
+    display: none;
+}
+
+@keyframes enter-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   ALUR OPERASIONAL (kiri)
+========================================================= */
+
+.login-flow {
+
+    margin-top: 26px;
+
+    max-width: 400px;
+
+    transform: perspective(900px)
+        rotateX(calc(var(--py, 0) * -2deg))
+        rotateY(calc(var(--px, 0) * 3deg));
+
+    transition: transform 0.35s ease-out;
+
+    animation: flow-in 0.6s ease 0.2s backwards;
+}
+
+@keyframes flow-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-flow-nodes {
+
+    position: relative;
+
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+}
+
+/* garis penghubung: terisi sampai langkah yang aktif */
+.login-flow-line {
+
+    position: absolute;
+
+    top: 19px;
+    left: 10%;
+    right: 10%;
+
+    height: 2px;
+
+    border-radius: 2px;
+
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.login-flow-fill {
+
+    height: 100%;
+
+    border-radius: 2px;
+
+    background: #ffe3b8;
+
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.login-node {
+
+    position: relative;
+
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: none;
+
+    font-family: inherit;
+    font-size: 8px;
+
+    color: rgba(241, 220, 195, 0.75);
+
+    cursor: pointer;
+
+    transition: color 0.3s ease;
+}
+
+.login-node-dot {
+
+    position: relative;
+
+    display: grid;
+    place-items: center;
+
+    width: 38px;
+    height: 38px;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    border-radius: 50%;
+
+    background: var(--brown);
+
+    box-shadow: inset 0 0 0 40px rgba(255, 255, 255, 0.1);
+
+    color: #f1dcc3;
+
+    transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.2s ease;
+}
+
+.login-node:hover .login-node-dot {
+
+    transform: translateY(-2px);
+}
+
+.login-node:focus-visible {
+
+    outline: none;
+}
+
+.login-node:focus-visible .login-node-dot {
+
+    box-shadow:
+        inset 0 0 0 40px rgba(255, 255, 255, 0.1),
+        0 0 0 3px #ffe3c2;
+}
+
+.login-node.is-done .login-node-dot {
+
+    border-color: #ffe3b8;
+
+    box-shadow: inset 0 0 0 40px rgba(255, 227, 184, 0.28);
+
+    color: white;
+}
+
+.login-node.is-now .login-node-dot {
+
+    border-color: white;
+
+    background: white;
+
+    box-shadow: none;
+
+    color: var(--brown);
+}
+
+/* cincin yang berdenyut di langkah aktif */
+.login-node.is-now .login-node-dot::after {
+
+    content: "";
+
+    position: absolute;
+    inset: -1px;
+
+    border: 2px solid rgba(255, 255, 255, 0.6);
+
+    border-radius: 50%;
+
+    animation: node-pulse 2s ease-out infinite;
+}
+
+@keyframes node-pulse {
+
+    from {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.55);
+    }
+}
+
+.login-node.is-done,
+.login-node.is-now {
+
+    color: white;
+}
+
+.login-node.is-now .login-node-label {
+
+    font-weight: 600;
+}
+
+/* penjelasan langkah */
+.login-flow-card {
+
+    display: grid;
+
+    margin-top: 18px;
+
+    padding: 12px 14px;
+
+    border: 1px solid rgba(255, 255, 255, 0.16);
+
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+}
+
+/* semua teks ditumpuk di satu sel supaya tinggi kartu tidak melompat */
+.login-flow-text {
+
+    grid-area: 1 / 1;
+
+    opacity: 0;
+
+    transform: translateY(4px);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+.login-flow-text.is-active {
+
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+.login-flow-text strong {
+
+    display: block;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: white;
+}
+
+.login-flow-text p {
+
+    margin-top: 3px;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+
+    color: #f1dcc3;
+}
+
 
 /* =========================================================
    FORM PANEL (kanan)
@@ -148,14 +578,148 @@
 
 .login-panel {
 
+    position: relative;
+
+    overflow: hidden;
+
+    isolation: isolate;
+
     display: flex;
     align-items: center;
     justify-content: center;
 
+    /* mulai dari tepi kanan panel coklat */
+    margin-left: calc(var(--cr) * 100%);
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
     padding: 32px 24px;
 }
 
+/* titik halus di latar */
+.login-dots {
+
+    position: absolute;
+    inset: 0;
+
+    z-index: -1;
+
+    background-image: radial-gradient(rgba(143, 71, 19, 0.18) 1px, transparent 1.3px);
+    background-size: 20px 20px;
+
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 72%);
+            mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 72%);
+}
+
+/* bercak warna yang bergerak pelan */
+.login-blobs {
+
+    position: absolute;
+    inset: 0;
+
+    z-index: -1;
+
+    pointer-events: none;
+}
+
+.login-blob {
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: rgba(143, 71, 19, 0.2);
+
+    filter: blur(54px);
+
+    animation: blob-drift 16s ease-in-out infinite alternate;
+}
+
+.login-blob--a {
+
+    width: 280px;
+    height: 280px;
+
+    top: -60px;
+    right: -40px;
+}
+
+.login-blob--b {
+
+    width: 240px;
+    height: 240px;
+
+    bottom: -70px;
+    left: -50px;
+
+    background: rgba(214, 160, 100, 0.28);
+
+    animation-duration: 20s;
+    animation-direction: alternate-reverse;
+}
+
+@keyframes blob-drift {
+
+    from { translate: 0 0; }
+    to   { translate: 30px 22px; }
+}
+
+/* sapaan + jam */
+.login-clock {
+
+    position: absolute;
+
+    z-index: 3;
+
+    top: 26px;
+    right: 32px;
+
+    text-align: right;
+}
+
+.login-clock strong,
+.login-clock span {
+
+    /* menunggu panel coklat lewat dulu baru warnanya berganti */
+    transition: color 0.3s ease 0.3s;
+}
+
+.login-clock strong {
+
+    display: block;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: white;
+}
+
+.login-clock span {
+
+    font-size: 9px;
+
+    color: #e9cdb0;
+}
+
+.login-page.is-revealing .login-clock strong,
+.login-page.is-form .login-clock strong {
+
+    color: var(--text);
+}
+
+.login-page.is-revealing .login-clock span,
+.login-page.is-form .login-clock span {
+
+    color: var(--muted);
+}
+
+
+/* ---------- kartu ---------- */
+
 .login-card {
+
+    position: relative;
 
     width: 100%;
     max-width: 400px;
@@ -168,7 +732,56 @@
 
     padding: 32px 30px;
 
-    box-shadow: 0 5px 20px rgba(86, 54, 25, 0.05);
+    box-shadow: 0 5px 20px rgba(86, 54, 25, 0.06);
+
+    animation: card-in 0.7s ease 0.25s backwards;
+}
+
+/* login gagal dari server: kartu bergetar sekali setelah muncul */
+.login-card--error {
+
+    animation:
+        card-in 0.7s ease 0.25s backwards,
+        card-shake 0.45s ease 0.95s;
+}
+
+/* isian kosong (cek di browser): kartu bergetar */
+.login-card.is-shaking {
+
+    animation:
+        card-in 0.7s ease 0.25s backwards,
+        card-shake-live 0.45s ease;
+}
+
+@keyframes card-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes card-shake {
+
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-7px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(3px); }
+}
+
+@keyframes card-shake-live {
+
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-7px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(3px); }
 }
 
 .login-card-brand {
@@ -200,6 +813,15 @@
     color: var(--muted);
 }
 
+.login-head {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
 .login-title {
 
     font-size: 19px;
@@ -215,6 +837,233 @@
     font-size: 10px;
 
     color: var(--muted);
+}
+
+
+/* ---------- cangkir di atas kartu ---------- */
+
+.login-stack {
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-cupbtn {
+
+    position: relative;
+
+    z-index: 2;
+
+    flex: none;
+
+    width: 84px;
+    height: 84px;
+
+    /* dasar cangkir menempel di tepi atas kartu, di pojok kanan */
+    margin-right: 22px;
+    margin-bottom: -9px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: none;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    animation: card-in 0.7s ease 0.25s backwards;
+}
+
+.login-cupbtn:focus-visible {
+
+    outline: 2px solid var(--brown);
+    outline-offset: 2px;
+}
+
+.login-cup,
+.login-saucer {
+
+    position: absolute;
+    inset: 0;
+
+    width: 84px;
+    height: 84px;
+
+    pointer-events: none;
+}
+
+/* cangkir miring dengan bibir kiri sebagai poros */
+.login-cup {
+
+    overflow: visible;
+
+    /* Motion otomatis memakai fill-box untuk SVG; paksa ke kotak 84x84 agar porosnya tepat di bibir cangkir */
+    transform-box: border-box !important;
+    transform-origin: 23.4% 40.6% !important;
+}
+
+.login-saucer path {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+}
+
+.login-cup-line {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-cup-bg {
+
+    fill: rgba(143, 71, 19, 0.07);
+}
+
+/* permukaan kopi dibuat berlawanan arah dengan cangkir supaya tetap datar */
+.login-coffee-wrap {
+
+    transform-box: view-box !important;
+    transform-origin: 31px 39px !important;
+}
+
+.login-coffee {
+
+    fill: var(--brown);
+
+    /* awal: cangkir kosong, lalu diisi lewat animasi */
+    transform: translateY(28px);
+}
+
+.login-steam path {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2;
+    stroke-linecap: round;
+
+    opacity: 0;
+}
+
+.is-steaming .login-steam path {
+
+    animation: steam-rise 2.4s ease-in-out infinite;
+}
+
+.is-steaming .login-steam path:nth-child(2) {
+
+    animation-delay: 0.4s;
+}
+
+.is-steaming .login-steam path:nth-child(3) {
+
+    animation-delay: 0.8s;
+}
+
+@keyframes steam-rise {
+
+    0%   { opacity: 0;   transform: translateY(3px); }
+    40%  { opacity: 0.7; }
+    100% { opacity: 0;   transform: translateY(-5px); }
+}
+
+/* aliran kopi dari bibir cangkir ke kartu */
+.login-stream {
+
+    position: absolute;
+
+    z-index: 3;
+
+    top: 34px;
+    left: calc(100% - 89px);
+
+    width: 6px;
+    height: 50px;
+
+    border-radius: 3px;
+
+    background: var(--brown);
+
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+
+    pointer-events: none;
+}
+
+
+/* ---------- kopi tumpah di kartu ---------- */
+
+.login-spill {
+
+    position: absolute;
+    inset: 0;
+
+    z-index: 0;
+
+    overflow: hidden;
+
+    border-radius: inherit;
+
+    pointer-events: none;
+}
+
+.login-spill-body {
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: -100%;
+
+    height: 100%;
+
+    background: var(--brown);
+
+    opacity: 0;
+}
+
+.login-spill-wave {
+
+    position: absolute;
+
+    left: 0;
+    top: calc(100% - 1px);
+
+    width: 200%;
+    height: 14px;
+
+    fill: var(--brown);
+
+    animation: wave-slide 4s linear infinite;
+}
+
+@keyframes wave-slide {
+
+    to { transform: translateX(-50%); }
+}
+
+/* isi kartu selalu di atas lapisan tumpahan */
+.login-card > :not(.login-spill) {
+
+    position: relative;
+
+    z-index: 1;
 }
 
 
@@ -248,31 +1097,49 @@
 
 .login-form {
 
-    margin-top: 20px;
+    margin-top: 22px;
 }
 
 .login-field {
 
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
-.login-label {
+.login-control {
 
-    display: block;
+    position: relative;
+}
 
-    margin-bottom: 6px;
+.login-icon {
 
-    font-size: 10px;
-    font-weight: 500;
+    position: absolute;
 
-    color: #775b46;
+    top: 50%;
+    left: 13px;
+
+    transform: translateY(-50%);
+
+    color: #b9a493;
+
+    pointer-events: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.login-control:focus-within .login-icon {
+
+    color: var(--brown);
+
+    transform: translateY(-50%) scale(1.1);
 }
 
 .login-input {
 
     width: 100%;
 
-    height: 40px;
+    height: 42px;
 
     border: 1px solid var(--border);
 
@@ -285,18 +1152,13 @@
     font-family: inherit;
     font-size: 11px;
 
-    padding: 0 13px;
+    padding: 0 13px 0 38px;
 
     outline: none;
 
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease;
-}
-
-.login-input::placeholder {
-
-    color: #b9a493;
 }
 
 .login-input:focus {
@@ -316,6 +1178,47 @@
     box-shadow: 0 0 0 3px rgba(201, 76, 76, 0.15);
 }
 
+.login-label {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 10px;
+    font-weight: 500;
+
+    color: #634a37;
+
+    transition: color 0.2s ease;
+}
+
+.login-field:focus-within .login-label {
+
+    color: var(--brown);
+}
+
+.login-input::placeholder {
+
+    color: #b9a493;
+}
+
+/* isian otomatis browser: jangan jadi biru, tetap putih */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover {
+
+    -webkit-box-shadow: 0 0 0 40px white inset;
+    -webkit-text-fill-color: var(--text);
+
+    caret-color: var(--text);
+}
+
+.login-input:-webkit-autofill:focus {
+
+    -webkit-box-shadow:
+        0 0 0 40px white inset,
+        0 0 0 3px rgba(143, 71, 19, 0.15);
+}
+
 .login-error {
 
     margin-top: 5px;
@@ -325,45 +1228,64 @@
     color: var(--red);
 }
 
+.login-note {
+
+    margin-top: 5px;
+
+    font-size: 9px;
+
+    color: var(--brown);
+}
+
 
 /* PASSWORD */
 
-.login-password {
-
-    position: relative;
-}
-
 .login-password .login-input {
 
-    padding-right: 82px;
+    padding-right: 44px;
 }
 
-.login-toggle {
+.login-eye {
 
     position: absolute;
 
     top: 50%;
-    right: 8px;
+    right: 6px;
 
     transform: translateY(-50%);
 
+    display: grid;
+    place-items: center;
+
+    width: 30px;
+    height: 30px;
+
     border: none;
+    border-radius: 7px;
 
     background: transparent;
 
-    color: var(--brown);
-
-    font-family: inherit;
-    font-size: 9px;
-
-    padding: 6px;
+    color: #b9a493;
 
     cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
-.login-toggle:hover {
+.login-eye:hover {
 
-    color: var(--brown-dark);
+    background: var(--cream-dark);
+
+    color: var(--brown);
+}
+
+.login-eye:focus-visible {
+
+    outline: none;
+
+    box-shadow: 0 0 0 3px rgba(143, 71, 19, 0.25);
 }
 
 
@@ -382,10 +1304,12 @@
 
 .login-check {
 
+    position: relative;
+
     display: flex;
     align-items: center;
 
-    gap: 7px;
+    gap: 8px;
 
     font-size: 10px;
 
@@ -396,12 +1320,68 @@
 
 .login-check input {
 
-    accent-color: var(--brown);
+    position: absolute;
 
-    cursor: pointer;
+    width: 0;
+    height: 0;
+
+    opacity: 0;
 }
 
-.login-options span {
+/* saklar "Ingat saya" */
+.login-switch {
+
+    position: relative;
+
+    flex: none;
+
+    width: 26px;
+    height: 15px;
+
+    border-radius: 99px;
+
+    background: #dccdbd;
+
+    transition: background 0.2s ease;
+}
+
+.login-switch::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 2px;
+    left: 2px;
+
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+
+    transition: transform 0.2s ease;
+}
+
+.login-check input:checked + .login-switch {
+
+    background: var(--brown);
+}
+
+.login-check input:checked + .login-switch::after {
+
+    transform: translateX(11px);
+}
+
+.login-check input:focus-visible + .login-switch {
+
+    box-shadow: 0 0 0 3px rgba(143, 71, 19, 0.25);
+}
+
+.login-options > span {
 
     font-size: 9px;
 
@@ -412,6 +1392,10 @@
 /* SUBMIT */
 
 .login-submit {
+
+    position: relative;
+
+    overflow: hidden;
 
     width: 100%;
 
@@ -431,12 +1415,46 @@
 
     cursor: pointer;
 
-    transition: background 0.2s ease;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* kilau cahaya yang lewat saat di-hover */
+.login-submit::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 45%;
+    height: 100%;
+
+    background: linear-gradient(
+        100deg,
+        transparent,
+        rgba(255, 235, 200, 0.28),
+        transparent
+    );
+
+    transform: translateX(-130%);
 }
 
 .login-submit:hover {
 
     background: var(--brown-dark);
+
+    box-shadow: 0 6px 16px rgba(143, 71, 19, 0.28);
+}
+
+.login-submit:hover::after {
+
+    transform: translateX(300%);
+
+    transition: transform 0.7s ease;
 }
 
 .login-submit:focus-visible {
@@ -448,9 +1466,38 @@
 
 .login-submit:disabled {
 
-    opacity: 0.6;
+    opacity: 0.75;
 
     cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+.login-busy {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+}
+
+.login-spinner {
+
+    width: 12px;
+    height: 12px;
+
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: login-spin 0.7s linear infinite;
+}
+
+@keyframes login-spin {
+
+    to { transform: rotate(360deg); }
 }
 
 .login-footer {
@@ -473,84 +1520,27 @@
 
 
 /* =========================================================
-   AKUN DEMO (hapus saat backend jadi)
-========================================================= */
-
-.login-demo {
-
-    margin-top: 22px;
-
-    padding: 12px;
-
-    border: 1px dashed var(--border);
-
-    border-radius: 10px;
-
-    background: var(--cream-dark);
-}
-
-.login-demo p {
-
-    font-size: 9px;
-
-    color: #775b46;
-
-    line-height: 1.5;
-}
-
-.login-demo-list {
-
-    display: flex;
-    flex-wrap: wrap;
-
-    gap: 6px;
-
-    margin-top: 9px;
-}
-
-.login-demo-btn {
-
-    border: 1px solid var(--border);
-
-    background: white;
-
-    color: var(--brown);
-
-    border-radius: 7px;
-
-    padding: 5px 9px;
-
-    font-family: inherit;
-    font-size: 8px;
-
-    cursor: pointer;
-}
-
-.login-demo-btn:hover {
-
-    background: #fff5e7;
-}
-
-
-/* =========================================================
    RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
 
+    /* di HP: layar coklat penuh dulu, setelah tombol ditekan bergeser habis ke kiri */
     .login-page {
 
-        grid-template-columns: 1fr;
-    }
-
-    .login-brand {
-
-        display: none;
+        --cr: 0;
+        --ir: 1;
+        --pad: 22px;
     }
 
     .login-card-brand {
 
         display: flex;
+    }
+
+    .login-clock {
+
+        display: none;
     }
 }
 
@@ -564,5 +1554,356 @@
     .login-card {
 
         padding: 26px 20px;
+    }
+}
+
+
+/* =========================================================
+   HORMATI PENGGUNA YANG MEMATIKAN ANIMASI
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .login-card,
+    .login-card--error,
+    .login-card.is-shaking,
+    .login-flow,
+    .login-node.is-now .login-node-dot::after,
+    .login-blob {
+
+        animation: none;
+    }
+
+    .login-brand::before,
+    .login-brand::after,
+    .login-flow {
+
+        transform: none;
+    }
+
+    .login-brand::before {
+
+        transition: none;
+    }
+
+    .is-steaming .login-steam path {
+
+        animation: none;
+
+        opacity: 0.6;
+    }
+
+    .login-spill-wave,
+    .login-cupbtn,
+    .login-enter {
+
+        animation: none;
+    }
+
+    .login-flow-fill,
+    .login-flow-text {
+
+        transition: none;
+    }
+}
+
+
+/* =========================================================
+   KOPSYNC COFFEE LOADING (REVISI)
+
+   Cara kerja:
+   - Cangkir miring dengan bibir kiri sebagai poros (sama seperti kopi tumpah di kartu).
+   - Aliran kopi jatuh tepat di ujung kanan bar yang sedang terisi.
+   - Bar HANYA bertambah saat kopi mengalir (.is-flowing).
+   - Saat tuangan berhenti: aliran hilang, cangkir tegak, bar ikut berhenti.
+   - Isi cangkir berkurang saat menuang, terisi lagi saat tegak.
+========================================================= */
+
+.login-loading {
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: grid;
+    place-items: center;
+
+    background: rgba(248, 244, 237, 0.84);
+
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.login-loading-content {
+
+    width: min(270px, calc(100% - 48px));
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+
+    animation: login-loading-appear 0.3s ease both;
+}
+
+/* area cangkir: lebarnya sama dengan bar, --p = persen isi bar */
+.login-loading-cup-area {
+
+    position: relative;
+
+    width: 100%;
+    height: 120px;
+}
+
+.login-loading-cup {
+
+    position: absolute;
+
+    top: 30px;
+
+    /* bibir cangkir (poros putar) tepat di ujung kanan bar yang terisi */
+    left: calc(var(--p, 0) * 1% - 13px);
+
+    width: 56px;
+    height: 56px;
+
+    overflow: visible;
+
+    transform-box: border-box;
+    transform-origin: 23.4% 40.6%;
+
+    transition:
+        left 0.15s linear,
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-pouring .login-loading-cup {
+
+    transform: rotate(-78deg);
+}
+
+.login-loading-cup-line {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-loading-cup-bg {
+
+    fill: rgba(143, 71, 19, 0.07);
+}
+
+/* permukaan kopi berlawanan arah dengan cangkir supaya tetap datar */
+.login-loading-wrap {
+
+    transform-box: view-box;
+    transform-origin: 31px 39px;
+
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-pouring .login-loading-wrap {
+
+    transform: rotate(78deg);
+}
+
+.login-loading-coffee {
+
+    fill: var(--brown);
+
+    transform: translateY(0);
+
+    /* cangkir terisi lagi saat tegak */
+    transition: transform 0.9s ease-out;
+}
+
+/* kopi berkurang pelan selama mengalir */
+.is-flowing .login-loading-coffee {
+
+    transform: translateY(24px);
+
+    transition: transform 1.3s linear;
+}
+
+.login-loading-steam path {
+
+    fill: none;
+
+    stroke: var(--brown);
+    stroke-width: 2;
+    stroke-linecap: round;
+
+    opacity: 0;
+}
+
+.login-loading-content:not(.is-pouring) .login-loading-steam path {
+
+    animation: login-loading-steam 2.4s ease-in-out infinite;
+}
+
+.login-loading-content:not(.is-pouring) .login-loading-steam path:nth-child(2) {
+
+    animation-delay: 0.4s;
+}
+
+.login-loading-content:not(.is-pouring) .login-loading-steam path:nth-child(3) {
+
+    animation-delay: 0.8s;
+}
+
+/* aliran kopi: jatuh dari bibir cangkir ke permukaan bar */
+.login-loading-stream {
+
+    position: absolute;
+
+    top: 52px;
+    left: calc(var(--p, 0) * 1% - 2px);
+
+    width: 4px;
+    height: 68px;
+
+    border-radius: 2px;
+
+    background: var(--brown);
+
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+
+    pointer-events: none;
+
+    transition:
+        left 0.15s linear,
+        transform 0.25s ease-in;
+}
+
+.is-flowing .login-loading-stream {
+
+    transform: scaleY(1);
+}
+
+.login-loading-track {
+
+    position: relative;
+
+    width: 100%;
+    height: 12px;
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: #e7d8c9;
+
+    box-shadow: inset 0 1px 3px rgba(70, 40, 20, 0.08);
+}
+
+.login-loading-fill {
+
+    position: relative;
+
+    width: 0%;
+    height: 100%;
+
+    overflow: hidden;
+
+    border-radius: inherit;
+
+    background: linear-gradient(90deg, #71370f, #914713, #b66c32);
+
+    transition: width 0.15s linear;
+}
+
+/* kilau hanya jalan saat kopi benar-benar mengalir */
+.login-loading-fill::after {
+
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+
+    opacity: 0;
+
+    animation: login-loading-shine 1.2s linear infinite;
+}
+
+.is-flowing .login-loading-fill::after {
+
+    opacity: 1;
+}
+
+.login-loading-percent {
+
+    margin-top: 16px;
+
+    color: var(--brown);
+
+    font-size: 22px;
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.login-loading-message {
+
+    min-height: 18px;
+
+    margin-top: 7px;
+
+    color: #806b58;
+
+    font-size: 11px;
+    font-weight: 500;
+}
+
+@keyframes login-loading-steam {
+
+    0%   { opacity: 0;   transform: translateY(3px); }
+    40%  { opacity: 0.7; }
+    100% { opacity: 0;   transform: translateY(-5px); }
+}
+
+@keyframes login-loading-shine {
+
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+}
+
+@keyframes login-loading-appear {
+
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+
+    .login-loading-content {
+
+        width: min(250px, calc(100% - 40px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .login-loading-content,
+    .login-loading-steam path,
+    .login-loading-fill::after {
+
+        animation: none;
+    }
+
+    .login-loading-cup,
+    .login-loading-wrap,
+    .login-loading-coffee,
+    .login-loading-stream {
+
+        transition: none;
     }
 }
